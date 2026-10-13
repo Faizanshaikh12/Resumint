@@ -1,6 +1,7 @@
 # Resumint - Architectural Decision Records (ADRs)
 
 ## ADR-001: Cloudflare Workers Edge Deployment (Free Tier Budget)
+
 - **Status**: Accepted
 - **Context**: The application is deployed as a single full-stack Worker utilizing React Router v7 framework mode. Cloudflare Workers Free Tier enforces a strict CPU execution limit of **10 ms per request**.
 - **Decision**:
@@ -12,6 +13,7 @@
 ---
 
 ## ADR-002: Client-Side PDF Generation via Print Stylesheets
+
 - **Status**: Accepted
 - **Context**: Kickresume and other builders typically render PDFs. Generating PDFs on the server using headless Chrome (Puppeteer) requires dedicated servers or third-party paid APIs and completely exceeds Cloudflare Worker CPU limits.
 - **Decision**: Implement high-fidelity `@page` print CSS and client-side browser print rendering (`window.print()`).
@@ -20,6 +22,7 @@
 ---
 
 ## ADR-003: Guest-First Editing with In-Place Draft Claiming
+
 - **Status**: Accepted
 - **Context**: Forcing users to create an account before experiencing the product creates high bounce rates.
 - **Decision**:
@@ -32,6 +35,7 @@
 ---
 
 ## ADR-004: Authentication Strategy & SHA-256 Hashed Sessions
+
 - **Status**: Accepted
 - **Context**: Hand-rolling custom bcrypt authentication on Cloudflare Workers runs into PBKDF2 WebCrypto CPU latency issues on the free tier. Plain-text session tokens in the database are a critical security liability.
 - **Decision**:
@@ -43,7 +47,22 @@
 ---
 
 ## ADR-005: AI Scope Deferred to Feature Flag (Zero AI in MVP)
+
 - **Status**: Accepted
 - **Context**: AI text generation introduces API key requirements, latency, token costs, and can produce generic resume content.
 - **Decision**: Exclude AI generation from MVP. Rely strictly on a deterministic, rule-based ATS evaluation engine. Any future Workers AI integrations will remain strictly behind feature flags.
 - **Consequences**: Instant, predictable resume generation with clean, high-signal ATS guidelines.
+
+---
+
+## ADR-006: Production Deployment & Edge Free-Tier Verification
+
+- **Status**: Accepted
+- **Context**: Phase 1 verification requires establishing a live deployment to Cloudflare Workers with Cloudflare D1 attached and testing startup performance within the free-tier budget.
+- **Decision**:
+  - Attached live D1 database `resumint` (UUID: `2be466e3-a248-49a9-8e46-57c6ad2ad5be`).
+  - Successfully deployed to `https://resumint.faizan-shaikh-dev.workers.dev`.
+  - Observed worker startup time: **8 ms** (well below the 10 ms budget). Total gzip bundle size: **186.08 KiB**.
+  - Verified live `/health` endpoint returning `{"status":"ok","timestamp":"...","d1":"connected"}`.
+- **Consequences**: Validates that React Router v7 on Cloudflare Workers and D1 operates reliably within the free plan envelope.
+

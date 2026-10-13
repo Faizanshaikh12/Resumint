@@ -1,6 +1,7 @@
 # Resumint - Engineering Workflow & Quality Standards
 
 ## Guiding Principles
+
 1. **Spec-Driven Development**: Every track has a confirmed `spec.md` and `plan.md` before code changes occur.
 2. **Phase Isolation**: Implement phase by phase. Never skip ahead.
 3. **Automated Verification**: Run lint, typecheck, unit, and integration tests before finishing any phase or task.

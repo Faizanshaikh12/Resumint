@@ -1,6 +1,7 @@
 # Resumint - Agent & Contributor Guidelines
 
 ## Development Standards
+
 1. **Edge Compliance**: Cloudflare Workers free tier environment. Never import Node.js built-ins (`node:fs`, `node:child_process`, `node:crypto` native wrappers). Use Web Standard APIs (`fetch`, `crypto.subtle`, `Headers`, `Request`, `Response`).
 2. **TypeScript Strictness**:
    - `strict: true`
@@ -18,6 +19,7 @@
    - `docs: ...` for documentation changes
 
 ## Key Commands
+
 - `npm run dev`: Launch local development server with Cloudflare Miniflare/Wrangler bindings
 - `npm run build`: Build production client and worker bundles
 - `npm run typecheck`: Run React Router typegen and TypeScript compiler checks

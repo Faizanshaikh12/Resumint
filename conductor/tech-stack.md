@@ -1,6 +1,7 @@
 # Resumint - Tech Stack Specification
 
 ## Core Technologies
+
 - **Framework**: React Router v7 (Framework Mode) on Cloudflare Workers.
 - **Language**: TypeScript (Strict Mode, `noUncheckedIndexedAccess`).
 - **Database**: Cloudflare D1 (SQLite) with Drizzle ORM and `drizzle-kit` migrations.

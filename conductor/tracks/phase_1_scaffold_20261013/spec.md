@@ -1,11 +1,13 @@
 # Track Specification: Phase 1 - Project Scaffold and Architecture
 
 ## 1. Overview
+
 Establish the foundational architecture, tooling, testing harness, CI/CD, and project documentation for **Resumint**, a modern online resume builder built on React Router v7 and Cloudflare Workers (D1 SQLite).
 
 ## 2. Requirements & Scope
 
 ### In Scope
+
 1. **Foundational Documentation**:
    - `docs/PLAN.md` with goals, MVP vs stretch scope, architecture diagram, route map, and risks.
    - `docs/TASKS.md` with multi-phase checkboxes.
@@ -34,11 +36,13 @@ Establish the foundational architecture, tooling, testing harness, CI/CD, and pr
    - GitHub Actions CI workflow (`.github/workflows/ci.yml`).
 
 ### Out of Scope
+
 - Authentication implementation (Deferred to Phase 3).
 - Production database schema and resume CRUD (Deferred to Phase 2/4).
 - Resume Editor UI, templates, PDF export, share links, ATS checker (Deferred to subsequent phases).
 
 ## 3. Acceptance Criteria
+
 - `npm run lint`, `npm run typecheck`, `npm test`, and `npm run build` succeed with 0 errors.
 - `/health` returns `{ status: "ok" }` with D1 `SELECT 1` confirmation.
 - CI workflow file passes syntactic and configuration validation.

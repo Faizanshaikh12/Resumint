@@ -1,1 +1,23 @@
-.idea
+.DS_Store
+.env
+.dev.vars
+.dev.vars.*
+/node_modules/
+*.tsbuildinfo
+.idea/
+
+# React Router & Build
+/.react-router/
+/build/
+/dist/
+
+# Cloudflare
+.mf
+.wrangler
+worker-configuration.d.ts
+
+# Test & Coverage
+coverage/
+test-results/
+playwright-report/
+blob-report/

@@ -1,0 +1,19 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "resumint",
+  "compatibility_date": "2025-02-14",
+  "main": "./workers/app.ts",
+  "compatibility_flags": ["nodejs_compat"],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "resumint",
+      "database_id": "2be466e3-a248-49a9-8e46-57c6ad2ad5be",
+      "migrations_dir": "./drizzle",
+    },
+  ],
+  "vars": {
+    "APP_ENV": "development",
+    "VALUE_FROM_CLOUDFLARE": "Hello from Cloudflare",
+  },
+}
