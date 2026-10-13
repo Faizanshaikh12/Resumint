@@ -62,30 +62,47 @@
 
 ---
 
-## Phase 4: Resume CRUD & Dashboard (Refined Outline)
+## Phase 4: Resume CRUD & Dashboard (Resumint)
 
-- [ ] Task 4.1: Authenticated Dashboard Route (`/dashboard`):
-  - List user's resumes using lightweight metadata projection (`listResumes`)
-  - Empty state with "Create Resume" CTA
-  - Resume card component (title, template preview thumbnail, last modified relative timestamp, status badge, action dropdown)
-- [ ] Task 4.2: Resume Management Actions:
-  - Create new blank or template-based resume (`createResume`)
-  - Duplicate existing resume (`duplicateResume`)
-  - Inline rename dialog (`renameResume`)
-  - Delete confirmation dialog with cascade warning (`deleteResume`)
-- [ ] Task 4.3: Search, filtering, and sort controls (by updated date, title)
-- [ ] Task 4.4: Authorization isolation & query level security tests (User A cannot list, read, edit, or delete User B resumes)
-- [ ] Task 4.5: Unit, worker integration, and Playwright E2E tests for dashboard operations
+- [x] Task 4.1: Shared Building Blocks:
+  - [x] `app/lib/schemas/resume-actions.ts`: Zod schemas for intents (`create`, `rename`, `duplicate`, `delete`, unified `dashboardActionSchema`), `ActionResult<T>` type, `dashboardQuerySchema`
+  - [x] `app/lib/resume/samples.ts`: 3 complete code samples (developer, student, designer) adhering to `resumeContentSchema`, `listSamples()`, `getSample(id)`
+  - [x] `app/lib/utils/format.ts`: Web Standard `formatRelativeTime`, `truncateTitle`, `formatDuplicateTitle` (capped at 100 chars)
+  - [x] `app/lib/resume/limits.ts`: `MAX_RESUMES_PER_USER = 20`
+  - [x] `app/db/queries/resumes.ts`: added `countResumes`, keyset cursor pagination with stable primary-key tie-break, safe SQL LIKE wildcard escaping (`%` and `_`), no-op rename optimization
+- [x] Task 4.2: Routes & Server Logic:
+  - [x] `/dashboard`: loader with `?q=`, `?sort=`, `?cursor=`, lightweight metadata projection, limit check; action supporting typed create, rename, duplicate, delete intents
+  - [x] `/resumes/new`: choose-start page (blank or 3 samples), respects limit, redirects to `/resumes/:id/edit`
+  - [x] `/resumes/:id/edit`: protected placeholder loader requiring ownership, 404 isolation for non-owned documents, friendly 404 ErrorBoundary
+  - [x] `app/lib/security/csrf.server.ts`: Origin validation rejecting cross-origin mutating requests with 403
+  - [x] Updated `app/routes.ts`
+- [x] Task 4.3: Accessible Dashboard UI:
+  - [x] Header: "My Documents", usage counter ("X of 20"), "New resume" CTA with disabled limit state
+  - [x] Toolbar: debounced search input (syncs to `?q=`), sort selector (syncs to `?sort=`), URL as source of truth
+  - [x] `ResumeCard`: accessible thumbnail miniature with initials, template badge, relative timestamp, share status badge, action dropdown
+  - [x] In-place `RenameDialog` with validation and autofocus
+  - [x] Confirmation `DeleteDialog` explicitly naming document and warning of snapshot/share cascade
+  - [x] Optimistic mutations via `useFetcher` with rollback and toasts ("Resume renamed", "Resume duplicated", "Resume deleted")
+  - [x] Keyset pagination via "Load more" button
+  - [x] Skeletons, empty states, and no-search-results states
+- [x] Task 4.4: Comprehensive Verification:
+  - [x] 11 new unit tests for schemas, samples, formatting, and limits
+  - [x] 7 component tests for `ResumeCard` and `DashboardEmptyState`
+  - [x] 13 worker integration tests: auth guards, limit enforcement (21st rejected), 404 route-level authorization isolation, LIKE wildcard escaping, CSRF rejection, lightweight projection verification
+  - [x] 3 Playwright E2E suites: full CRUD lifecycle, User B 404 isolation, Axe WCAG 2.1 AA audits on dashboard, `/resumes/new`, and open delete dialog (0 violations)
+  - [x] Code coverage: 98.9% statement and line coverage
+- [x] Task 4.5: Documentation updates (`PLAN.md`, `DECISIONS.md` with ADR-013, `TASKS.md`, `README.md`)
 
 ---
 
 ## Phase 5: Resume Editor Core (Outline)
 
-- [ ] Task 5.1: Two-pane layout with mobile responsive tab switcher
-- [ ] Task 5.2: Dynamic section forms (Personal Info, Summary, Experience, Education, Skills, Projects)
-- [ ] Task 5.3: Drag-and-drop item reordering and bullet points editor
-- [ ] Task 5.4: Debounced autosave (~1s) with optimistic version validation
-- [ ] Task 5.5: Version snapshot creation (capped at 20) and restoration
+- [ ] Task 5.1: Two-pane layout with mobile responsive tab switcher (Editor Form <-> Live Scaled A4/Letter Preview)
+- [ ] Task 5.2: Reactive section forms with react-hook-form + Zod (Personal Info, Summary, Experience, Education, Skills, Projects)
+- [ ] Task 5.3: Reorderable dynamic lists (drag-and-drop or accessible up/down controls) and rich bullet points
+- [ ] Task 5.4: Debounced autosave (~1000ms) with optimistic concurrency check (`expectedVersion`) and conflict handling
+- [ ] Task 5.5: Version snapshot restoration UI (capped at 20) with pre-restore checkpoint
+- [ ] Task 5.6: Guest-first editing and in-place draft claim modal (`AuthModal`) saving local draft to D1 upon login/signup
 
 ---
 

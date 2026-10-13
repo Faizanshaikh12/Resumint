@@ -1,6 +1,6 @@
-import { eq, and, desc, asc, like } from "drizzle-orm";
+import { eq, and, desc, asc, count, sql, or, lt, gt } from "drizzle-orm";
 import { nanoid } from "nanoid";
-import { resumes } from "../schema";
+import { resumes, shareLinks, resumeSnapshots } from "../schema";
 import type { Database } from "../client";
 import type { Resume, InsertResume } from "../schema";
 import {
@@ -12,14 +12,71 @@ import {
   type TemplateId,
 } from "~/lib/schemas/resume";
 import { createDefaultContent, createDefaultDesign } from "~/lib/resume/defaults";
+import { formatDuplicateTitle } from "~/lib/utils/format";
 
 export interface ListResumesOptions {
   search?: string;
   sort?: "updated" | "created" | "title";
   limit?: number;
+  cursor?: string;
 }
 
-export type ResumeSummary = Omit<Resume, "content" | "design">;
+export interface ResumeSummary {
+  id: string;
+  userId: string;
+  title: string;
+  templateId: TemplateId;
+  version: number;
+  createdAt: Date;
+  updatedAt: Date;
+  hasShareLink: boolean;
+}
+
+export type ListResumesResult = ResumeSummary[] & {
+  items: ResumeSummary[];
+  nextCursor: string | null;
+};
+
+function escapeLikePattern(pattern: string): string {
+  return pattern.replace(/\\/g, "\\\\").replace(/%/g, "\\%").replace(/_/g, "\\_");
+}
+
+function encodeCursor(payload: { v: string | number; id: string }): string {
+  try {
+    return btoa(JSON.stringify(payload));
+  } catch {
+    return "";
+  }
+}
+
+function decodeCursor(cursor?: string | null): { v: string | number; id: string } | null {
+  if (!cursor) return null;
+  try {
+    const raw = atob(cursor);
+    const parsed = JSON.parse(raw);
+    if (
+      parsed &&
+      typeof parsed === "object" &&
+      "v" in parsed &&
+      "id" in parsed &&
+      typeof parsed.id === "string"
+    ) {
+      return parsed as { v: string | number; id: string };
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+export async function countResumes(db: Database, userId: string): Promise<number> {
+  const [result] = await db
+    .select({ total: count() })
+    .from(resumes)
+    .where(eq(resumes.userId, userId));
+
+  return result?.total ?? 0;
+}
 
 export async function createResume(
   db: Database,
@@ -59,19 +116,62 @@ export async function listResumes(
   db: Database,
   userId: string,
   options?: ListResumesOptions
-): Promise<ResumeSummary[]> {
-  const limit = Math.min(options?.limit ?? 50, 100);
+): Promise<ListResumesResult> {
+  const limit = Math.max(1, Math.min(options?.limit ?? 50, 100));
   const search = options?.search?.trim();
+  const sort = options?.sort ?? "updated";
 
-  let orderBy = desc(resumes.updatedAt);
-  if (options?.sort === "created") orderBy = desc(resumes.createdAt);
-  if (options?.sort === "title") orderBy = asc(resumes.title);
+  const conditions = [eq(resumes.userId, userId)];
 
-  const whereClause = search
-    ? and(eq(resumes.userId, userId), like(resumes.title, `%${search}%`))
-    : eq(resumes.userId, userId);
+  if (search) {
+    const escaped = escapeLikePattern(search);
+    conditions.push(sql`${resumes.title} LIKE ${`%${escaped}%`} ESCAPE '\\'`);
+  }
 
-  return db
+  const cursor = decodeCursor(options?.cursor);
+
+  let orderClauses = [desc(resumes.updatedAt), desc(resumes.id)];
+
+  if (sort === "created") {
+    orderClauses = [desc(resumes.createdAt), desc(resumes.id)];
+    if (cursor) {
+      const cursorDate = new Date(Number(cursor.v));
+      if (!isNaN(cursorDate.getTime())) {
+        conditions.push(
+          or(
+            lt(resumes.createdAt, cursorDate),
+            and(eq(resumes.createdAt, cursorDate), lt(resumes.id, cursor.id))
+          )!
+        );
+      }
+    }
+  } else if (sort === "title") {
+    orderClauses = [asc(resumes.title), asc(resumes.id)];
+    if (cursor) {
+      const cursorTitle = String(cursor.v);
+      conditions.push(
+        or(
+          gt(resumes.title, cursorTitle),
+          and(eq(resumes.title, cursorTitle), gt(resumes.id, cursor.id))
+        )!
+      );
+    }
+  } else {
+    // sort === "updated"
+    if (cursor) {
+      const cursorDate = new Date(Number(cursor.v));
+      if (!isNaN(cursorDate.getTime())) {
+        conditions.push(
+          or(
+            lt(resumes.updatedAt, cursorDate),
+            and(eq(resumes.updatedAt, cursorDate), lt(resumes.id, cursor.id))
+          )!
+        );
+      }
+    }
+  }
+
+  const rows = await db
     .select({
       id: resumes.id,
       userId: resumes.userId,
@@ -80,11 +180,43 @@ export async function listResumes(
       version: resumes.version,
       createdAt: resumes.createdAt,
       updatedAt: resumes.updatedAt,
+      hasShareLink: sql<number>`CASE WHEN ${shareLinks.id} IS NOT NULL THEN 1 ELSE 0 END`.as(
+        "hasShareLink"
+      ),
     })
     .from(resumes)
-    .where(whereClause)
-    .orderBy(orderBy)
-    .limit(limit);
+    .leftJoin(shareLinks, eq(shareLinks.resumeId, resumes.id))
+    .where(and(...conditions))
+    .orderBy(...orderClauses)
+    .limit(limit + 1);
+
+  const hasMore = rows.length > limit;
+  const rawItems = hasMore ? rows.slice(0, limit) : rows;
+
+  const items: ResumeSummary[] = rawItems.map((r) => ({
+    id: r.id,
+    userId: r.userId,
+    title: r.title,
+    templateId: r.templateId as TemplateId,
+    version: r.version,
+    createdAt: r.createdAt,
+    updatedAt: r.updatedAt,
+    hasShareLink: Boolean(r.hasShareLink),
+  }));
+
+  let nextCursor: string | null = null;
+  if (hasMore && items.length > 0) {
+    const lastItem = items[items.length - 1]!;
+    if (sort === "title") {
+      nextCursor = encodeCursor({ v: lastItem.title, id: lastItem.id });
+    } else if (sort === "created") {
+      nextCursor = encodeCursor({ v: lastItem.createdAt.getTime(), id: lastItem.id });
+    } else {
+      nextCursor = encodeCursor({ v: lastItem.updatedAt.getTime(), id: lastItem.id });
+    }
+  }
+
+  return Object.assign(items, { items, nextCursor });
 }
 
 export async function getResume(
@@ -119,7 +251,6 @@ export async function updateResume(
   id: string,
   input: UpdateResumeInput
 ): Promise<UpdateResumeResult> {
-  // Validate payloads if provided
   const validatedContent = input.content ? resumeContentSchema.parse(input.content) : undefined;
   const validatedDesign = input.design ? resumeDesignSchema.parse(input.design) : undefined;
   const validatedTemplate = input.templateId ? templateIdSchema.parse(input.templateId) : undefined;
@@ -133,7 +264,6 @@ export async function updateResume(
   if (validatedContent !== undefined) updateFields.content = validatedContent;
   if (validatedDesign !== undefined) updateFields.design = validatedDesign;
 
-  // Execute update with optimistic concurrency inside SQL
   const result = await db
     .update(resumes)
     .set({
@@ -154,7 +284,6 @@ export async function updateResume(
     return { ok: true, resume: updated };
   }
 
-  // Determine if it was not found or a version conflict
   const existing = await getResume(db, userId, id);
   if (!existing) {
     return { ok: false, reason: "not_found" };
@@ -169,9 +298,25 @@ export async function renameResume(
   id: string,
   title: string
 ): Promise<boolean> {
+  const trimmed = title.trim();
+  if (!trimmed) return false;
+
+  const [existing] = await db
+    .select({ title: resumes.title })
+    .from(resumes)
+    .where(and(eq(resumes.id, id), eq(resumes.userId, userId)))
+    .limit(1);
+
+  if (!existing) return false;
+
+  // No-op if unchanged: do not perform a DB write
+  if (existing.title === trimmed) {
+    return true;
+  }
+
   const result = await db
     .update(resumes)
-    .set({ title: title.trim(), updatedAt: new Date() })
+    .set({ title: trimmed, updatedAt: new Date() })
     .where(and(eq(resumes.id, id), eq(resumes.userId, userId)));
 
   return (result.meta?.changes ?? 0) > 0;
@@ -182,11 +327,16 @@ export async function deleteResume(
   userId: string,
   id: string
 ): Promise<boolean> {
-  const result = await db
-    .delete(resumes)
-    .where(and(eq(resumes.id, id), eq(resumes.userId, userId)));
+  const target = await getResume(db, userId, id);
+  if (!target) return false;
 
-  return (result.meta?.changes ?? 0) > 0;
+  await db.batch([
+    db.delete(shareLinks).where(eq(shareLinks.resumeId, id)),
+    db.delete(resumeSnapshots).where(eq(resumeSnapshots.resumeId, id)),
+    db.delete(resumes).where(and(eq(resumes.id, id), eq(resumes.userId, userId))),
+  ]);
+
+  return true;
 }
 
 export async function duplicateResume(
@@ -200,7 +350,7 @@ export async function duplicateResume(
   const newResume: InsertResume = {
     id: nanoid(12),
     userId,
-    title: `${original.title} (Copy)`,
+    title: formatDuplicateTitle(original.title),
     templateId: original.templateId,
     content: original.content,
     design: original.design,

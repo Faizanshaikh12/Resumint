@@ -16,6 +16,19 @@ Resumint provides a zero-friction experience: jump straight into creating your r
 
 ---
 
+## Features
+
+- **Document Management ("My Documents")**: Fast, responsive dashboard at `/dashboard` with keyset cursor pagination and optimistic updates.
+- **Flexible Creation**: Start blank or select from 3 industry-tested code samples (Software Engineer, Student / Entry-Level, Product Designer).
+- **In-Place Actions**: Seamless in-place rename dialogs, one-click resume duplication (`<title> (Copy)`), and confirmation dialogs with cascade warnings.
+- **Search & Sort**: Debounced title search with safe SQL LIKE wildcard escaping and multiple sorting criteria (`updated`, `created`, `title`), synchronized with URL search params.
+- **Edge & Free-Tier Optimized**: Lightweight projections (no JSON blobs on list queries) and a strict 20-resume per-user storage cap to protect D1 free quotas.
+- **Enterprise Authorization Isolation**: Non-owned or missing documents consistently respond with HTTP 404 (never 403) to prevent ID enumeration.
+- **WCAG 2.1 AA Compliant**: High-contrast, accessible UI with screen-reader live regions, full keyboard navigation, and zero axe-core violations.
+- **Edge Authentication**: Edge-native WebCrypto PBKDF2-SHA256 password hashing with sub-3ms CPU execution on Cloudflare Workers Free Tier.
+
+---
+
 ## Tech Stack
 
 - **Framework**: React Router v7 (Framework Mode) on Cloudflare Workers

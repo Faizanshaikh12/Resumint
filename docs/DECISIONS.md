@@ -159,3 +159,30 @@
     - CPU Limit Errors: 0 (`exceeded CPU` errors observed: 0).
   - **Gate Status**: PASSED. WebCrypto PBKDF2 with 100,000 iterations is verified production-ready on Cloudflare Workers Free Plan.
 
+---
+
+## ADR-013: Resume CRUD, Dashboard State & Authorization Architecture (Phase 4)
+
+- **Status**: Accepted
+- **Context**: Phase 4 connects the D1 database layer to authenticated routes (`/dashboard`, `/resumes/new`, `/resumes/:id/edit`), establishes user document management, and enforces strict authorization and D1 free-tier resource boundaries.
+- **Decisions**:
+  1. **404-not-403 Information Leakage Prevention Policy**:
+     - Whenever a user attempts to view, edit, rename, duplicate, or delete a resume that either does not exist or belongs to another user, the application responds with HTTP 404 (Never HTTP 403).
+     - Rationale: HTTP 403 reveals that a document with the given identifier exists, allowing document ID enumeration attacks. 404 preserves complete data isolation.
+  2. **Per-User Resume Cap (D1 Free Tier Budget Protection)**:
+     - Hard cap defined as `MAX_RESUMES_PER_USER = 20`.
+     - Both `create` and `duplicate` operations verify `countResumes(db, userId) < 20`. Exceeding this limit immediately rejects the mutation with an informative error message without performing any database writes.
+  3. **Lightweight List Projections (Free Tier Memory & Bandwidth)**:
+     - `listResumes` explicitly projects lightweight metadata columns (`id`, `userId`, `title`, `templateId`, `version`, `createdAt`, `updatedAt`, `hasShareLink`), completely omitting `content` and `design` JSON blobs.
+     - Rationale: Querying large JSON structures on list requests unnecessarily exhausts Worker memory and D1 row read quotas. Full blobs are only fetched when loading an individual resume editor.
+  4. **URL-as-State for Search, Sort, and Filtering**:
+     - Query parameters (`?q=`, `?sort=updated|created|title`, `?cursor=`) are the single source of truth for the dashboard view.
+     - Search inputs are debounced (300ms) and safely escape SQLite `LIKE` wildcard metacharacters (`%` and `_`) via `ESCAPE '\\'` so users searching for literal symbols do not trigger wildcards.
+  5. **Stable Cursor Pagination with Primary Key Tie-Break**:
+     - Keyset cursors encode `{ v: sortColumnValue, id: resumeId }` in Base64.
+     - SQL sorting always includes `resumes.id` as a secondary ordering criteria (e.g. `[desc(updatedAt), desc(id)]`), guaranteeing deterministic pagination that never skips or duplicates rows.
+  6. **Deferred Real Thumbnails**:
+     - Client-side DOM screenshot rendering and SVG thumbnails are deferred until Phase 6 templates are established.
+     - Phase 4 implements a lightweight, accessible CSS initials document miniature with WCAG 2.1 AA compliant contrast ratios.
+- **Consequences**: Rock-solid authorization isolation, zero data leaks, efficient free-tier D1 utilization, and an accessible, keyboard-navigable dashboard experience.
+

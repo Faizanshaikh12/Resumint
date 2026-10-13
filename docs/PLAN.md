@@ -177,17 +177,32 @@
 
 ---
 
-## 5. Route Map
+## 5. Route Map & Behavior Notes
 
 ```
 /                     -> Marketing Landing Page & "Start Building" CTA
-/resumes/new          -> Guest & Authenticated Resume Builder (Blank / Template)
-/resumes/:id/edit     -> Authenticated Resume Editor + Live Preview
-/dashboard            -> Authenticated Resume Dashboard (List, Rename, Duplicate, Delete)
-/r/:slug              -> Public Read-Only SSR Resume Page (Accessible if active)
+/resumes/new          -> Choose-Start Page (Blank canvas or 3 code samples: developer, student, designer)
+/resumes/:id/edit     -> Authenticated Resume Editor (Phase 4 protected placeholder; responds 404 for non-owned)
+/dashboard            -> Authenticated Resume Dashboard ("My Documents": search, sort, cursor pagination, CRUD)
+/login                -> Sign In Page with redirect parameter retention
+/signup               -> Account Registration Page with instant session generation
+/forgot-password      -> Password reset request
+/reset-password       -> Password reset fulfillment
+/r/:slug              -> Public Read-Only SSR Resume Page (Phase 8)
 /health               -> Resource route: returns status, D1 ping & table count verification
-/api/auth/*           -> Authentication endpoints (Session, Signin, Signup)
+/api/auth/*           -> Better Auth endpoints (Session, Signin, Signup)
+/logout               -> Session invalidation endpoint
 ```
+
+### Dashboard Behavior & Free Tier Protections
+- **Authentication Guard**: Every loader and mutating action calls `requireUser`. Unauthenticated requests redirect to `/login?redirectTo=...`.
+- **Authorization Isolation**: Missing or unowned resumes respond with HTTP 404 (never 403) to prevent ID enumeration.
+- **CSRF Defense**: All mutating actions verify `Origin` header matching current origin.
+- **Free Tier Budget Protections**:
+  - `listResumes` projects lightweight metadata only, omitting heavy `content` and `design` JSON blobs.
+  - Per-user cap of 20 resumes enforced on both create and duplicate.
+  - Safe SQL LIKE wildcard escaping for `%` and `_`.
+  - Stable cursor pagination with primary key tie-break (`resumes.id`).
 
 ---
 
@@ -213,8 +228,8 @@
 - **Phase 1: Project Scaffold and Architecture** (Tooling, RR v7, D1 binding, test harness, CI, docs) [DONE]
 - **Phase 2: Database Schema & Migrations** (D1 tables, Drizzle schemas, typed queries, seed script, tests) [DONE]
 - **Phase 3: Authentication & Guest Claiming** (Better Auth, WebCrypto PBKDF2 edge hashing, auth pages, route guards, tests) [DONE]
-- **Phase 4: Resume CRUD & Dashboard** (Resume management, duplicate, delete, search, cards)
-- **Phase 5: Resume Editor Core** (Two-pane UI, section forms, dynamic lists, bullet points, autosave)
+- **Phase 4: Resume CRUD & Dashboard** (Resume management, duplicate, delete, search, sort, cursor pagination, 404 isolation, cards) [DONE]
+- **Phase 5: Resume Editor Core** (Two-pane UI, section forms, dynamic lists, bullet points, autosave, guest draft claim flow)
 - **Phase 6: Templates & Customization** (5 ATS-compliant templates, theme & typography styling)
 - **Phase 7: Export Systems** (Print stylesheet, client-side PDF download, JSON import/export)
 - **Phase 8: Public Share Links** (Slug generator, public `/r/:slug` page, password/expiry controls)

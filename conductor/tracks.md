@@ -13,5 +13,5 @@
 
 ---
 
-- [ ] **Track: Phase 4 - Resume CRUD + Dashboard**
+- [x] **Track: Phase 4 - Resume CRUD + Dashboard**
   *Link: [conductor/tracks/phase_4_resume_crud_20261013/index.md](./tracks/phase_4_resume_crud_20261013/index.md)*
