@@ -39,13 +39,13 @@ test.describe("Dashboard & Resume Management E2E", () => {
 
     await page.getByRole("button", { name: /create blank resume/i }).click();
 
-    // 4. Lands on protected editor placeholder
+    // 4. Lands on protected editor
     await page.waitForURL(/\/resumes\/[a-zA-Z0-9_-]+\/edit/, { timeout: 15000 });
-    await expect(page.getByRole("heading", { name: /editor arrives in phase 5/i })).toBeVisible();
+    await expect(page.getByTestId("manual-save-button")).toBeVisible();
     await expect(page.getByText("Untitled Resume")).toBeVisible();
 
     // 5. Navigate back to dashboard and verify card is visible
-    await page.getByRole("button", { name: /back to dashboard/i }).click();
+    await page.getByRole("link", { name: /dashboard/i }).click();
     await page.waitForURL("**/dashboard", { timeout: 10000 });
 
     const card = page.getByTestId("resume-card");
@@ -58,10 +58,11 @@ test.describe("Dashboard & Resume Management E2E", () => {
 
     await page.getByRole("button", { name: /start with software engineer/i }).click();
     await page.waitForURL(/\/resumes\/[a-zA-Z0-9_-]+\/edit/, { timeout: 15000 });
-    await expect(page.getByRole("heading", { name: /software engineer/i })).toBeVisible();
+    await expect(page.getByTestId("manual-save-button")).toBeVisible();
+    await expect(page.getByText("Alex Morgan")).toBeVisible();
 
     // Return to dashboard
-    await page.getByRole("button", { name: /back to dashboard/i }).click();
+    await page.getByRole("link", { name: /dashboard/i }).click();
     await page.waitForURL("**/dashboard", { timeout: 10000 });
 
     const cards = page.getByTestId("resume-card");
@@ -197,7 +198,7 @@ test.describe("Dashboard & Resume Management E2E", () => {
 
     await page.getByRole("button", { name: /create blank resume/i }).click();
     await page.waitForURL(/\/resumes\/[a-zA-Z0-9_-]+\/edit/, { timeout: 15000 });
-    await page.getByRole("button", { name: /back to dashboard/i }).click();
+    await page.getByRole("link", { name: /dashboard/i }).click();
     await page.waitForURL("**/dashboard", { timeout: 10000 });
 
     // 3. Populated Dashboard accessibility scan

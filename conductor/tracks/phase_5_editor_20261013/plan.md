@@ -5,46 +5,46 @@
 ========================================================================
 
 ### Phase 1: Pure Logic Foundation (`app/lib/resume/`)
-- [ ] Task: Create `app/lib/resume/editor-state.ts` with immutable pure reducer and actions (`updateField`, `addItem`, `removeItem`, `moveItem`, `addSection`, `removeSection`, `renameSection`, `reorderSections`, `toggleSectionHidden`, `addBullet`, `removeBullet`, `moveBullet`, `replaceContent`)
-- [ ] Task: Create `app/lib/resume/section-registry.ts` defining metadata, item shapes, default factories, and customizability for all sections
-- [ ] Task: Create `app/lib/resume/reorder.ts` with safe array move helpers and `sectionOrder` normalization
-- [ ] Task: Create `app/lib/resume/dates.ts` with date range validation (`start <= end`), "Present" toggle, and display formatting
-- [ ] Task: Write comprehensive unit tests for `editor-state`, `section-registry`, `reorder`, and `dates` in `tests/unit/editor-state.test.ts`
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Create `app/lib/resume/editor-state.ts` with immutable pure reducer and actions (`updateField`, `addItem`, `removeItem`, `moveItem`, `addSection`, `removeSection`, `renameSection`, `reorderSections`, `toggleSectionHidden`, `addBullet`, `removeBullet`, `moveBullet`, `replaceContent`)
+- [x] Task: Create `app/lib/resume/section-registry.ts` defining metadata, item shapes, default factories, and customizability for all sections
+- [x] Task: Create `app/lib/resume/reorder.ts` with safe array move helpers and `sectionOrder` normalization
+- [x] Task: Create `app/lib/resume/dates.ts` with date range validation (`start <= end`), "Present" toggle, and display formatting
+- [x] Task: Write comprehensive unit tests for `editor-state`, `section-registry`, `reorder`, and `dates` in `tests/unit/editor-state.test.ts`
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ### Phase 2: Route & Server Logic (`/resumes/:id/edit`)
-- [ ] Task: Implement `/resumes/:id/edit` loader requiring ownership, returning title, content, design, templateId, and version; 404 for unowned resumes
-- [ ] Task: Implement `/resumes/:id/edit` action with `save` intent (optimistic concurrency version bump, size cap validation, 409 conflict, 404 isolation) and `rename` intent
-- [ ] Task: Write worker integration tests in `tests/worker/editor.test.ts` covering save success, concurrent conflict (409), payload size limit, 404 authorization isolation, and CSRF origin checks
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Implement `/resumes/:id/edit` loader requiring ownership, returning title, content, design, templateId, and version; 404 for unowned resumes
+- [x] Task: Implement `/resumes/:id/edit` action with `save` intent (optimistic concurrency version bump, size cap validation, 409 conflict, 404 isolation) and `rename` intent
+- [x] Task: Write worker integration tests in `tests/worker/editor.test.ts` covering save success, concurrent conflict (409), payload size limit, 404 authorization isolation, and CSRF origin checks
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ### Phase 3: Editor UI Components & Forms
-- [ ] Task: Implement layout container `<ResumeEditor />` with header, title inline edit, save status area, desktop two-pane view, and mobile tab switcher ("Edit" | "Preview")
-- [ ] Task: Implement left section navigation list with scroll-to-section jumping and hidden badges
-- [ ] Task: Implement Personal Info form (name, job title, email, phone, location, links list) and Summary form with character counter
-- [ ] Task: Implement generic collapsible item cards and forms for all multi-item sections (Experience, Education, Projects, Certifications, Awards, Publications, Volunteering, Languages, Interests, References, Custom)
-- [ ] Task: Implement tag-style Skills input (Enter/comma to add, remove badge, level selector)
-- [ ] Task: Implement `<BulletEditor />` with dnd-kit sortable handles, Enter to add, Backspace to remove, and keyboard accessibility
-- [ ] Task: Implement section visibility toggles, dnd-kit section reordering, and custom section add/delete controls
-- [ ] Task: Component RTL tests for item forms, skills tags, bullet points, and section controls in `tests/components/Editor.test.tsx`
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Implement layout container `<ResumeEditor />` with header, title inline edit, save status area, desktop two-pane view, and mobile tab switcher ("Edit" | "Preview")
+- [x] Task: Implement left section navigation list with scroll-to-section jumping and hidden badges
+- [x] Task: Implement Personal Info form (name, job title, email, phone, location, links list) and Summary form with character counter
+- [x] Task: Implement generic collapsible item cards and forms for all multi-item sections (Experience, Education, Projects, Certifications, Awards, Publications, Volunteering, Languages, Interests, References, Custom)
+- [x] Task: Implement tag-style Skills input (Enter/comma to add, remove badge, level selector)
+- [x] Task: Implement `<BulletEditor />` with dnd-kit sortable handles, Enter to add, Backspace to remove, and keyboard accessibility
+- [x] Task: Implement section visibility toggles, dnd-kit section reordering, and custom section add/delete controls
+- [x] Task: Component RTL tests for item forms, skills tags, bullet points, and section controls in `tests/components/Editor.test.tsx`
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ### Phase 4: Live Preview & Navigation Guardrails
-- [ ] Task: Implement `<BasicPreview />` semantic HTML A4 preview reacting instantaneously to editor state
-- [ ] Task: Implement `<ResumePreview />` abstract wrapper interface
-- [ ] Task: Implement unsaved changes protection using React Router `useBlocker` and browser `beforeunload`
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Implement `<BasicPreview />` semantic HTML A4 preview reacting instantaneously to editor state
+- [x] Task: Implement `<ResumePreview />` abstract wrapper interface
+- [x] Task: Implement unsaved changes protection using React Router `useBlocker` and browser `beforeunload`
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ### Phase 5: Stage 5A Verification & Quality
-- [ ] Task: Write Playwright E2E test in `tests/e2e/editor.spec.ts` (login -> open resume -> edit personal info -> add experience with bullets -> reorder section -> hide section -> save -> reload and verify persistence)
-- [ ] Task: Run automated Axe accessibility scans on the editor view (0 violations)
-- [ ] Task: Verify test coverage >= 80% on `app/lib/resume` and editor routes
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Write Playwright E2E test in `tests/e2e/editor.spec.ts` (login -> open resume -> edit personal info -> add experience with bullets -> reorder section -> hide section -> save -> reload and verify persistence)
+- [x] Task: Run automated Axe accessibility scans on the editor view (0 violations)
+- [x] Task: Verify test coverage >= 80% on `app/lib/resume` and editor routes
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ### Phase 6: Stage 5A Checkpoint Review & Handoff
-- [ ] Task: Update `docs/DECISIONS.md` with ADRs for editor state architecture, persistence adapter, and plain-text bullets
-- [ ] Task: Execute full validation suite (`npm run lint`, `npm run typecheck`, `npm test`, `npm run test:worker`, `npm run test:e2e`, `npm run build`)
-- [ ] Task: **CRITICAL CHECKPOINT**: Halt execution, present comprehensive Stage 5A report, and await user approval before proceeding to Stage 5B
+- [x] Task: Update `docs/DECISIONS.md` with ADRs for editor state architecture, persistence adapter, and plain-text bullets
+- [x] Task: Execute full validation suite (`npm run lint`, `npm run typecheck`, `npm test`, `npm run test:worker`, `npm run test:e2e`, `npm run build`)
+- [x] Task: **CRITICAL CHECKPOINT**: Halt execution, present comprehensive Stage 5A report, and await user approval before proceeding to Stage 5B
 
 ========================================================================
 ## STAGE 5B: AUTOSAVE, UNDO/REDO, VERSIONS, GUEST-FIRST SAVE

@@ -21,3 +21,7 @@ coverage/
 test-results/
 playwright-report/
 blob-report/
+
+# SQLite databases
+*.sqlite
+*.sqlite3

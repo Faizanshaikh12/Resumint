@@ -150,6 +150,24 @@ export const customSectionSchema = z.object({
   items: z.array(customSectionItemSchema).max(20).default([]),
 });
 
+export type ResumeLink = z.infer<typeof resumeLinkSchema>;
+export type PersonalInfo = z.infer<typeof personalInfoSchema>;
+export type DateRange = z.infer<typeof dateRangeSchema>;
+export type ExperienceItem = z.infer<typeof experienceItemSchema>;
+export type EducationItem = z.infer<typeof educationItemSchema>;
+export type SkillItem = z.infer<typeof skillItemSchema>;
+export type LanguageItem = z.infer<typeof languageItemSchema>;
+export type ProjectItem = z.infer<typeof projectItemSchema>;
+export type CertificationItem = z.infer<typeof certificationItemSchema>;
+export type AwardItem = z.infer<typeof awardItemSchema>;
+export type PublicationItem = z.infer<typeof publicationItemSchema>;
+export type VolunteeringItem = z.infer<typeof volunteeringItemSchema>;
+export type InterestItem = z.infer<typeof interestItemSchema>;
+export type ReferenceItem = z.infer<typeof referenceItemSchema>;
+export type CustomSectionItem = z.infer<typeof customSectionItemSchema>;
+export type CustomSection = z.infer<typeof customSectionSchema>;
+
+
 // Complete Resume Content Schema with Caps
 export const resumeContentSchema = z.object({
   personal: personalInfoSchema.default({

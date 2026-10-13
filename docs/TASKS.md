@@ -95,14 +95,21 @@
 
 ---
 
-## Phase 5: Resume Editor Core (Outline)
-
-- [ ] Task 5.1: Two-pane layout with mobile responsive tab switcher (Editor Form <-> Live Scaled A4/Letter Preview)
-- [ ] Task 5.2: Reactive section forms with react-hook-form + Zod (Personal Info, Summary, Experience, Education, Skills, Projects)
-- [ ] Task 5.3: Reorderable dynamic lists (drag-and-drop or accessible up/down controls) and rich bullet points
-- [ ] Task 5.4: Debounced autosave (~1000ms) with optimistic concurrency check (`expectedVersion`) and conflict handling
-- [ ] Task 5.5: Version snapshot restoration UI (capped at 20) with pre-restore checkpoint
-- [ ] Task 5.6: Guest-first editing and in-place draft claim modal (`AuthModal`) saving local draft to D1 upon login/signup
+## Phase 5: Resume Editor, Autosave, Versions & Guest Flow
+- [x] **Stage 5A: Editor Core (Complete)**:
+  - [x] Task 5.1: Pure logic foundation in `app/lib/resume/` (`editor-state.ts`, `section-registry.ts`, `reorder.ts`, `dates.ts`, `persistence.ts`)
+  - [x] Task 5.2: Server action & loader on `/resumes/:id/edit` with optimistic concurrency version bump, 409 conflict, 404 isolation, CSRF origin checks, and 200 KB size caps
+  - [x] Task 5.3: Responsive two-pane editor layout with desktop split and mobile edit/preview tab toggle
+  - [x] Task 5.4: Live reactive forms with collapsible cards for all 12 standard sections + custom sections, tag-style skills badges, and sortable `<BulletEditor />`
+  - [x] Task 5.5: Left section navigation with dnd-kit sortable reordering, visibility toggle, and add/delete custom sections
+  - [x] Task 5.6: Semantic HTML `<BasicPreview />` in CSS-scaled A4 container behind abstract `<ResumePreview />`
+  - [x] Task 5.7: Navigation protection with React Router `useBlocker` and browser `beforeunload`
+  - [x] Task 5.8: Comprehensive test suite (98.9% statement coverage, 73 unit/component tests, 64 worker tests, 10 Playwright E2E tests, 0 Axe a11y violations)
+- [ ] **Stage 5B: Autosave, Undo/Redo, Versions & Guest Claim (Awaiting Approval)**:
+  - [ ] Task 5.9: Debounced autosave engine (~1.5s) with hash skip, single in-flight coalescing, retry backoff, and 409 conflict modal
+  - [ ] Task 5.10: Client undo/redo history stack (~100 items) with keystroke coalescing
+  - [ ] Task 5.11: Version snapshot history (`/resumes/:id/versions`), auto-snapshot throttling (1 per 30m), and pre-restore backups
+  - [ ] Task 5.12: Client-only `/build` guest flow with versioned localStorage draft (`resumint:guest-draft:v1`) and in-place `AuthDialog` claim flow
 
 ---
 

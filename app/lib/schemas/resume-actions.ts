@@ -34,6 +34,17 @@ export const deleteResumeActionSchema = z.object({
   id: z.string().min(1, "Resume ID is required"),
 });
 
+export const saveResumeActionSchema = z.object({
+  intent: z.literal("save"),
+  expectedVersion: z.coerce.number().int().min(1, "Expected version must be positive"),
+  content: z.unknown(), // re-validated strictly with resumeContentSchema
+});
+
+export const editorRenameActionSchema = z.object({
+  intent: z.literal("rename"),
+  title: resumeTitleSchema,
+});
+
 export const dashboardActionSchema = z.discriminatedUnion("intent", [
   createResumeActionSchema,
   renameResumeActionSchema,
@@ -45,6 +56,8 @@ export type CreateResumeAction = z.infer<typeof createResumeActionSchema>;
 export type RenameResumeAction = z.infer<typeof renameResumeActionSchema>;
 export type DuplicateResumeAction = z.infer<typeof duplicateResumeActionSchema>;
 export type DeleteResumeAction = z.infer<typeof deleteResumeActionSchema>;
+export type SaveResumeAction = z.infer<typeof saveResumeActionSchema>;
+export type EditorRenameAction = z.infer<typeof editorRenameActionSchema>;
 export type DashboardAction = z.infer<typeof dashboardActionSchema>;
 
 /**

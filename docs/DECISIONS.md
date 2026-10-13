@@ -186,3 +186,33 @@
      - Phase 4 implements a lightweight, accessible CSS initials document miniature with WCAG 2.1 AA compliant contrast ratios.
 - **Consequences**: Rock-solid authorization isolation, zero data leaks, efficient free-tier D1 utilization, and an accessible, keyboard-navigable dashboard experience.
 
+---
+
+## ADR-014: Resume Editor Architecture, State Management & Preview Pipeline (Phase 5A)
+
+- **Status**: Accepted
+- **Context**: Phase 5A implements the core resume editor UI, state management, section reordering, live preview, and manual persistence. The editor must run on Cloudflare Workers edge, support both logged-in and upcoming guest-first workflows, remain responsive with large documents, and strictly prevent XSS and concurrency bugs.
+- **Decisions**:
+  1. **Pure Reducer State Management via React Context (`useReducer`)**:
+     - Chosen approach: Pure immutable reducer in `app/lib/resume/editor-state.ts` combined with React `useReducer` and `EditorContext`.
+     - Rejection of Zustand / Redux: A pure reducer function requires zero external runtime dependencies, keeping the client bundle footprint minimal (33.89 kB gzipped total bundle) and allowing 100% unit test coverage in Vitest without React or DOM mocks.
+     - Actions are granular: `UPDATE_FIELD`, `UPDATE_FIELD_PATH`, `ADD_ITEM`, `REMOVE_ITEM`, `MOVE_ITEM`, `ADD_SECTION`, `REMOVE_SECTION`, `RENAME_SECTION`, `REORDER_SECTIONS`, `TOGGLE_SECTION_HIDDEN`, `ADD_BULLET`, `REMOVE_BULLET`, `MOVE_BULLET`, and `REPLACE_CONTENT`.
+  2. **Persistence Adapter Abstraction (`ResumePersistence`)**:
+     - The editor interacts with storage exclusively via an adapter interface:
+       `interface ResumePersistence { save(content: ResumeContent, expectedVersion?: number): Promise<SaveResult>; }`
+     - In Stage 5A, `ServerPersistence` sends POST requests to `/resumes/:id/edit` with optimistic concurrency checking (`expectedVersion`), CSRF verification, and 200 KB size caps.
+     - In Stage 5B, `GuestPersistence` will implement the exact same interface writing to `localStorage` without altering the `<ResumeEditor />` component.
+  3. **Strict Plain-Text Bullets & XSS Immunity**:
+     - No rich-text or WYSIWYG editors (TipTap, Slate, Lexical).
+     - Bullets and description fields are strictly stored as plain text strings and rendered as native React text nodes (JSX escaping).
+     - Zero usage of `dangerouslySetInnerHTML`. This eliminates DOM-based XSS vectors entirely and simplifies export serialization.
+  4. **Temporary `BasicPreview` Behind Abstract `<ResumePreview />`**:
+     - To ensure Stage 5 does not block on Phase 6 (template engine), preview rendering is abstracted behind `<ResumePreview content design templateId />`.
+     - In Stage 5, this delegates to `<BasicPreview />`, which renders semantic HTML (`<h1>`, `<h2>`, `<ul>`, `<li>`) in a responsive CSS-scaled A4 container. In Phase 6, `ResumePreview` will swap in the template registry seamlessly with zero changes to editor state.
+  5. **React Router v7 Single Fetch Response Decoding**:
+     - In React Router v7 framework mode with Single Fetch enabled, POSTing to an action route outside of `fetcher.submit` returns turbo-stream / Single Fetch encoded arrays (`[{"_1":2...},"actionData",...]`) instead of direct JSON.
+     - Implemented `parseActionResponse(text, status)` in `app/lib/resume/persistence.ts` to decode both direct JSON objects and Single Fetch responses, ensuring robust compatibility with React Router v7.
+  6. **Stable Nanoid Identifiers**:
+     - Every section and array item carries an immutable `nanoid` id used as React `key` and `dnd-kit` sortable id. Array indices are never used as identifiers, preventing item transposition bugs during reordering or deletion.
+- **Consequences**: Zero external state libraries, deterministic optimistic concurrency in SQL, robust keyboard-accessible drag-and-drop, instantaneous live preview with zero network latency, and complete decoupling between editor state and storage engines.
+

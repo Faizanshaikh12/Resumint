@@ -1,12 +1,16 @@
+import * as React from "react";
 import { Link, isRouteErrorResponse, useRouteError } from "react-router";
 import type { Route } from "./+types/resumes.$id.edit";
 import { requireUser } from "~/auth/helpers.server";
 import { getDatabase } from "~/db/helpers.server";
-import { getResume } from "~/db/queries/resumes";
+import { getResume, renameResume, updateResume } from "~/db/queries/resumes";
 import { Button } from "~/components/ui/button";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "~/components/ui/card";
-import { ArrowLeft, Clock, FileCode, Sparkles, AlertTriangle } from "lucide-react";
-import { formatRelativeTime } from "~/lib/utils/format";
+import { ArrowLeft, FileCode, AlertTriangle } from "lucide-react";
+import { ResumeEditor } from "~/components/editor/ResumeEditor";
+import { createServerPersistence } from "~/lib/resume/persistence";
+import { resumeContentSchema, type ResumeContent, type ResumeDesign, type TemplateId } from "~/lib/schemas/resume";
+import { editorRenameActionSchema, resumeTitleSchema } from "~/lib/schemas/resume-actions";
+import { verifyCsrf } from "~/lib/security/csrf.server";
 
 export function meta({ data }: Route.MetaArgs) {
   const title = data?.resume ? `${data.resume.title} | Resumint Editor` : "Resume Editor | Resumint";
@@ -38,7 +42,9 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
     resume: {
       id: resume.id,
       title: resume.title,
-      templateId: resume.templateId,
+      content: resume.content as ResumeContent,
+      design: resume.design as ResumeDesign,
+      templateId: resume.templateId as TemplateId,
       version: resume.version,
       updatedAt: resume.updatedAt,
       createdAt: resume.createdAt,
@@ -46,55 +52,140 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
   };
 }
 
-export default function ResumeEditPlaceholderPage({ loaderData }: Route.ComponentProps) {
+export async function action({ request, params, context }: Route.ActionArgs) {
+  verifyCsrf(request);
+  const env = (context as { cloudflare?: { env?: Env } })?.cloudflare?.env;
+  const user = await requireUser(request, env);
+  const db = await getDatabase(env);
+
+  const { id } = params;
+  if (!id) {
+    return Response.json({ ok: false, error: "Resume Not Found" }, { status: 404 });
+  }
+
+  const contentType = request.headers.get("content-type") || "";
+  let payload: Record<string, unknown>;
+
+  if (contentType.includes("application/json")) {
+    const rawBody = await request.text();
+
+    // Check payload size cap (200 KB)
+    if (rawBody.length > 204800) {
+      return Response.json(
+        { ok: false, error: "Resume content exceeds maximum allowed size of 200 KB" },
+        { status: 413 }
+      );
+    }
+
+    try {
+      payload = JSON.parse(rawBody);
+    } catch {
+      return Response.json({ ok: false, error: "Invalid JSON payload" }, { status: 400 });
+    }
+  } else {
+    const formData = await request.formData();
+    payload = Object.fromEntries(formData.entries());
+    if (typeof payload.content === "string") {
+      try {
+        payload.content = JSON.parse(payload.content);
+      } catch {
+        // Leave as is for zod validation to catch
+      }
+    }
+  }
+
+  const intent = payload.intent;
+
+  if (intent === "rename") {
+    const parsed = editorRenameActionSchema.safeParse(payload);
+    if (!parsed.success) {
+      return Response.json(
+        { ok: false, error: "Invalid title", fieldErrors: parsed.error.flatten().fieldErrors },
+        { status: 400 }
+      );
+    }
+
+    const success = await renameResume(db, user.id, id, parsed.data.title);
+    if (!success) {
+      return Response.json({ ok: false, error: "Resume not found" }, { status: 404 });
+    }
+
+    return Response.json({ ok: true, title: parsed.data.title.trim() });
+  }
+
+  if (intent === "save") {
+    const expectedVersionNum = Number(payload.expectedVersion);
+    if (!Number.isInteger(expectedVersionNum) || expectedVersionNum < 1) {
+      return Response.json(
+        { ok: false, error: "Invalid expectedVersion: must be positive integer" },
+        { status: 400 }
+      );
+    }
+
+    // Strictly validate content against resumeContentSchema
+    const parsedContent = resumeContentSchema.safeParse(payload.content);
+    if (!parsedContent.success) {
+      console.error("Resume content validation failed:", JSON.stringify(parsedContent.error.flatten()));
+      return Response.json(
+        {
+          ok: false,
+          error: "Resume content failed validation",
+          fieldErrors: parsedContent.error.flatten().fieldErrors,
+        },
+        { status: 400 }
+      );
+    }
+
+    const result = await updateResume(db, user.id, id, {
+      content: parsedContent.data,
+      expectedVersion: expectedVersionNum,
+    });
+
+    if (result.ok) {
+      return Response.json({
+        ok: true,
+        version: result.resume.version,
+        updatedAt: result.resume.updatedAt,
+      });
+    }
+
+    if (result.reason === "conflict") {
+      const current = await getResume(db, user.id, id);
+      return Response.json(
+        {
+          ok: false,
+          reason: "conflict",
+          serverVersion: current?.version ?? expectedVersionNum + 1,
+        },
+        { status: 409 }
+      );
+    }
+
+    return Response.json({ ok: false, error: "Resume not found" }, { status: 404 });
+  }
+
+  return Response.json({ ok: false, error: "Unknown action intent" }, { status: 400 });
+}
+
+export default function ResumeEditRoute({ loaderData }: Route.ComponentProps) {
   const { resume } = loaderData;
 
-  return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl space-y-6">
-      <div className="flex items-center justify-between border-b pb-4">
-        <div className="flex items-center gap-4">
-          <Link to="/dashboard">
-            <Button variant="ghost" size="sm" className="gap-2">
-              <ArrowLeft className="h-4 w-4" />
-              Back to dashboard
-            </Button>
-          </Link>
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-3">
-              {resume.title}
-              <span className="inline-flex items-center rounded-full bg-secondary/80 px-2.5 py-0.5 text-xs font-medium text-secondary-foreground border border-border">
-                {resume.templateId}
-              </span>
-            </h1>
-            <p className="text-xs text-muted-foreground flex items-center gap-2 mt-1">
-              <Clock className="h-3 w-3" />
-              Updated {formatRelativeTime(resume.updatedAt)} &bull; Version {resume.version}
-            </p>
-          </div>
-        </div>
-      </div>
+  const persistence = React.useMemo(() => {
+    return createServerPersistence(resume.id);
+  }, [resume.id]);
 
-      <Card className="border-dashed border-2 bg-card/50">
-        <CardHeader className="text-center py-12">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 text-primary mb-3">
-            <Sparkles className="h-7 w-7" />
-          </div>
-          <CardTitle className="text-xl">Editor arrives in Phase 5</CardTitle>
-          <CardDescription className="max-w-md mx-auto mt-2 text-sm">
-            You own this document (ID: <code className="font-mono text-xs">{resume.id}</code>).
-            Interactive two-pane resume editing, live preview, and autosave arrive in Phase 5.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="flex justify-center pb-10">
-          <Link to="/dashboard">
-            <Button className="gap-2">
-              <ArrowLeft className="h-4 w-4" />
-              Return to My Documents
-            </Button>
-          </Link>
-        </CardContent>
-      </Card>
-    </div>
+  return (
+    <ResumeEditor
+      initial={{
+        id: resume.id,
+        title: resume.title,
+        content: resume.content,
+        design: resume.design,
+        templateId: resume.templateId,
+        version: resume.version,
+      }}
+      persistence={persistence}
+    />
   );
 }
 
