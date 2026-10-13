@@ -32,6 +32,7 @@ export default defineConfig({
           name: "worker",
           include: ["tests/worker/**/*.test.ts"],
           globals: true,
+          setupFiles: ["./tests/worker/setup.ts"],
           alias: {
             "~": path.resolve(__dirname, "./app"),
           },

@@ -7,7 +7,13 @@ import { hashPassword, verifyPassword } from "./crypto.server";
 export function createAuth(env: Env, request?: Request) {
   const db = getDb(env);
 
-  const configuredUrl = env.BETTER_AUTH_URL || "http://localhost:5173";
+  const isProd =
+    (env.APP_ENV === "production" || process.env.NODE_ENV === "production") &&
+    process.env.NODE_ENV !== "test" &&
+    !process.env.TEST;
+
+  const defaultLocalUrl = "http://localhost:5173";
+  const configuredUrl = isProd ? env.BETTER_AUTH_URL || defaultLocalUrl : defaultLocalUrl;
   let origin = configuredUrl;
   if (request) {
     try {
@@ -63,9 +69,9 @@ export function createAuth(env: Env, request?: Request) {
     },
     advanced: {
       cookiePrefix: "resumint",
-      useSecureCookies: origin.startsWith("https://"),
+      useSecureCookies: isProd && origin.startsWith("https://"),
       ipAddress: {
-        ipAddressHeaders: ["cf-connecting-ip", "x-forwarded-for"],
+        ipAddressHeaders: ["cf-connecting-ip", "x-forwarded-for", "x-real-ip"],
       },
     },
     onAPIError: {
