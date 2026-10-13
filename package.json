@@ -13,7 +13,7 @@
     "test": "vitest run --project=unit",
     "test:unit": "vitest run --project=unit",
     "test:worker": "vitest run --project=worker",
-    "test:e2e": "playwright test",
+    "test:e2e": "npm run db:migrate:local && playwright test",
     "test:coverage": "vitest run --coverage",
     "db:generate": "drizzle-kit generate",
     "db:migrate:local": "wrangler d1 migrations apply DB --local",
