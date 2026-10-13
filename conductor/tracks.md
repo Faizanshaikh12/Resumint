@@ -8,5 +8,10 @@
 - [x] **Track: Phase 2 - Database Layer**
   *Link: [conductor/tracks/phase_2_database_20261013/index.md](./tracks/phase_2_database_20261013/index.md)*
 
-- [ ] **Track: Phase 3 - Authentication**
+- [x] **Track: Phase 3 - Authentication**
   *Link: [conductor/tracks/phase_3_auth_20261013/index.md](./tracks/phase_3_auth_20261013/index.md)*
+
+---
+
+- [ ] **Track: Phase 4 - Resume CRUD + Dashboard**
+  *Link: [conductor/tracks/phase_4_resume_crud_20261013/index.md](./tracks/phase_4_resume_crud_20261013/index.md)*
