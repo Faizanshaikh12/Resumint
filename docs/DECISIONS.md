@@ -66,3 +66,60 @@
   - Verified live `/health` endpoint returning `{"status":"ok","timestamp":"...","d1":"connected"}`.
 - **Consequences**: Validates that React Router v7 on Cloudflare Workers and D1 operates reliably within the free plan envelope.
 
+---
+
+## ADR-007: JSON Columns vs. Normalized Tables for Resume Sections
+
+- **Status**: Accepted
+- **Context**: Resumes have deeply nested, variable sections (experience, education, skills, projects, certifications, custom sections, bullets). Normalizing each sub-item into separate relational SQLite tables requires multiple joins and sequential multi-row INSERTs/UPDATEs on every autosave, quickly burning Cloudflare D1's daily row read and write limits.
+- **Decision**:
+  - Store `content` and `design` as structured JSON text fields (`text({ mode: "json" })`) inside the `resumes` table.
+  - Validate all JSON content strictly at the application boundary via Zod (`resumeContentSchema`, `resumeDesignSchema`) before persisting.
+  - Enforce hard boundary caps (max items per section, max string lengths, ~200 KB total payload size) to keep D1 rows well below SQLite limits.
+  - In `listResumes()`, project only lightweight metadata columns (`id`, `title`, `templateId`, `version`, `createdAt`, `updatedAt`) omitting `content` and `design` to minimize D1 read costs.
+- **Consequences**: Single-row atomic writes on save, ultra-fast reads, zero complex join overhead, with strict TypeScript and runtime type safety guaranteed by Zod.
+
+---
+
+## ADR-008: Optimistic Concurrency Inside SQL (`WHERE id=? AND version=?`)
+
+- **Status**: Accepted
+- **Context**: In multi-tab or mobile/desktop concurrent workflows, simultaneous edits could overwrite each other silently without detection. Cloudflare D1 lacks interactive transactions (`BEGIN...COMMIT`), meaning read-then-write checks in application code are vulnerable to race conditions.
+- **Decision**:
+  - Perform atomic optimistic concurrency checks directly inside the SQL `UPDATE` query:
+    `UPDATE resumes SET ..., version = version + 1 WHERE id = ? AND user_id = ? AND version = ?`
+  - Inspect the updated row count: if zero rows match, determine whether the record was absent (`not_found`) or outdated (`conflict`).
+- **Consequences**: Deterministic conflict detection without distributed locks or interactive transactions, completely preventing silent overwrites.
+
+---
+
+## ADR-009: Snapshot Storage Cap (Max 20 Per Resume Auto-Pruned)
+
+- **Status**: Accepted
+- **Context**: Autosave or frequent milestone snapshots can lead to unbounded table growth, inflating database storage and exhausting D1 limits.
+- **Decision**:
+  - Limit snapshots to a maximum of 20 newest entries per resume.
+  - On snapshot creation or restoration, execute an auto-pruning routine that queries existing snapshot IDs ordered newest first and deletes entries beyond index 20.
+- **Consequences**: Bounded SQLite table storage with predictable resource usage while preserving ample revision history for user restore workflows.
+
+---
+
+## ADR-010: Bot Detection Filter for Public Share View Counts
+
+- **Status**: Accepted
+- **Context**: Cloudflare D1 Free Tier allows ~100,000 row writes per day. Public `/r/:slug` resumes crawled by web spiders (Googlebot, Bingbot, social media scrapers) could easily consume substantial write quota if every hit updated `view_count`.
+- **Decision**:
+  - Separate `recordView()` into an explicit helper.
+  - Pass `{ isBot }` (using the edge-compatible `isbot` library) into `recordView()`. If `isBot` is true, immediately bypass the database write.
+- **Consequences**: Preserves D1 free-tier write limits for real human traffic; bot visits render read-only SSR with zero database mutation overhead.
+
+---
+
+## ADR-011: Better Auth Schema Generated Early in Drizzle
+
+- **Status**: Accepted
+- **Context**: While authentication wiring occurs in Phase 3, foreign key integrity requires the `resumes` table to reference `user(id)` with `ON DELETE CASCADE`. Creating partial schemas or modifying foreign keys later in SQLite is error-prone because SQLite doesn't natively support `ALTER TABLE ... ADD CONSTRAINT FOREIGN KEY`.
+- **Decision**:
+  - Define all official Better Auth tables (`user`, `session`, `account`, `verification`) in Phase 2 alongside domain tables (`resumes`, `resume_snapshots`, `share_links`).
+  - Validate foreign key cascade deletion directly in Phase 2 tests (`PRAGMA foreign_keys = ON`).
+- **Consequences**: Seamless transition into Phase 3 auth implementation with zero schema refactoring or SQLite table rebuilds required.

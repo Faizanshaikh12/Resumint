@@ -65,7 +65,81 @@
 
 ---
 
-## 4. Route Map
+## 4. Data Model & Entity-Relationship Diagram
+
+### ASCII ER Diagram
+
+```
++------------------------------------------------------------------+
+|                              USER                                |
+|------------------------------------------------------------------|
+| id: text [PK]                                                    |
+| name: text                                                       |
+| email: text [UNIQUE]                                             |
+| email_verified: integer (boolean)                                |
+| image: text (nullable)                                           |
+| created_at: integer (timestamp)                                  |
+| updated_at: integer (timestamp)                                  |
++------------------------------------------------------------------+
+       | 1                           | 1                     | 1
+       |                             |                       |
+       | 0..N                        | 0..N                  | 0..N
+       v                             v                       v
++-----------------------+     +-------------------+   +--------------------+
+|        SESSION        |     |      ACCOUNT      |   |      RESUMES       |
+|-----------------------|     |-------------------|   |--------------------|
+| id: text [PK]         |     | id: text [PK]     |   | id: text [PK] (12) |
+| token: text [UQ]      |     | account_id: text  |   | user_id: text [FK] |
+| user_id: text [FK]    |     | provider_id: text |   | title: text        |
+| expires_at: integer   |     | user_id: text [FK]|   | template_id: text  |
+| ip_address: text      |     | password: text    |   | content: JSON text |
+| user_agent: text      |     | created_at: int   |   | design: JSON text  |
+| created_at: integer   |     | updated_at: int   |   | version: int (1..) |
+| updated_at: integer   |     +-------------------+   | created_at: int    |
++-----------------------+                             | updated_at: int    |
+                                                      +--------------------+
+                                                            | 1        | 1
+                                                            |          |
+                                                    0..20   v          v 0..1
+                               +-----------------------------+   +-----------------------+
+                               |      RESUME_SNAPSHOTS       |   |      SHARE_LINKS      |
+                               |-----------------------------|   |-----------------------|
+                               | id: text [PK] (nanoid)      |   | id: text [PK] (nanoid)|
+                               | resume_id: text [FK, cascd] |   | resume_id: text [FK,UQ|
+                               | content: JSON text          |   | slug: text [UQ] (14)  |
+                               | design: JSON text           |   | is_active: integer    |
+                               | label: text (nullable)      |   | allow_download: int   |
+                               | created_at: integer (ts)    |   | noindex: integer      |
+                               +-----------------------------+   | password_hash: text   |
+                                                                 | expires_at: int (null)|
+                                                                 | view_count: int (0..) |
+                                                                 | created_at: int (ts)  |
+                                                                 +-----------------------+
+```
+
+### Table Definitions & Invariants
+
+1. **`user`**: User identity record managed in conformity with Better Auth standards.
+2. **`session`**: Active authenticated sessions with hashed token lookup.
+3. **`account`**: Auth credentials (local password hash or federated OAuth credentials).
+4. **`verification`**: Verification tokens for password resets and email verification flows.
+5. **`resumes`**: Core resume entity.
+   - `content`: Typed JSON containing sections (personal, summary, experience, education, skills, projects, certifications, etc.) bounded by strict Zod schema caps (~200 KB limit).
+   - `design`: Typed JSON containing theme choices (accent color, font family, sizing, spacing, margins, paper size).
+   - `version`: Monotonically incrementing integer used for optimistic concurrency control inside SQL queries (`WHERE id=? AND user_id=? AND version=?`).
+   - Indexes: `(user_id, updated_at)`.
+6. **`resume_snapshots`**: Reversion checkpoints for undo/restore functionality.
+   - Auto-pruned to retain at most the newest 20 snapshots per resume.
+   - Indexes: `(resume_id, created_at)`.
+7. **`share_links`**: Public read-only sharing representation.
+   - Unique 14-character nanoid slug.
+   - Strict 1:1 relation to resume (`resume_id UNIQUE`).
+   - Granular privacy flags: `is_active`, `allow_download`, `noindex`, `password_hash`, `expires_at`.
+   - `view_count` recorded conditionally, filtering automated crawlers to preserve D1 free-tier write budget.
+
+---
+
+## 5. Route Map
 
 ```
 /                     -> Marketing Landing Page & "Start Building" CTA
@@ -73,20 +147,20 @@
 /resumes/:id/edit     -> Authenticated Resume Editor + Live Preview
 /dashboard            -> Authenticated Resume Dashboard (List, Rename, Duplicate, Delete)
 /r/:slug              -> Public Read-Only SSR Resume Page (Accessible if active)
-/health               -> Resource route: returns status & tests D1 connectivity
+/health               -> Resource route: returns status, D1 ping & table count verification
 /api/auth/*           -> Authentication endpoints (Session, Signin, Signup)
 ```
 
 ---
 
-## 5. Free-Tier Constraints & Risk Mitigation
+## 6. Free-Tier Constraints & Risk Mitigation
 
 1. **Cloudflare Worker CPU Budget (10ms limit per request on Free Tier)**:
    - _Risk_: Heavy compute (server-side PDF rendering like Puppeteer/Playwright, bcrypt hashing) easily exceeds 10ms CPU time and crashes worker instances.
    - _Mitigation_: Client-side PDF export via browser print stylesheets; WebCrypto-based PBKDF2/argon2 tuned iterations or Better Auth D1 edge-optimized adapters.
 2. **D1 Daily Row Write Limits (~100k writes/day)**:
    - _Risk_: Recording view counts on `/r/:slug` on every single bot hit exhausts D1 write allowances.
-   - _Mitigation_: Filter bot User-Agents or sample view increments; debounce autosave to ~1000ms.
+   - _Mitigation_: Filter bot User-Agents (`isbot` library); debounce autosave to ~1000ms.
 3. **Optimistic Concurrency & Data Loss**:
    - _Risk_: Multiple browser tabs overwriting resume state silently.
    - _Mitigation_: Check version number in the SQL UPDATE query (`WHERE id = ? AND version = ?`).
@@ -96,10 +170,10 @@
 
 ---
 
-## 6. Delivery Milestones
+## 7. Delivery Milestones
 
-- **Phase 1: Project Scaffold and Architecture** (Tooling, RR v7, D1 binding, test harness, CI, docs)
-- **Phase 2: Database Schema & Migrations** (D1 tables, Drizzle schemas, typed queries, seed script)
+- **Phase 1: Project Scaffold and Architecture** (Tooling, RR v7, D1 binding, test harness, CI, docs) [DONE]
+- **Phase 2: Database Schema & Migrations** (D1 tables, Drizzle schemas, typed queries, seed script, tests) [DONE]
 - **Phase 3: Authentication & Guest Claiming** (Better Auth, session management, in-place auth modal)
 - **Phase 4: Resume CRUD & Dashboard** (Resume management, duplicate, delete, search, cards)
 - **Phase 5: Resume Editor Core** (Two-pane UI, section forms, dynamic lists, bullet points, autosave)
