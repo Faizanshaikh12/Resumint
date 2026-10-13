@@ -56,6 +56,7 @@ export default [
       ".wrangler/",
       "test-results/",
       "playwright-report/",
+      "coverage/",
       "worker-configuration.d.ts",
     ],
   },

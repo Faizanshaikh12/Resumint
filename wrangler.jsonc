@@ -15,5 +15,6 @@
   "vars": {
     "APP_ENV": "development",
     "VALUE_FROM_CLOUDFLARE": "Hello from Cloudflare",
+    "BETTER_AUTH_URL": "https://resumint.faizan-shaikh-dev.workers.dev",
   },
 }

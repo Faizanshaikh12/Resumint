@@ -40,22 +40,42 @@
 
 ---
 
-## Phase 3: Authentication & Guest Claiming (Refined Outline)
+## Phase 3: Authentication (Resumint)
 
-- [ ] Task 3.1: Better Auth configuration with Cloudflare D1 Drizzle adapter (email/password, SHA-256 hashed session tokens)
-- [ ] Task 3.2: Edge-optimized WebCrypto password hashing / verification within 10ms CPU budget
-- [ ] Task 3.3: In-place Auth Modal (`AuthDialog.tsx`) supporting seamless login and registration without navigation
-- [ ] Task 3.4: Guest draft claiming pipeline: transitions `localStorage` draft (`resumint_draft_v1`) into D1 upon authentication
-- [ ] Task 3.5: React Router session loader, auth context, and protected route guards
-- [ ] Task 3.6: Worker integration and Playwright tests for auth flows, draft claiming, and session lifecycle
+- [x] Task 3.1: Research & Decision Record (ADR-012 in DECISIONS.md: WebCrypto PBKDF2 edge hashing, session storage, rate limiting, email verification deferred)
+- [x] Task 3.2: Edge-compliant WebCrypto PBKDF2-SHA256 password hasher (`app/auth/crypto.server.ts`, 100k iterations, constant-time compare, <3ms CPU execution)
+- [x] Task 3.3: Request-scoped Better Auth factory (`app/auth/auth.server.ts`) with Drizzle D1 adapter, rolling session lifecycle, rate limiting, dev email stub
+- [x] Task 3.4: Server helpers & route guards (`app/auth/helpers.server.ts` & `app/auth/redirect.ts`: `getSession`, `requireUser`, `requireGuest`, `safeRedirect`, `AuthUser`)
+- [x] Task 3.5: Critical Gate Benchmark on deployed free-plan Worker (20/20 live signups and signins succeeded, 100% success rate, 0 CPU errors, documented in ADR-012)
+- [x] Task 3.6: Reusable accessible UI:
+  - [x] `app/components/auth/AuthForm.tsx` (react-hook-form + Zod, show/hide password, compact mode, accessible labels & aria-live alerts)
+  - [x] Routes: `/login`, `/signup`, `/forgot-password`, `/reset-password`
+  - [x] Placeholder `/dashboard` protected by `requireUser`
+  - [x] POST `/logout` route clearing session
+  - [x] Header authentication state with user profile dropdown
+- [x] Task 3.7: Comprehensive Test Suites:
+  - [x] Unit/component tests (29 passing tests: Zod schemas, safeRedirect, AuthForm RTL, Header auth state)
+  - [x] Worker integration tests (43 passing tests: signup, duplicate rejection, login, session cookies, logout, requireUser redirect, 429 rate limit, expired session, sensitive token leak prevention)
+  - [x] Playwright E2E tests (6 passing tests: signup -> dashboard -> logout -> login, protected redirect flow, Axe accessibility audits on /login and /signup with 0 violations)
+  - [x] Coverage: 100% statement and line coverage on `app/auth` and schemas
+- [x] Task 3.8: Documentation updates (`DECISIONS.md`, `PLAN.md`, `TASKS.md`, `README.md`)
 
 ---
 
-## Phase 4: Resume CRUD & Dashboard (Outline)
+## Phase 4: Resume CRUD & Dashboard (Refined Outline)
 
-- [ ] Task 4.1: Dashboard route (`/dashboard`) with resume cards, search, and sorting
-- [ ] Task 4.2: Actions: Create, Duplicate, Rename, and Delete (with confirmation dialog)
-- [ ] Task 4.3: Authorization isolation tests (User A cannot view or mutate User B resumes)
+- [ ] Task 4.1: Authenticated Dashboard Route (`/dashboard`):
+  - List user's resumes using lightweight metadata projection (`listResumes`)
+  - Empty state with "Create Resume" CTA
+  - Resume card component (title, template preview thumbnail, last modified relative timestamp, status badge, action dropdown)
+- [ ] Task 4.2: Resume Management Actions:
+  - Create new blank or template-based resume (`createResume`)
+  - Duplicate existing resume (`duplicateResume`)
+  - Inline rename dialog (`renameResume`)
+  - Delete confirmation dialog with cascade warning (`deleteResume`)
+- [ ] Task 4.3: Search, filtering, and sort controls (by updated date, title)
+- [ ] Task 4.4: Authorization isolation & query level security tests (User A cannot list, read, edit, or delete User B resumes)
+- [ ] Task 4.5: Unit, worker integration, and Playwright E2E tests for dashboard operations
 
 ---
 

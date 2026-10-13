@@ -13,6 +13,21 @@ import { Header } from "./components/common/Header";
 import { Footer } from "./components/common/Footer";
 import { Toaster } from "./components/ui/sonner";
 
+import { getSession, type AuthUser } from "./auth/helpers.server";
+
+export async function loader({
+  request,
+}: {
+  request: Request;
+}): Promise<{ user: AuthUser | null }> {
+  try {
+    const session = await getSession(request);
+    return { user: session?.user ?? null };
+  } catch {
+    return { user: null };
+  }
+}
+
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
   {

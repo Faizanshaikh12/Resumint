@@ -1,9 +1,21 @@
-import { Link } from "react-router";
+import { Link, Form, useMatches } from "react-router";
 import { ThemeToggle } from "./ThemeToggle";
 import { Button } from "~/components/ui/button";
-import { FileText } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "~/components/ui/dropdown-menu";
+import { FileText, User as UserIcon, LogOut, LayoutDashboard } from "lucide-react";
+import type { AuthUser } from "~/auth/helpers.server";
 
-export function Header() {
+export function Header({ user: propUser }: { user?: AuthUser | null } = {}) {
+  const matches = useMatches();
+  const rootMatch = matches.find((m) => m.id === "root");
+  const rootUser = (rootMatch?.data as { user?: AuthUser | null } | undefined)?.user;
+  const user = propUser !== undefined ? propUser : (rootUser ?? null);
+
   return (
     <>
       <a
@@ -38,18 +50,76 @@ export function Header() {
             <Link to="/#features" className="transition-colors hover:text-foreground">
               Features
             </Link>
-            <Link to="/dashboard" className="transition-colors hover:text-foreground">
-              Dashboard
-            </Link>
+            {user && (
+              <Link to="/dashboard" className="transition-colors hover:text-foreground">
+                Dashboard
+              </Link>
+            )}
           </nav>
 
           <div className="flex items-center gap-3">
             <ThemeToggle />
-            <Link to="/resumes/new">
-              <Button size="sm" className="font-medium shadow-xs">
-                Build Resume
-              </Button>
-            </Link>
+
+            {user ? (
+              <div className="flex items-center gap-2">
+                <DropdownMenu>
+                  <DropdownMenuTrigger
+                    aria-label="User menu"
+                    className="flex h-9 items-center gap-2 rounded-full border border-border px-3 text-sm font-medium transition-colors hover:bg-accent"
+                  >
+                    <UserIcon className="h-4 w-4 text-primary" />
+                    <span className="max-w-[120px] truncate">{user.name}</span>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56 p-2">
+                    <div className="border-b pb-2 mb-1 px-2">
+                      <p className="text-sm font-medium text-foreground truncate">{user.name}</p>
+                      <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                    </div>
+                    <DropdownMenuItem>
+                      <Link to="/dashboard" className="flex items-center gap-2 w-full">
+                        <LayoutDashboard className="h-4 w-4 text-muted-foreground" />
+                        <span>Dashboard</span>
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem>
+                      <Form method="post" action="/logout" className="w-full">
+                        <button
+                          type="submit"
+                          className="flex items-center gap-2 w-full text-destructive text-left"
+                        >
+                          <LogOut className="h-4 w-4" />
+                          <span>Log out</span>
+                        </button>
+                      </Form>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+
+                <Link to="/resumes/new" className="hidden sm:inline-flex">
+                  <Button size="sm" className="font-medium shadow-xs">
+                    Build Resume
+                  </Button>
+                </Link>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <Link to="/login">
+                  <Button variant="ghost" size="sm" className="font-medium">
+                    Log in
+                  </Button>
+                </Link>
+                <Link to="/signup" className="hidden sm:inline-flex">
+                  <Button variant="outline" size="sm" className="font-medium">
+                    Sign up
+                  </Button>
+                </Link>
+                <Link to="/resumes/new">
+                  <Button size="sm" className="font-medium shadow-xs">
+                    Build Resume
+                  </Button>
+                </Link>
+              </div>
+            )}
           </div>
         </div>
       </header>

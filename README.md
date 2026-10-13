@@ -45,13 +45,32 @@ npm install
 
 ### Environment Configuration
 
-Create a `.env` or `.dev.vars` file with your Cloudflare D1 credentials (required for remote migration generation and Drizzle Studio):
+Create a `.dev.vars` file for local development (copy from `.dev.vars.example`):
+
+```ini
+BETTER_AUTH_SECRET=your-random-32-character-secret-key-here
+BETTER_AUTH_URL=http://localhost:5173
+```
+
+For Cloudflare D1 migrations and Drizzle Studio tooling, create `.env`:
 
 ```ini
 CLOUDFLARE_ACCOUNT_ID=your_account_id
 CLOUDFLARE_DATABASE_ID=2be466e3-a248-49a9-8e46-57c6ad2ad5be
 CLOUDFLARE_D1_TOKEN=your_cloudflare_api_token
 ```
+
+### Production Secrets
+
+Configure production secrets on Cloudflare Workers via Wrangler:
+
+```bash
+npx wrangler secret put BETTER_AUTH_SECRET
+npx wrangler secret put BETTER_AUTH_URL
+```
+
+> [!NOTE]
+> **Known Limitation (MVP)**: Email verification is currently deferred as no transactional email provider is configured. In local development, password reset links are printed directly to the console via an edge logging stub. In production, password reset requests return generic success responses.
 
 ---
 

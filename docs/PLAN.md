@@ -65,6 +65,44 @@
 
 ---
 
+## 3.1 Authentication Sequence Diagram (Better Auth + WebCrypto + D1)
+
+```
+        Browser Client                  Cloudflare Worker (Edge)                  Cloudflare D1
+              |                                    |                                    |
+              | 1. POST /api/auth/sign-up/email    |                                    |
+              |    { name, email, password }       |                                    |
+              |----------------------------------->|                                    |
+              |                                    | 2. Rate limit check (10 req/min)   |
+              |                                    | 3. WebCrypto PBKDF2-SHA256         |
+              |                                    |    (100,000 iter, sub-3ms CPU)     |
+              |                                    | 4. INSERT user, account, session   |
+              |                                    |----------------------------------->|
+              |                                    |<-----------------------------------|
+              | 5. HTTP 200 OK                     |                                    |
+              |    Set-Cookie: resumint.session=.. |                                    |
+              |<-----------------------------------|                                    |
+              |                                    |                                    |
+              | 6. GET /dashboard (Cookie)         |                                    |
+              |----------------------------------->| 7. requireUser(request)            |
+              |                                    | 8. SELECT session WHERE token=?    |
+              |                                    |----------------------------------->|
+              |                                    |<-----------------------------------|
+              |                                    | 9. Check expiry, return AuthUser   |
+              | 10. HTTP 200 (Dashboard SSR)       |    (password & raw token omitted)  |
+              |<-----------------------------------|                                    |
+              |                                    |                                    |
+              | 11. POST /logout                   |                                    |
+              |----------------------------------->| 12. DELETE session from D1         |
+              |                                    |----------------------------------->|
+              |                                    |<-----------------------------------|
+              | 13. HTTP 302 Redirect to /login    |                                    |
+              |     Set-Cookie: Clear session      |                                    |
+              |<-----------------------------------|                                    |
+```
+
+---
+
 ## 4. Data Model & Entity-Relationship Diagram
 
 ### ASCII ER Diagram
@@ -174,7 +212,7 @@
 
 - **Phase 1: Project Scaffold and Architecture** (Tooling, RR v7, D1 binding, test harness, CI, docs) [DONE]
 - **Phase 2: Database Schema & Migrations** (D1 tables, Drizzle schemas, typed queries, seed script, tests) [DONE]
-- **Phase 3: Authentication & Guest Claiming** (Better Auth, session management, in-place auth modal)
+- **Phase 3: Authentication & Guest Claiming** (Better Auth, WebCrypto PBKDF2 edge hashing, auth pages, route guards, tests) [DONE]
 - **Phase 4: Resume CRUD & Dashboard** (Resume management, duplicate, delete, search, cards)
 - **Phase 5: Resume Editor Core** (Two-pane UI, section forms, dynamic lists, bullet points, autosave)
 - **Phase 6: Templates & Customization** (5 ATS-compliant templates, theme & typography styling)
