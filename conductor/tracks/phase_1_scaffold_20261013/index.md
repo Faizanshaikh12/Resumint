@@ -1,0 +1,6 @@
+# Track: Phase 1 - Project Scaffold and Architecture
+
+- **Status**: In Progress
+- **Specification**: [spec.md](./spec.md)
+- **Plan**: [plan.md](./plan.md)
+- **Metadata**: [metadata.json](./metadata.json)
