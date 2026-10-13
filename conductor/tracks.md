@@ -15,3 +15,8 @@
 
 - [x] **Track: Phase 4 - Resume CRUD + Dashboard**
   *Link: [conductor/tracks/phase_4_resume_crud_20261013/index.md](./tracks/phase_4_resume_crud_20261013/index.md)*
+
+---
+
+- [ ] **Track: Phase 5 - Resume Editor, Autosave, Versions, Guest-First Save**
+  *Link: [conductor/tracks/phase_5_editor_20261013/index.md](./tracks/phase_5_editor_20261013/index.md)*
