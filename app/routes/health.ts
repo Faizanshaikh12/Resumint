@@ -1,9 +1,22 @@
-import { env } from "cloudflare:workers";
+import { env as defaultEnv } from "cloudflare:workers";
 
-export async function loader() {
+interface HealthLoaderArgs {
+  context?: { cloudflare?: { env?: Env } };
+}
+
+export async function loader({ context }: HealthLoaderArgs = {}) {
+  const env = context?.cloudflare?.env ?? defaultEnv;
+
   try {
-    // 1. Connectivity Ping
+    if (!env?.DB) {
+      throw new Error("Missing D1 database binding (DB)");
+    }
+
+    // 1. Connectivity Ping (SELECT 1)
     const pingResult = await env.DB.prepare("SELECT 1 as ping").first<{ ping: number }>();
+    if (pingResult?.ping !== 1) {
+      throw new Error("D1 ping returned unexpected result");
+    }
 
     // 2. Schema / Table Integrity Check
     const tablesResult = await env.DB.prepare(
@@ -12,21 +25,37 @@ export async function loader() {
 
     const tableCount = tablesResult?.count ?? 0;
     const isSchemaReady = tableCount >= 5;
+    if (!isSchemaReady) {
+      throw new Error(`Incomplete schema: found ${tableCount}/5 required tables`);
+    }
 
-    return Response.json({
-      status: "ok",
-      timestamp: new Date().toISOString(),
-      d1: pingResult?.ping === 1 ? "connected" : "unexpected_result",
-      schema: isSchemaReady ? "ready" : "pending_migrations",
-      tablesVerified: tableCount,
-    });
+    return Response.json(
+      {
+        status: "ok",
+        d1: "connected",
+        schema: "ready",
+        tablesVerified: tableCount,
+      },
+      {
+        status: 200,
+        headers: {
+          "Cache-Control": "no-store",
+        },
+      }
+    );
   } catch (error) {
+    console.error("[HEALTH_CHECK_ERROR] Health check failed:", error);
     return Response.json(
       {
         status: "error",
-        message: error instanceof Error ? error.message : "Unknown database error",
+        check: "db",
       },
-      { status: 500 }
+      {
+        status: 503,
+        headers: {
+          "Cache-Control": "no-store",
+        },
+      }
     );
   }
 }
