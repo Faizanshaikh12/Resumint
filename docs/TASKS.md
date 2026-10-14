@@ -175,18 +175,66 @@
 
 ---
 
-## Phase 8: Public Share Links (Outline)
+## Phase 8: Public Share Links (Resumint)
 
-- [ ] Task 8.1: Unique slug generator (nanoid) and `/r/:slug` public route
-- [ ] Task 8.2: Privacy controls: password protection, expiration date, noindex tags, download toggles
-- [ ] Task 8.3: View count increments with bot mitigation
+- [x] Task 8.1: Schema & Query Module Updates:
+  - [x] `app/db/schema.ts`: Added `hideContact` (boolean, default false) to `share_links` table
+  - [x] Generated migration `drizzle/0001_magenta_invaders.sql` and applied locally to Cloudflare D1
+  - [x] Updated query module `app/db/queries/shares.ts` (`upsertShareLink`, `getShareLinkByResumeId`, `getRawShareLinkBySlug`, `getPublicResumeById`, `countActiveShareLinks`, `revokeShareLink`, `deleteShareLink`, `recordView`)
+  - [x] Strict projection rules: Never select `passwordHash` into client/loader types; expose only `hasPassword: boolean`
+- [x] Task 8.2: Pure Share Logic Foundation in `app/lib/share/`:
+  - [x] `status.ts`: `getShareStatus` mapping `missing`, `revoked`, `expired` to generic `unavailable` at public boundary; exact UTC boundary comparisons with injected `now`
+  - [x] `expiry.ts`: Presets (7, 30, 90 days, custom date, never) to UTC end-of-day; past date rejection
+  - [x] `redact.ts`: `redactContactDetails` stripping email, phone, mailto, tel when `hideContact` is enabled
+  - [x] `password.ts`: Edge-compliant WebCrypto PBKDF2 password hasher and constant-time verifier (<3ms CPU, zero Node built-ins)
+  - [x] `unlock-cookie.ts`: HMAC-SHA256 signed tokens (`rs_<slug>`) over `{ slug, pwFingerprint, exp }`, automatically invalidated on password rotation or clearing
+  - [x] `bots.ts`: `isLikelyBot` rejecting crawlers (`Googlebot`, `bingbot`, `Slackbot`, `Twitterbot`, `Discordbot`, `WhatsApp`, etc.), HEAD, prefetch headers, and non-HTML accepts
+  - [x] `meta.ts`: `buildShareMeta` building plain-text sanitized title, ~160 char summary description, profile OG tags, and noindex robots meta
+- [x] Task 8.3: Owner Management Console (`/resumes/:id/share`):
+  - [x] Protected route behind `requireUser` with 404 ownership isolation and CSRF origin verification
+  - [x] Loader returns sanitized metadata, never `passwordHash`
+  - [x] Typed actions: `enable`, `update`, `setPassword`, `removePassword`, `regenerate`, `disable`, `deleteLink`
+  - [x] Per-user active link cap (10 active links) protecting D1 write/storage allowances
+  - [x] Guest users: Share button opens `AuthDialog` with no unauthenticated server mutation
+- [x] Task 8.4: Public View Route (`/r/:slug`):
+  - [x] Uniform 404 unavailable boundary for missing, revoked, and expired links (`This link is unavailable`, `noindex`, `no-store`)
+  - [x] Minimal password-protected locked state without candidate name, title, or content leaks
+  - [x] In-memory IP/slug rate limiting (5 attempts/min, 429 response)
+  - [x] Server-side contact redaction (`hideContact`) applied before data serialization
+  - [x] Slim header with candidate name and conditional "Download PDF" button via `usePrintResume`
+  - [x] Best-effort print suppression stylesheet when `allowDownload` is false
+  - [x] Security headers: `Cache-Control: no-store`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `X-Frame-Options: DENY`, `X-Robots-Tag: noindex, nofollow`
+  - [x] Asynchronous non-blocking view counter via `ctx.waitUntil` with 30-min deduplication cookie (`rv_<slug>`), owner exemption, and bot filtering (0 PII stored)
+- [x] Task 8.5: UI & Dashboard Integration:
+  - [x] `QrCodeDialog.tsx`: 100% client-side dynamic QR code generation with PNG download
+  - [x] `ResumeCard.tsx`: Real-time status badges (`Not shared`, `Shared`, `Protected`, `Expired`, `Disabled`) and "Copy link" / "Share settings" action menu
+  - [x] `EditorHeader.tsx`: Wired Share button and guest `AuthDialog` modal
+- [x] Task 8.6: Comprehensive Testing:
+  - [x] 28 unit tests in `tests/unit/share.test.ts` (100% passing)
+  - [x] 10 component tests in `tests/components/Share.test.tsx` (100% passing)
+  - [x] 12 worker query tests in `tests/worker/shares.test.ts` (100% passing)
+  - [x] 11 worker route integration tests in `tests/worker/share-routes.test.ts` (100% passing)
+  - [x] 6 Playwright E2E tests in `tests/e2e/share.spec.ts` (100% passing)
+  - [x] 0 ESLint errors and warnings
+  - [x] 0 TypeScript compiler errors
+  - [x] Production build passes cleanly (`react-router build`)
+- [x] Task 8.7: Documentation updates (`docs/PLAN.md`, `docs/DECISIONS.md`, `docs/TASKS.md`, `README.md`)
 
 ---
 
-## Phase 9: ATS Rule-Based Checker (Outline)
+## Phase 9: ATS Checker & Rule Engine (Refined Outline)
 
-- [ ] Task 9.1: Pure function rule evaluators (action verbs, quantifiable metrics, contact hygiene)
-- [ ] Task 9.2: Real-time ATS score indicator and recommendation panel in editor
+- [ ] Task 9.1: Pure ATS Evaluation Engine (`app/lib/ats/`):
+  - [ ] Action verb validator (detect strong vs weak verbs per bullet point)
+  - [ ] Quantifiable metric detector (numbers, percentages, currencies, multipliers)
+  - [ ] Contact info & length hygiene rules (email, phone, LinkedIn, total bullet count, page estimation)
+  - [ ] Formatting & section structure rules (standard headers, chronological ordering)
+  - [ ] Score calculation model (0-100 deterministic weighted score)
+- [ ] Task 9.2: ATS Scoring UI & Recommendations:
+  - [ ] Real-time score gauge & breakdown badge in EditorHeader
+  - [ ] Side drawer / panel with actionable suggestions ("Add quantifiable metrics", "Replace passive verbs")
+  - [ ] One-click jump to problematic sections in the editor
+- [ ] Task 9.3: Unit, Component & E2E Testing for ATS Evaluator
 
 ---
 

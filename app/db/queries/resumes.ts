@@ -30,6 +30,8 @@ export interface ResumeSummary {
   createdAt: Date;
   updatedAt: Date;
   hasShareLink: boolean;
+  shareSlug?: string | null;
+  shareStatus?: "not_shared" | "shared" | "protected" | "expired" | "disabled";
 }
 
 export type ListResumesResult = ResumeSummary[] & {
@@ -183,6 +185,12 @@ export async function listResumes(
       hasShareLink: sql<number>`CASE WHEN ${shareLinks.id} IS NOT NULL THEN 1 ELSE 0 END`.as(
         "hasShareLink"
       ),
+      shareSlug: shareLinks.slug,
+      shareIsActive: shareLinks.isActive,
+      shareExpiresAt: shareLinks.expiresAt,
+      hasPassword: sql<number>`CASE WHEN ${shareLinks.passwordHash} IS NOT NULL AND ${shareLinks.passwordHash} != '' THEN 1 ELSE 0 END`.as(
+        "hasPassword"
+      ),
     })
     .from(resumes)
     .leftJoin(shareLinks, eq(shareLinks.resumeId, resumes.id))
@@ -193,16 +201,35 @@ export async function listResumes(
   const hasMore = rows.length > limit;
   const rawItems = hasMore ? rows.slice(0, limit) : rows;
 
-  const items: ResumeSummary[] = rawItems.map((r) => ({
-    id: r.id,
-    userId: r.userId,
-    title: r.title,
-    templateId: r.templateId as TemplateId,
-    version: r.version,
-    createdAt: r.createdAt,
-    updatedAt: r.updatedAt,
-    hasShareLink: Boolean(r.hasShareLink),
-  }));
+  const nowMs = Date.now();
+  const items: ResumeSummary[] = rawItems.map((r) => {
+    let shareStatus: ResumeSummary["shareStatus"] = "not_shared";
+    if (r.shareSlug) {
+      const isExpired = r.shareExpiresAt && new Date(r.shareExpiresAt).getTime() < nowMs;
+      if (!r.shareIsActive) {
+        shareStatus = "disabled";
+      } else if (isExpired) {
+        shareStatus = "expired";
+      } else if (r.hasPassword) {
+        shareStatus = "protected";
+      } else {
+        shareStatus = "shared";
+      }
+    }
+
+    return {
+      id: r.id,
+      userId: r.userId,
+      title: r.title,
+      templateId: r.templateId as TemplateId,
+      version: r.version,
+      createdAt: r.createdAt,
+      updatedAt: r.updatedAt,
+      hasShareLink: Boolean(r.hasShareLink),
+      shareSlug: r.shareSlug ?? null,
+      shareStatus,
+    };
+  });
 
   let nextCursor: string | null = null;
   if (hasMore && items.length > 0) {

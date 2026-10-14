@@ -283,6 +283,7 @@ export async function getRawShareLinkBySlug(
       hideContact: shareLinks.hideContact,
       passwordHash: shareLinks.passwordHash,
       expiresAt: shareLinks.expiresAt,
+      viewCount: shareLinks.viewCount,
     })
     .from(shareLinks)
     .where(eq(shareLinks.slug, slug))

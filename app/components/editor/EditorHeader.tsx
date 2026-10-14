@@ -27,8 +27,9 @@ import {
 import { useEditor } from "./EditorContext";
 import { ExportMenu } from "~/components/export/ExportMenu";
 import { ImportDialog } from "~/components/export/ImportDialog";
-import { toast } from "~/components/ui/sonner";
-import { UploadCloud, Sparkles } from "lucide-react";
+import { UploadCloud, Sparkles, Share2 } from "lucide-react";
+import { AuthDialog } from "~/components/auth/AuthDialog";
+import { useNavigate } from "react-router";
 
 export function EditorHeader() {
   const {
@@ -59,6 +60,7 @@ export function EditorHeader() {
   // Import Dialog states (for guest / direct import)
   const [importOpen, setImportOpen] = React.useState(false);
   const [confirmReplaceOpen, setConfirmReplaceOpen] = React.useState(false);
+  const [authDialogOpen, setAuthDialogOpen] = React.useState(false);
 
   React.useEffect(() => {
     setTitleInput(title);
@@ -338,6 +340,29 @@ export function EditorHeader() {
           title={title}
         />
 
+        {/* Share Button */}
+        {id ? (
+          <Link
+            to={`/resumes/${id}/share`}
+            className="inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-md text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 border border-input bg-background shadow-xs hover:bg-accent hover:text-accent-foreground h-9 px-3"
+            data-testid="editor-share-button"
+          >
+            <Share2 className="h-4 w-4" />
+            <span className="hidden sm:inline">Share</span>
+          </Link>
+        ) : (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setAuthDialogOpen(true)}
+            className="gap-1.5 h-9"
+            data-testid="editor-share-button"
+          >
+            <Share2 className="h-4 w-4" />
+            <span className="hidden sm:inline">Share</span>
+          </Button>
+        )}
+
         {/* Save to Account CTA for Guests */}
         {!id && (
           <Link to="/signup" className="hidden lg:inline-flex">
@@ -389,6 +414,9 @@ export function EditorHeader() {
         onOpenChange={setImportOpen}
         onConfirm={handleExecuteImport}
       />
+
+      {/* Guest Auth Dialog */}
+      <AuthDialog open={authDialogOpen} onOpenChange={setAuthDialogOpen} />
     </header>
   );
 }

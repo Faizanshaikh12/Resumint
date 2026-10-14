@@ -21,7 +21,11 @@ import {
   Globe,
   Clock,
   FileJson,
+  Lock,
+  Share2,
+  Link2,
 } from "lucide-react";
+import { toast } from "~/components/ui/sonner";
 import type { ActionResult } from "~/lib/schemas/resume-actions";
 
 interface ResumeCardProps {
@@ -88,6 +92,17 @@ export function ResumeCard({ resume, fetcher, atLimit }: ResumeCardProps) {
     );
   };
 
+  const handleCopyShareLink = async () => {
+    if (!resume.shareSlug) return;
+    const origin = typeof window !== "undefined" ? window.location.origin : "";
+    try {
+      await navigator.clipboard.writeText(`${origin}/r/${resume.shareSlug}`);
+      toast.success("Share link copied to clipboard");
+    } catch {
+      toast.error("Failed to copy link");
+    }
+  };
+
   return (
     <>
       <article
@@ -109,13 +124,53 @@ export function ResumeCard({ resume, fetcher, atLimit }: ResumeCardProps) {
           />
 
           <div className="absolute top-2 right-2 flex gap-1.5 z-10">
-            {resume.hasShareLink && (
+            {resume.shareStatus === "not_shared" && (
+              <span
+                title="Not Shared"
+                className="inline-flex items-center gap-1 rounded-full bg-background/90 backdrop-blur-xs px-2 py-0.5 text-[10px] font-medium text-muted-foreground/70 shadow-xs"
+                data-testid="share-badge-not_shared"
+              >
+                Not shared
+              </span>
+            )}
+            {(resume.shareStatus === "shared" || (!resume.shareStatus && (resume as any).hasShareLink)) && (
               <span
                 title="Active Share Link"
                 className="inline-flex items-center gap-1 rounded-full bg-background/90 backdrop-blur-xs px-2 py-0.5 text-[10px] font-semibold text-emerald-600 shadow-xs dark:text-emerald-400"
+                data-testid="share-badge-shared"
               >
                 <Globe className="h-2.5 w-2.5" />
                 Shared
+              </span>
+            )}
+            {resume.shareStatus === "protected" && (
+              <span
+                title="Password Protected Share Link"
+                className="inline-flex items-center gap-1 rounded-full bg-background/90 backdrop-blur-xs px-2 py-0.5 text-[10px] font-semibold text-amber-600 shadow-xs dark:text-amber-400"
+                data-testid="share-badge-protected"
+              >
+                <Lock className="h-2.5 w-2.5" />
+                Protected
+              </span>
+            )}
+            {resume.shareStatus === "expired" && (
+              <span
+                title="Expired Share Link"
+                className="inline-flex items-center gap-1 rounded-full bg-background/90 backdrop-blur-xs px-2 py-0.5 text-[10px] font-semibold text-rose-600 shadow-xs dark:text-rose-400"
+                data-testid="share-badge-expired"
+              >
+                <Clock className="h-2.5 w-2.5" />
+                Expired
+              </span>
+            )}
+            {resume.shareStatus === "disabled" && (
+              <span
+                title="Disabled Share Link"
+                className="inline-flex items-center gap-1 rounded-full bg-background/90 backdrop-blur-xs px-2 py-0.5 text-[10px] font-semibold text-muted-foreground shadow-xs"
+                data-testid="share-badge-disabled"
+              >
+                <Globe className="h-2.5 w-2.5" />
+                Disabled
               </span>
             )}
             <span className="inline-flex items-center rounded-md bg-background/90 backdrop-blur-xs px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-foreground/80 shadow-xs">
@@ -157,6 +212,26 @@ export function ResumeCard({ resume, fetcher, atLimit }: ResumeCardProps) {
                   Open Editor
                 </Link>
               </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => {}}>
+                <Link
+                  to={`/resumes/${resume.id}/share`}
+                  className="flex w-full items-center gap-2 text-xs"
+                  data-testid="card-share-settings-item"
+                >
+                  <Share2 className="h-3.5 w-3.5 text-muted-foreground" />
+                  Share settings
+                </Link>
+              </DropdownMenuItem>
+              {resume.shareSlug && (resume.shareStatus === "shared" || resume.shareStatus === "protected") && (
+                <DropdownMenuItem
+                  onClick={() => void handleCopyShareLink()}
+                  className="flex items-center gap-2 text-xs"
+                  data-testid="card-copy-share-link-item"
+                >
+                  <Link2 className="h-3.5 w-3.5 text-muted-foreground" />
+                  Copy link
+                </DropdownMenuItem>
+              )}
               <DropdownMenuItem
                 onClick={() => setRenameOpen(true)}
                 className="flex items-center gap-2 text-xs"

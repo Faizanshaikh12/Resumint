@@ -73,7 +73,7 @@ export function buildShareMeta(
     pageTitle = `${candidateName} | Resumint`;
   }
 
-  let description = "";
+  let description: string;
   if (content.summary && content.summary.trim()) {
     description = sanitizeAndTruncateText(content.summary, 160);
   } else if (candidateTitle) {

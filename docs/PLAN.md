@@ -297,6 +297,101 @@
 - **Phase 5: Resume Editor Core** (Two-pane UI, section forms, dynamic lists, bullet points, autosave, guest draft claim flow) [DONE]
 - **Phase 6: Templates & Customization** (5 ATS-compliant templates, theme & typography styling, design panel, thumbnails, continuous preview) [DONE]
 - **Phase 7: Export Systems** (Print stylesheet, client-side PDF download, JSON import/export, plain-text export) [DONE]
-- **Phase 8: Public Share Links** (Slug generator, public `/r/:slug` page, password/expiry controls)
+- **Phase 8: Public Share Links** (Slug generator, public `/r/:slug` page, password/expiry controls, HMAC cookies, bot-filtered view counting) [DONE]
 - **Phase 9: ATS Checker & Rule Engine** (Rule-based score calculator, ATS guidelines)
 - **Phase 10: Polish, Hardening & Production Deploy** (Performance audit, axe a11y, live Cloudflare deploy)
+
+---
+
+## 8. Phase 8: Public Share Link Architecture & Sequence Diagrams
+
+### Diagram 1: Owner Enable Share Link
+```
+Owner Browser                 Worker Edge (/resumes/:id/share)            Cloudflare D1
+     |                                      |                                  |
+     |--- 1. POST { intent: "enable" } ---->|                                  |
+     |    (CSRF verified, auth checked)     |--- 2. Count active user links -->|
+     |                                      |<-- Return count (cap = 10) ------|
+     |                                      |                                  |
+     |                                      |--- 3. upsertShareLink ---------->|
+     |                                      |    (slug, allowDownload: true,   |
+     |                                      |     noindex: true, active: true) |
+     |                                      |<-- Return share record ----------|
+     |                                      |                                  |
+     |<-- 4. 200 OK { ok: true, slug } -----|                                  |
+     |                                      |                                  |
+     | (UI displays public URL, QR code,    |                                  |
+     |  options, and view count panel)      |                                  |
+```
+
+### Diagram 2: Public View Flow (Hostile-by-Default & View Counting)
+```
+Visitor / Crawler Browser          Worker Edge (/r/:slug)                 Cloudflare D1
+        |                                   |                                   |
+        |--- 1. GET /r/:slug -------------->|                                   |
+        |                                   |--- 2. getRawShareLinkBySlug ----->|
+        |                                   |<-- Return share row --------------|
+        |                                   |                                   |
+        |                                   |-- 3. Compute status:              |
+        |                                   |   - Missing / Revoked / Expired:  |
+        |                                   |     Throw 404 (Uniform boundary)  |
+        |                                   |   - Password required:            |
+        |                                   |     Verify rs_<slug> cookie       |
+        |                                   |                                   |
+        |                                   |-- 4. If hideContact: true         |
+        |                                   |   Redact email & phone in-memory  |
+        |                                   |                                   |
+        |                                   |-- 5. Human View Check:            |
+        |                                   |   !isBot && !isOwner && !isDeduped|
+        |                                   |   -> ctx.waitUntil(recordView())  |
+        |                                   |   -> Set-Cookie: rv_<slug> (30m)  |
+        |                                   |                                   |
+        |<-- 6. Render HTML + Headers ------|                                   |
+        |    (Cache-Control: no-store,      |                                   |
+        |     X-Robots-Tag: noindex,        |                                   |
+        |     X-Frame-Options: DENY)        |                                   |
+```
+
+### Diagram 3: Password Unlock Flow (PRG Pattern & Signed Cookie)
+```
+Visitor Browser                     Worker Edge (/r/:slug)                 Cloudflare D1
+     |                                       |                                  |
+     |--- 1. POST { password } ------------->|                                  |
+     |                                       |-- 2. IP Rate Limit Check (5/min) |
+     |                                       |                                  |
+     |                                       |-- 3. WebCrypto PBKDF2 Verify     |
+     |                                       |   (Constant-time comparison)     |
+     |                                       |                                  |
+     |                                       |-- 4. Issue HMAC-SHA256 Token:    |
+     |                                       |   Sign { slug, pwFingerprint, exp}
+     |                                       |   Cookie rs_<slug> (HttpOnly,24h)|
+     |                                       |                                  |
+     |<-- 5. 200 OK + Set-Cookie ------------|                                  |
+     |    (Client reloads automatically)     |                                  |
+     |                                       |                                  |
+     |--- 6. GET /r/:slug (with cookie) ---->|                                  |
+     |                                       |-- 7. verifyUnlockToken() -> true |
+     |<-- 8. Render Unlocked Resume ---------|                                  |
+```
+
+### Diagram 4: Owner Revocation / Slug Regeneration Flow
+```
+Owner Browser                 Worker Edge (/resumes/:id/share)            Cloudflare D1
+     |                                      |                                  |
+     |--- 1. POST { intent: "disable" } --->|                                  |
+     |       (or intent: "regenerate")      |--- 2. Update share_links ------->|
+     |                                      |    (isActive = false / new slug) |
+     |                                      |<-- DB commit --------------------|
+     |<-- 3. 200 OK (Status: Sharing Off) --|                                  |
+     |                                                                         |
+     | [Simultaneous Visitor Request on Old URL]                               |
+     |                                                                         |
+Visitor Browser                     Worker Edge (/r/:oldSlug)             Cloudflare D1
+     |                                      |                                  |
+     |--- 4. GET /r/:oldSlug -------------->|                                  |
+     |                                      |--- 5. getRawShareLinkBySlug ---->|
+     |                                      |<-- Inactive / Not Found ---------|
+     |                                      |                                  |
+     |<-- 6. Immediate 404 Unavailable -----|                                  |
+     |    (Zero stale cache, no-store)      |                                  |
+```

@@ -18,6 +18,16 @@ Resumint provides a zero-friction experience: jump straight into creating your r
 
 ## Features
 
+- **Public Share Links (`/r/:slug`)**: Share formatted resumes instantly via secret web links with zero login friction for recipients. Live updates reflect author edits in real-time.
+- **Granular Privacy Controls**:
+  - **Password Protection**: Require visitors to enter a password before viewing candidate name, summary, or details. Protected by constant-time WebCrypto PBKDF2 verification, in-memory IP rate limiting, and signed HMAC-SHA256 unlock cookies (`rs_<slug>`).
+  - **Server-Side Contact Redaction**: Hide candidate email address and phone number server-side before sending HTML/JSON to public visitors.
+  - **Link Expiration**: Automatically deactivate links after 7, 30, 90 days, or a custom UTC cutoff date.
+  - **Search Engine De-Indexing**: Emit `X-Robots-Tag: noindex, nofollow` headers and robots meta tags so search crawlers do not index public resumes.
+  - **PDF Download Toggle**: Allow or disallow visitor PDF downloads, backed by best-effort `@media print` suppression rules.
+  - **Uniform 404 Boundaries**: Missing, revoked, and expired links return identical generic 404 responses to eliminate metadata leakage.
+- **Client-Side QR Code Generator**: One-click QR code dialog generated 100% client-side with instant PNG download.
+- **Non-PII View Counting**: Asynchronous background view counter via `ctx.waitUntil` with 30-minute visitor deduplication (`rv_<slug>`), owner session bypass, and crawler/bot filtering. Zero IP addresses, user agents, or PII stored.
 - **5 ATS-Optimized Templates**: `Modern`, `Minimal`, `Executive`, `Classic`, and `Technical`. Pure presentational design guarantees zero content loss during template switching.
 - **Client-Side High-Fidelity PDF Export**: Zero-overhead browser print engine (`@page`, `window.print()`) with automatic paper formatting (`A4` and `US Letter`), pre-flight font readiness, and ATS-readable selectable text vectors.
 - **Complete JSON Backup & Import**: Portable versioned JSON envelope (`$schema: https://resumint.dev/schema/v1.json`), protected by a 220 KB pre-parse size cap, prototype pollution prevention, and 100% item ID regeneration with `nanoid()`.
@@ -105,6 +115,7 @@ Configure production secrets on Cloudflare Workers via Wrangler:
 ```bash
 npx wrangler secret put BETTER_AUTH_SECRET
 npx wrangler secret put BETTER_AUTH_URL
+npx wrangler secret put SHARE_COOKIE_SECRET
 ```
 
 > [!NOTE]

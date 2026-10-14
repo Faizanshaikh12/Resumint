@@ -303,5 +303,129 @@
   - Provide both direct `.txt` download via Blob/object URL and one-click "Copy as Text" to clipboard with `navigator.clipboard.writeText` and a hidden `textarea` fallback for legacy or insecure contexts.
 - **Consequences**: Instant accessibility for copy-paste application forms, zero server roundtrips, and optimal keyword parsing in raw text extractors.
 
+---
+
+## ADR-021: Uniform Unavailable Boundaries (Indistinguishable 404 for Missing, Revoked, and Expired Links)
+
+- **Status**: Accepted
+- **Context**: In Phase 8 public sharing, exposing distinct responses (e.g., 404 for missing vs 410 Gone for revoked vs 403 Forbidden for expired) leaks sensitive user activity metadata to unauthorized external scanners and scrapers.
+- **Decision**:
+  - Unify all unavailable link states (`not_found`, `revoked`, `expired`) into a single indistinguishable generic response at the public `/r/:slug` boundary.
+  - Return HTTP status `404 Not Found` with the exact body `"This link is unavailable"`.
+  - Always emit `X-Robots-Tag: noindex, nofollow` and `Cache-Control: no-store`.
+  - Provide specific status reasons (`Active`, `Disabled`, `Expired`, `Protected`) exclusively to the authenticated resume owner inside their private management console (`/resumes/:id/share`).
+- **Consequences**: Zero metadata leakage to public visitors; hostile-by-default boundary guarantees confidentiality.
+
+---
+
+## ADR-022: Edge-Optimized Caching (Cache-Control: no-store) vs. D1 Read Budget
+
+- **Status**: Accepted
+- **Context**: Public share links require instantaneous revocation. If public resume pages or HTML responses are cached in Cloudflare CDN edge caches or browser caches, revoking a link or changing its password would fail to terminate access immediately.
+- **Decision**:
+  - Enforce `Cache-Control: no-store` on all `/r/:slug` responses.
+  - Mitigate D1 read consumption by issuing at most 1 single D1 query per public page hit (`getRawShareLinkBySlug` joined with resume metadata).
+  - Defer view increment writes to asynchronous background execution (`ctx.waitUntil`).
+- **Consequences**: Immediate, real-time revocation and password change propagation with predictable, single-digit D1 read operations.
+
+---
+
+## ADR-023: Live Content Rendering vs. Snapshot-Pinned Shares
+
+- **Status**: Accepted
+- **Context**: When an author edits their resume in the editor, candidates expect recipients to see the latest corrections without having to manually generate a new link or trigger a "republish" deployment step.
+- **Decision**:
+  - Render live resume content dynamically from the `resumes` table joined by `share_links.resumeId`.
+  - Server-side redact private fields (`hideContact`) in-flight before returning data to visitors.
+  - Record static snapshot pinning as a future candidate extension for Phase 10+.
+- **Consequences**: Seamless author workflow where edits immediately reflect on active links; zero duplicate storage or desynchronized snapshot data.
+
+---
+
+## ADR-024: Cryptographically Signed HMAC Unlock Cookies (rs_<slug>) & Fingerprint Invalidation
+
+- **Status**: Accepted
+- **Context**: Password-protected resumes must not require visitors to enter the password on every page reload or navigation, yet storing plaintext session passwords or database unlock tokens risks token inflation. Furthermore, if an author changes or removes the password, existing visitor unlock sessions must terminate immediately.
+- **Decision**:
+  - Issue an HMAC-SHA256 signed unlock token in an `HttpOnly`, `SameSite=Lax`, `Path=/r/<slug>` cookie (`rs_<slug>`) valid for 24 hours.
+  - Include `{ slug, pwFingerprint, exp }` in the signed token payload.
+  - Compute `pwFingerprint` as a WebCrypto SHA-256 digest of the password hash. If the owner rotates or clears the password, existing unlock cookies fail verification automatically without requiring database invalidation tables.
+  - Derive secret from `SHARE_COOKIE_SECRET` or `BETTER_AUTH_SECRET`.
+- **Consequences**: Zero database read/write cost to verify unlock cookies, automatic invalidation on password rotation, and maximum edge performance.
+
+---
+
+## ADR-025: Non-PII Bot Filtering, Asynchronous View Counting (ctx.waitUntil), and 30-Minute Deduplication
+
+- **Status**: Accepted
+- **Context**: Cloudflare D1 Free Tier allows ~100,000 daily row writes. If search engine web crawlers, link preview bots (Slack, Discord, LinkedIn, Twitter, iMessage), owners previewing their own resume, or repeated page refreshes increment the view counter, D1 write quotas would be rapidly depleted.
+- **Decision**:
+  - **Bot Filtering**: Inspect HTTP method (`HEAD` rejected), `Accept` headers (non-HTML rejected), `Purpose: prefetch` / `Sec-Purpose` headers, and known bot user-agents (`Googlebot`, `bingbot`, `Slackbot`, `Twitterbot`, `facebookexternalhit`, `LinkedInBot`, `WhatsApp`, `Discordbot`).
+  - **Owner Exemption**: Validate active Better Auth session; if the viewer is the owner of the resume, do not count the view.
+  - **Deduplication**: Issue a 30-minute `HttpOnly` cookie (`rv_<slug>`). Repeated visits within 30 minutes bypass the write counter.
+  - **Asynchronous Execution**: Invoke `ctx.waitUntil(recordView(...))` on Cloudflare Workers so counter increments never block public HTML rendering.
+  - **Zero PII**: Store only integer counts (`view_count = view_count + 1`). Never store visitor IP addresses, user agents, or timestamps.
+- **Consequences**: Zero risk of D1 quota exhaustion from automated scrapers, zero tracking of visitor identities, and sub-10ms SSR rendering.
+
+---
+
+## ADR-026: Robots Meta & Open Crawling Strategy (Permitting /r/ in robots.txt)
+
+- **Status**: Accepted
+- **Context**: Users expect search engines not to index their resumes when `noindex` is toggled. If `robots.txt` disallows `/r/`, search engine crawlers will never crawl the page and therefore will never read the `X-Robots-Tag: noindex, nofollow` HTTP header or `<meta name="robots" content="noindex, nofollow" />`, potentially causing search engines to index the URL itself based on external links.
+- **Decision**:
+  - Do NOT disallow `/r/` in `public/robots.txt`.
+  - Never list share URLs in any `sitemap.xml`.
+  - Emit both `X-Robots-Tag: noindex, nofollow` and `<meta name="robots" content="noindex, nofollow">` on all `/r/:slug` responses where `noindex: true`, and unconditionally on all locked and unavailable pages.
+- **Consequences**: Search engines can crawl the page, process the `noindex` instruction, and completely omit the URL from search indexes.
+
+---
+
+## ADR-027: Convenience vs. DRM: Print Stylesheet Suppression When allowDownload is False
+
+- **Status**: Accepted
+- **Context**: Authors may choose to turn off the "Allow PDF Download" toggle. However, web browsers running on user devices can never enforce absolute DRM against client-side screenshots, DOM inspection, or print dialogs.
+- **Decision**:
+  - Hide the "Download PDF" action button in the public header when `allowDownload` is false.
+  - Inject an inline `@media print` style rule hiding `#public-resume-document` and rendering a polite notice during print attempts.
+  - Document transparently in documentation and UI help text that this is a convenience barrier, not cryptographic DRM.
+- **Consequences**: Honest user communication without misleading security claims; prevents casual unauthorized PDF saving while maintaining web standards compliance.
+
+---
+
+## ADR-028: Contact Redaction Boundary (hideContact) Server-Side Enforcement
+
+- **Status**: Accepted
+- **Context**: When authors share resumes publicly on job forums or social networks, they often wish to hide their personal email and telephone number to avoid spammers and telemarketers.
+- **Decision**:
+  - Enforce contact details redaction (`redactContactDetails`) strictly on the server inside the route loader before serializing JSON or rendering SSR HTML.
+  - Clear `email` and `phone` strings from candidate JSON, strip `mailto:` and `tel:` links, and omit them from Open Graph and meta descriptions.
+- **Consequences**: Contact details are physically absent from HTTP response payloads, eliminating risk of client-side inspection leakage.
+
+---
+
+## ADR-029: Per-User Active Link Cap (10 Links) for D1 Quota Protection
+
+- **Status**: Accepted
+- **Context**: Malicious or runaway scripts could generate millions of unique share slugs, exhausting database storage and index capacity on Cloudflare D1.
+- **Decision**:
+  - Enforce a strict per-user limit of **10 active share links** (`MAX_ACTIVE_SHARE_LINKS_PER_USER = 10`).
+  - Check the active link count before creating a new share link or re-enabling a disabled link.
+  - Return HTTP 400 with a clear, user-friendly error message if the limit is exceeded.
+- **Consequences**: Guaranteed database capacity preservation within free-tier quotas.
+
+---
+
+## ADR-030: Zero-Dependency Client-Side Dynamic QR Code Generation
+
+- **Status**: Accepted
+- **Context**: Providing QR codes for share links allows users to quickly scan and view resumes on mobile devices. Generating QR codes on the server consumes CPU cycles and increases worker bundle size.
+- **Decision**:
+  - Render QR codes 100% client-side inside `<QrCodeDialog>`.
+  - Lazy-load the dialog and QR generator only when the user explicitly clicks the "QR Code" button.
+  - Render directly to an HTML5 `<canvas>` element and support one-click PNG download via `canvas.toDataURL("image/png")`.
+- **Consequences**: Zero server CPU overhead, zero impact on initial bundle size, accessible keyboard and screen-reader dialog controls.
+
+
 
 
