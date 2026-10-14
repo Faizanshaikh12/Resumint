@@ -53,17 +53,19 @@ jobs:
 
       - name: Post-Deploy Smoke Test (/health & /)
         run: |
-          PROD_URL="${{ secrets.BETTER_AUTH_URL || 'https://resumint.dev' }}"
+          PROD_URL="${{ secrets.BETTER_AUTH_URL || 'https://resumint.faizan-shaikh-dev.workers.dev' }}"
           echo "Verifying health endpoint at $PROD_URL/health..."
           HEALTH_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$PROD_URL/health" || echo "000")
           echo "Health check HTTP status: $HEALTH_STATUS"
           if [ "$HEALTH_STATUS" != "200" ]; then
-            echo "Smoke test warning: /health returned $HEALTH_STATUS (verify DNS and deployment state)"
+            echo "Smoke test error: /health returned $HEALTH_STATUS"
+            exit 1
           fi
 
           echo "Verifying root route at $PROD_URL/..."
           HOME_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$PROD_URL/" || echo "000")
           echo "Home route HTTP status: $HOME_STATUS"
           if [ "$HOME_STATUS" != "200" ]; then
-            echo "Smoke test warning: / returned $HOME_STATUS"
+            echo "Smoke test error: / returned $HOME_STATUS"
+            exit 1
           fi

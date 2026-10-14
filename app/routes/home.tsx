@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router";
 import type { Route } from "./+types/home";
 import { Button } from "~/components/ui/button";
@@ -49,12 +49,11 @@ export function meta() {
   ];
 }
 
-const sampleData = createDeveloperSample();
-
 export default function Home() {
   const [searchParams] = useSearchParams();
   const accountDeleted = searchParams.get("deleted") === "true";
   const [selectedTemplate, setSelectedTemplate] = useState<TemplateId>("modern");
+  const sampleData = useMemo(() => createDeveloperSample(), []);
   const activeTemplateDef = TEMPLATES[selectedTemplate];
   const ActiveComponent = activeTemplateDef.Component;
 
