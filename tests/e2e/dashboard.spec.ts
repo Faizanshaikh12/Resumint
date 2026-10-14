@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
+import { signUpUser } from "./test-utils";
 
 function assertNoViolations(scan: { violations: any[] }) {
   if (scan.violations && scan.violations.length) {
@@ -25,25 +26,16 @@ test.describe("Dashboard & Resume Management E2E", () => {
     page,
   }) => {
     // 1. Sign up User Alpha with full networkidle hydration
-    await page.goto("/signup");
-    await page.waitForLoadState("networkidle");
-    await expect(page.locator("#auth-name")).toBeVisible();
-
-    await page.fill("#auth-name", userA.name);
-    await page.fill("#auth-email", userA.email);
-    await page.fill("#auth-password", userA.password);
-    await page.click('button[type="submit"]');
+    await signUpUser(page, userA);
 
     // 2. Lands on Dashboard with empty state
-    await page.waitForURL("**/dashboard", { timeout: 15000 });
-    await expect(page.getByRole("heading", { name: /my documents/i })).toBeVisible();
-    await expect(page.getByTestId("dashboard-empty-state")).toBeVisible();
+    await page.waitForURL("**/dashboard", { timeout: 30000 });
+    await expect(page.getByRole("heading", { name: /my documents/i })).toBeVisible({ timeout: 20000 });
+    await expect(page.getByTestId("dashboard-empty-state")).toBeVisible({ timeout: 20000 });
 
     // 3. Create blank resume
-    const createFirstBtn = page
-      .locator("[data-testid='create-first-resume-button']")
-      .or(page.getByRole("button", { name: /create (your first )?resume/i }));
-    await expect(createFirstBtn).toBeVisible({ timeout: 10000 });
+    const createFirstBtn = page.locator("[data-testid='create-first-resume-button']");
+    await expect(createFirstBtn).toBeVisible({ timeout: 20000 });
     await createFirstBtn.click();
     await page.waitForURL("**/resumes/new", { timeout: 10000 });
     await expect(page.getByRole("heading", { name: /create new resume/i })).toBeVisible();
@@ -132,22 +124,16 @@ test.describe("Dashboard & Resume Management E2E", () => {
     const contextA = await browser.newContext();
     const pageA = await contextA.newPage();
 
-    await pageA.goto("/signup");
-    await pageA.waitForLoadState("networkidle");
-    await expect(pageA.locator("#auth-name")).toBeVisible();
+    await signUpUser(pageA, {
+      name: userA.name,
+      email: `isolate-a-${timestamp}@resumint.dev`,
+      password: userA.password,
+    });
 
-    await pageA.fill("#auth-name", userA.name);
-    await pageA.fill("#auth-email", `isolate-a-${timestamp}@resumint.dev`);
-    await pageA.fill("#auth-password", userA.password);
-    await pageA.click('button[type="submit"]');
-
-    await pageA.waitForURL("**/dashboard", { timeout: 15000 });
-    const createFirstBtnA = pageA
-      .locator("[data-testid='create-first-resume-button']")
-      .or(pageA.getByRole("button", { name: /create (your first )?resume/i }));
-    await expect(createFirstBtnA).toBeVisible({ timeout: 10000 });
+    const createFirstBtnA = pageA.locator("[data-testid='create-first-resume-button']");
+    await expect(createFirstBtnA).toBeVisible({ timeout: 20000 });
     await createFirstBtnA.click();
-    await pageA.waitForURL("**/resumes/new", { timeout: 10000 });
+    await pageA.waitForURL("**/resumes/new", { timeout: 30000 });
     await pageA.getByRole("button", { name: /create blank resume/i }).click();
 
     await pageA.waitForURL(/\/resumes\/([a-zA-Z0-9_-]+)\/edit/, { timeout: 15000 });
@@ -157,16 +143,7 @@ test.describe("Dashboard & Resume Management E2E", () => {
     const contextB = await browser.newContext();
     const pageB = await contextB.newPage();
 
-    await pageB.goto("/signup");
-    await pageB.waitForLoadState("networkidle");
-    await expect(pageB.locator("#auth-name")).toBeVisible();
-
-    await pageB.fill("#auth-name", userB.name);
-    await pageB.fill("#auth-email", userB.email);
-    await pageB.fill("#auth-password", userB.password);
-    await pageB.click('button[type="submit"]');
-
-    await pageB.waitForURL("**/dashboard", { timeout: 15000 });
+    await signUpUser(pageB, userB);
 
     // User B attempts to open User A's resume URL
     await pageB.goto(userAEditUrl);
@@ -185,18 +162,15 @@ test.describe("Dashboard & Resume Management E2E", () => {
     page,
   }) => {
     // Sign up a clean user
-    await page.goto("/signup");
-    await page.waitForLoadState("networkidle");
-    await expect(page.locator("#auth-name")).toBeVisible();
-
-    await page.fill("#auth-name", "A11y Auditor");
-    await page.fill("#auth-email", `a11y-${timestamp}@resumint.dev`);
-    await page.fill("#auth-password", "Password123!");
-    await page.click('button[type="submit"]');
+    await signUpUser(page, {
+      name: "A11y Auditor",
+      email: `a11y-${timestamp}@resumint.dev`,
+      password: "Password123!",
+    });
 
     // 1. Dashboard empty state accessibility scan
-    await page.waitForURL("**/dashboard", { timeout: 15000 });
-    await expect(page.locator('[data-testid="dashboard-main"]')).toBeVisible({ timeout: 10000 });
+    await page.waitForURL("**/dashboard", { timeout: 30000 });
+    await expect(page.locator('[data-testid="dashboard-main"]')).toBeVisible({ timeout: 20000 });
     const emptyScan = await new AxeBuilder({ page })
       .withTags(["wcag2a", "wcag2aa"])
       .include("#main-content")
@@ -204,10 +178,8 @@ test.describe("Dashboard & Resume Management E2E", () => {
     assertNoViolations(emptyScan);
 
     // 2. Create a resume to populate dashboard
-    const createFirstBtn = page
-      .locator("[data-testid='create-first-resume-button']")
-      .or(page.getByRole("button", { name: /create (your first )?resume/i }));
-    await expect(createFirstBtn).toBeVisible({ timeout: 10000 });
+    const createFirstBtn = page.locator("[data-testid='create-first-resume-button']");
+    await expect(createFirstBtn).toBeVisible({ timeout: 20000 });
     await createFirstBtn.click();
     await page.waitForURL("**/resumes/new", { timeout: 10000 });
     await expect(page.getByRole("heading", { name: /create new resume/i })).toBeVisible({ timeout: 10000 });

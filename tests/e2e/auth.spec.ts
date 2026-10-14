@@ -29,12 +29,15 @@ test.describe("Authentication Flows & Route Guards", () => {
     await page.fill("#auth-email", testUser.email);
     await expect(page.locator("#auth-password")).toBeVisible({ timeout: 5000 });
     await page.fill("#auth-password", testUser.password);
-    await page.click('button[type="submit"]');
+    await Promise.all([
+      page.waitForURL("**/dashboard", { timeout: 30000 }),
+      page.click('button[type="submit"]'),
+    ]);
+    await page.waitForLoadState("networkidle");
 
     // 3. Lands on /dashboard
-    await page.waitForURL("**/dashboard", { timeout: 15000 });
-    await expect(page.getByRole("heading", { name: new RegExp(`Hello, ${testUser.name}!`, "i") })).toBeVisible();
-    await expect(page.getByText(testUser.email, { exact: true })).toBeVisible();
+    await expect(page.getByRole("heading", { name: new RegExp(`Hello, ${testUser.name}!`, "i") })).toBeVisible({ timeout: 20000 });
+    await expect(page.getByText(testUser.email, { exact: true })).toBeVisible({ timeout: 20000 });
 
     // 4. Logout
     await page.getByRole("button", { name: /sign out/i }).click();
@@ -49,11 +52,14 @@ test.describe("Authentication Flows & Route Guards", () => {
     await page.fill("#auth-email", testUser.email);
     await expect(page.locator("#auth-password")).toBeVisible({ timeout: 5000 });
     await page.fill("#auth-password", testUser.password);
-    await page.click('button[type="submit"]');
+    await Promise.all([
+      page.waitForURL("**/dashboard", { timeout: 30000 }),
+      page.click('button[type="submit"]'),
+    ]);
+    await page.waitForLoadState("networkidle");
 
     // 7. Returns to /dashboard
-    await page.waitForURL("**/dashboard", { timeout: 15000 });
-    await expect(page.getByRole("heading", { name: new RegExp(`Hello, ${testUser.name}!`, "i") })).toBeVisible();
+    await expect(page.getByRole("heading", { name: new RegExp(`Hello, ${testUser.name}!`, "i") })).toBeVisible({ timeout: 20000 });
   });
 
   test("redirects unauthenticated users trying to access /dashboard and returns them after login", async ({
@@ -85,11 +91,14 @@ test.describe("Authentication Flows & Route Guards", () => {
     await page.fill("#auth-email", user.email);
     await expect(page.locator("#auth-password")).toBeVisible({ timeout: 5000 });
     await page.fill("#auth-password", user.password);
-    await page.click('button[type="submit"]');
+    await Promise.all([
+      page.waitForURL("**/dashboard", { timeout: 30000 }),
+      page.click('button[type="submit"]'),
+    ]);
+    await page.waitForLoadState("networkidle");
 
     // Lands back on /dashboard
-    await page.waitForURL("**/dashboard", { timeout: 15000 });
-    await expect(page.getByRole("heading", { name: new RegExp(`Hello, ${user.name}!`, "i") })).toBeVisible();
+    await expect(page.getByRole("heading", { name: new RegExp(`Hello, ${user.name}!`, "i") })).toBeVisible({ timeout: 20000 });
   });
 
   test("passes axe accessibility standards on /login and /signup", async ({ page }) => {

@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
+import { signUpUser } from "./test-utils";
 
 async function assertNoViolations(scan: { violations: any[] }, contextName: string) {
   if (scan.violations && scan.violations.length) {
@@ -115,15 +116,7 @@ test.describe("Phase 10: Comprehensive Accessibility Audit (WCAG 2.2 AA)", () =>
     page,
   }) => {
     // Sign up
-    await page.goto("/signup");
-    await page.waitForLoadState("networkidle");
-    await expect(page.locator("#auth-name")).toBeVisible({ timeout: 10000 });
-    await page.fill("#auth-name", testUser.name);
-    await page.fill("#auth-email", testUser.email);
-    await page.fill("#auth-password", testUser.password);
-    await page.click('button[type="submit"]');
-
-    await page.waitForURL("**/dashboard", { timeout: 15000 });
+    await signUpUser(page, testUser);
 
     // Visit /settings
     await page.goto("/settings");

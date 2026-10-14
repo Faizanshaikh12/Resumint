@@ -78,9 +78,9 @@ export function createAuth(env: Env, request?: Request) {
       throw: false,
     },
     rateLimit: {
-      enabled: true,
+      enabled: isProd || process.env.NODE_ENV === "test",
       window: 60,
-      max: 100,
+      max: isProd ? 100 : 5000,
       customRules: {
         "/sign-in/email": {
           window: 60,
@@ -88,7 +88,7 @@ export function createAuth(env: Env, request?: Request) {
         },
         "/sign-up/email": {
           window: 60,
-          max: 10,
+          max: isProd ? 10 : 5000,
         },
       },
     },

@@ -1,5 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
+import { signUpUser, openNewBlankResume } from "./test-utils";
 
 async function createOwnerWithResume(page: Page) {
   const timestamp = `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
@@ -9,22 +10,9 @@ async function createOwnerWithResume(page: Page) {
     password: "Password123!",
   };
 
-  // 1. Sign up
-  await page.goto("/signup");
-  await page.waitForLoadState("networkidle");
-  await page.fill("#auth-name", user.name);
-  await page.fill("#auth-email", user.email);
-  await page.fill("#auth-password", user.password);
-  await page.click('button[type="submit"]');
-
-  await page.waitForURL("**/dashboard", { timeout: 15000 });
-
-  // 2. Create blank resume
-  await page.getByRole("button", { name: /create your first resume/i }).click();
-  await page.waitForURL("**/resumes/new", { timeout: 10000 });
-  await page.getByRole("button", { name: /create blank resume/i }).click();
-
-  await page.waitForURL(/\/resumes\/[a-zA-Z0-9_-]+\/edit/, { timeout: 15000 });
+  // 1. Sign up & navigate to blank resume
+  await signUpUser(page, user);
+  await openNewBlankResume(page);
 
   // Fill candidate details
   await page.getByLabel(/Full Name/i).fill("Elena Rostova");

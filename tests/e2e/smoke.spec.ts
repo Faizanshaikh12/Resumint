@@ -14,7 +14,7 @@ test.describe("Resumint Landing Smoke & Accessibility", () => {
     await expect(heading).toContainText(/Resume Builder/i);
 
     // Verify CTA button
-    const ctaButton = page.getByRole("link", { name: /Start Building Resume/i });
+    const ctaButton = page.getByTestId("hero-build-cta");
     await expect(ctaButton).toBeVisible();
   });
 

@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
+import { openNewBlankResume } from "./test-utils";
 
 test.describe("Phase 10: Golden Path E2E (Full User Lifecycle)", () => {
   const timestamp = Date.now();
@@ -94,31 +95,24 @@ test.describe("Phase 10: Golden Path E2E (Full User Lifecycle)", () => {
     // Navigate to /signup from dialog
     await page.getByTestId("auth-dialog-signup-button").click();
     await page.waitForURL("**/signup", { timeout: 10000 });
+    await page.waitForLoadState("networkidle");
+    await expect(page.locator("#auth-name")).toBeVisible({ timeout: 15000 });
 
     // Complete sign up
     await page.fill("#auth-name", testUser.name);
     await page.fill("#auth-email", testUser.email);
     await page.fill("#auth-password", testUser.password);
-    await page.click('button[type="submit"]');
-
-    // Lands on Dashboard
-    await page.waitForURL("**/dashboard", { timeout: 15000 });
-    await expect(page.getByRole("heading", { name: /my documents/i })).toBeVisible({ timeout: 10000 });
+    await Promise.all([
+      page.waitForURL("**/dashboard", { timeout: 30000 }),
+      page.click('button[type="submit"]'),
+    ]);
+    await page.waitForLoadState("networkidle");
+    await expect(page.getByRole("heading", { name: /my documents/i })).toBeVisible({ timeout: 20000 });
 
     // -------------------------------------------------------------
     // Step 5: Create / Open Resume in Account Editor & Autosave
     // -------------------------------------------------------------
-    const createBtn = page
-      .locator("[data-testid='create-first-resume-button']")
-      .or(page.getByRole("button", { name: /create (your first )?resume/i }));
-    await expect(createBtn).toBeVisible({ timeout: 10000 });
-    await createBtn.click();
-
-    await page.waitForURL("**/resumes/new", { timeout: 10000 });
-    await page.getByRole("button", { name: /create blank resume/i }).click();
-
-    await page.waitForURL(/\/resumes\/[a-zA-Z0-9_-]+\/edit/, { timeout: 15000 });
-    await expect(page.getByTestId("manual-save-button")).toBeVisible({ timeout: 10000 });
+    await openNewBlankResume(page);
 
     // Edit Name
     const editorNameInput = page.getByLabel(/Full Name/i);

@@ -1,6 +1,7 @@
 import { test, expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 import { createRequire } from "node:module";
+import { signUpUser, openNewBlankResume } from "./test-utils";
 
 const require = createRequire(import.meta.url);
 const pdf = require("pdf-parse/lib/pdf-parse.js");
@@ -33,34 +34,9 @@ test.describe("Phase 7: Export and Import E2E", () => {
   test("full JSON export and import roundtrip preserves content and design", async ({
     page,
   }) => {
-    // 1. Sign up user
-    await page.goto("/signup");
-    await page.waitForLoadState("networkidle");
-    await expect(page.locator("#auth-name")).toBeVisible({ timeout: 10000 });
-    await page.fill("#auth-name", testUser.name);
-    await expect(page.locator("#auth-email")).toBeVisible({ timeout: 5000 });
-    await page.fill("#auth-email", testUser.email);
-    await expect(page.locator("#auth-password")).toBeVisible({ timeout: 5000 });
-    await page.fill("#auth-password", testUser.password);
-    await page.click('button[type="submit"]');
-
-    await page.waitForURL("**/dashboard", { timeout: 15000 });
-
-    // 2. Create blank resume
-    const createFirstBtn = page
-      .locator("[data-testid='create-first-resume-button']")
-      .or(page.getByRole("button", { name: /create (your first )?resume/i }));
-    await expect(createFirstBtn).toBeVisible({ timeout: 10000 });
-    await createFirstBtn.click();
-    await page.waitForURL("**/resumes/new", { timeout: 10000 });
-    const createBlankBtn = page.getByRole("button", { name: /create blank resume/i });
-    await expect(createBlankBtn).toBeVisible({ timeout: 10000 });
-    await createBlankBtn.click();
-
-    // 3. Lands on editor
-    await page.waitForURL(/\/resumes\/[a-zA-Z0-9_-]+\/edit/, { timeout: 15000 });
-    await expect(page.getByTestId("manual-save-button")).toBeVisible();
-    await expect(page.getByTestId("resume-preview-document")).toBeVisible();
+    // 1. Sign up user & navigate to new blank resume
+    await signUpUser(page, testUser);
+    await openNewBlankResume(page);
 
     // Fill candidate details
     await page.getByLabel(/Full Name/i).fill("Alexander Vance");
@@ -161,34 +137,13 @@ test.describe("Phase 7: Export and Import E2E", () => {
   });
 
   test("plain text (.txt) export and clipboard copy", async ({ page }) => {
-    // Re-use user from previous or create blank resume
-    await page.goto("/signup");
-    await page.waitForLoadState("networkidle");
     const uniqueUser = {
       name: "Text Tester",
       email: `text-${Date.now()}@resumint.dev`,
       password: "Password123!",
     };
-    await expect(page.locator("#auth-name")).toBeVisible({ timeout: 10000 });
-    await page.fill("#auth-name", uniqueUser.name);
-    await expect(page.locator("#auth-email")).toBeVisible({ timeout: 5000 });
-    await page.fill("#auth-email", uniqueUser.email);
-    await expect(page.locator("#auth-password")).toBeVisible({ timeout: 5000 });
-    await page.fill("#auth-password", uniqueUser.password);
-    await page.click('button[type="submit"]');
-
-    await page.waitForURL("**/dashboard", { timeout: 15000 });
-    const createFirstBtn = page
-      .locator("[data-testid='create-first-resume-button']")
-      .or(page.getByRole("button", { name: /create (your first )?resume/i }));
-    await expect(createFirstBtn).toBeVisible({ timeout: 10000 });
-    await createFirstBtn.click();
-    await page.waitForURL("**/resumes/new", { timeout: 10000 });
-    const createBlankBtn = page.getByRole("button", { name: /create blank resume/i });
-    await expect(createBlankBtn).toBeVisible({ timeout: 10000 });
-    await createBlankBtn.click();
-    await page.waitForURL(/\/resumes\/[a-zA-Z0-9_-]+\/edit/, { timeout: 15000 });
-    await expect(page.getByTestId("manual-save-button")).toBeVisible();
+    await signUpUser(page, uniqueUser);
+    await openNewBlankResume(page);
 
     // Set candidate info
     await page.getByLabel(/Full Name/i).fill("Marcus Brody");
@@ -240,34 +195,13 @@ test.describe("Phase 7: Export and Import E2E", () => {
   test("PDF export across all 5 templates with Chromium print fidelity and text extraction", async ({
     page,
   }) => {
-    // Create new resume
-    await page.goto("/signup");
-    await page.waitForLoadState("networkidle");
     const uniqueUser = {
       name: "PDF Tester",
       email: `pdf-${Date.now()}@resumint.dev`,
       password: "Password123!",
     };
-    await expect(page.locator("#auth-name")).toBeVisible({ timeout: 10000 });
-    await page.fill("#auth-name", uniqueUser.name);
-    await expect(page.locator("#auth-email")).toBeVisible({ timeout: 5000 });
-    await page.fill("#auth-email", uniqueUser.email);
-    await expect(page.locator("#auth-password")).toBeVisible({ timeout: 5000 });
-    await page.fill("#auth-password", uniqueUser.password);
-    await page.click('button[type="submit"]');
-
-    await page.waitForURL("**/dashboard", { timeout: 15000 });
-    const createFirstBtn = page
-      .locator("[data-testid='create-first-resume-button']")
-      .or(page.getByRole("button", { name: /create (your first )?resume/i }));
-    await expect(createFirstBtn).toBeVisible({ timeout: 10000 });
-    await createFirstBtn.click();
-    await page.waitForURL("**/resumes/new", { timeout: 10000 });
-    const createBlankBtn = page.getByRole("button", { name: /create blank resume/i });
-    await expect(createBlankBtn).toBeVisible({ timeout: 10000 });
-    await createBlankBtn.click();
-    await page.waitForURL(/\/resumes\/[a-zA-Z0-9_-]+\/edit/, { timeout: 15000 });
-    await expect(page.getByTestId("manual-save-button")).toBeVisible();
+    await signUpUser(page, uniqueUser);
+    await openNewBlankResume(page);
 
     // Set candidate details
     await page.getByLabel(/Full Name/i).fill("Cassian Andor");
@@ -299,6 +233,8 @@ test.describe("Phase 7: Export and Import E2E", () => {
 
       // Emulate print CSS media
       await page.emulateMedia({ media: "print" });
+      await page.waitForSelector('[data-testid="resume-preview-document"]', { state: "visible", timeout: 20000 });
+      await page.waitForTimeout(200);
 
       // Generate A4 PDF
       const a4Buffer = await page.pdf({
@@ -323,6 +259,8 @@ test.describe("Phase 7: Export and Import E2E", () => {
 
     // Also verify Letter format on technical template
     await page.emulateMedia({ media: "print" });
+    await page.waitForSelector('[data-testid="resume-preview-document"]', { state: "visible", timeout: 20000 });
+    await page.waitForTimeout(200);
     const letterBuffer = await page.pdf({
       format: "Letter",
       printBackground: true,

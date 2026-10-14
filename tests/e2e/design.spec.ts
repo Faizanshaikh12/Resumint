@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
+import { signUpUser, openNewBlankResume } from "./test-utils";
 
 test.describe("Resume Templates & Design Customization E2E", () => {
   const timestamp = Date.now();
@@ -12,23 +13,9 @@ test.describe("Resume Templates & Design Customization E2E", () => {
   test("switch template, customize design tokens, undo/redo, persistence, and Chromium PDF print fidelity", async ({
     page,
   }) => {
-    // 1. Sign up user
-    await page.goto("/signup");
-    await page.waitForLoadState("networkidle");
-    await page.fill("#auth-name", testUser.name);
-    await page.fill("#auth-email", testUser.email);
-    await page.fill("#auth-password", testUser.password);
-    await page.click('button[type="submit"]');
-
-    await page.waitForURL("**/dashboard", { timeout: 15000 });
-
-    // 2. Create blank resume
-    await page.getByRole("button", { name: /create your first resume/i }).click();
-    await page.waitForURL("**/resumes/new", { timeout: 10000 });
-    await page.getByRole("button", { name: /create blank resume/i }).click();
-
-    // 3. Lands on editor
-    await page.waitForURL(/\/resumes\/[a-zA-Z0-9_-]+\/edit/, { timeout: 15000 });
+    // 1. Sign up user & navigate to blank resume
+    await signUpUser(page, testUser);
+    await openNewBlankResume(page);
     await expect(page.getByTestId("resume-preview-document")).toBeVisible();
 
     // Fill candidate name in content tab first
