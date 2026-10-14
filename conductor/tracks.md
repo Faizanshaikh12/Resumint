@@ -33,6 +33,11 @@
 
 ---
 
-- [~] **Track: Phase 8 - Share via Link**
+- [x] **Track: Phase 8 - Share via Link**
   *Link: [conductor/tracks/phase_8_share_link_20261014/index.md](./tracks/phase_8_share_link_20261014/index.md)*
+
+---
+
+- [ ] **Track: Phase 9 - ATS Checker, Resume Score, Job Description Match**
+  *Link: [conductor/tracks/phase_9_ats_checker_20261014/index.md](./tracks/phase_9_ats_checker_20261014/index.md)*
 
