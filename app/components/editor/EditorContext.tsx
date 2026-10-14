@@ -28,9 +28,11 @@ export interface EditorContextValue {
   canRedo: boolean;
   activeSection: string;
   setActiveSection: (secId: string) => void;
+  id?: string;
   save: () => Promise<SaveResult>;
   rename: (newTitle: string) => Promise<boolean>;
   persistence: ResumePersistence;
+  onImport?: (envelope: any) => void;
 }
 
 export const EditorContext = React.createContext<EditorContextValue | null>(null);

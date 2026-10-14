@@ -134,12 +134,13 @@ export function ResumePreview({
 
         {/* Scaled paper viewport container */}
         <div
-          className="w-full flex justify-center overflow-visible"
+          className="w-full flex justify-center overflow-visible resume-preview-viewport"
           style={{
             height: scale < 1 && paperHeight > 0 ? `${paperHeight * scale}px` : "auto",
           }}
         >
           <div
+            className="resume-preview-scaler"
             style={{
               transform: scale < 1 ? `scale(${scale})` : undefined,
               transformOrigin: "top center",

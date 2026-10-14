@@ -20,6 +20,7 @@ import {
   Trash2,
   Globe,
   Clock,
+  FileJson,
 } from "lucide-react";
 import type { ActionResult } from "~/lib/schemas/resume-actions";
 
@@ -172,6 +173,16 @@ export function ResumeCard({ resume, fetcher, atLimit }: ResumeCardProps) {
               >
                 <Copy className="h-3.5 w-3.5 text-muted-foreground" />
                 Duplicate {atLimit && "(Limit reached)"}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => {}}>
+                <a
+                  href={`/resumes/${resume.id}/export.json`}
+                  download
+                  className="flex w-full items-center gap-2 text-xs"
+                >
+                  <FileJson className="h-3.5 w-3.5 text-muted-foreground" />
+                  Download JSON
+                </a>
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => setDeleteOpen(true)}

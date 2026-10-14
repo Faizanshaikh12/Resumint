@@ -212,3 +212,79 @@ export function createServerPersistence(resumeId: string): ResumePersistence {
     },
   };
 }
+
+/**
+ * Local persistence adapter for guest editing without an account.
+ * Persists changes directly to browser localStorage.
+ */
+export function createLocalPersistence(storageKey = "resumint_guest_draft"): ResumePersistence {
+  return {
+    async save(
+      content: ResumeContent,
+      expectedVersion: number,
+      design?: ResumeDesign,
+      templateId?: TemplateId
+    ): Promise<SaveResult> {
+      try {
+        if (typeof window === "undefined" || !window.localStorage) {
+          return { ok: true, version: expectedVersion + 1 };
+        }
+
+        const existingRaw = localStorage.getItem(storageKey);
+        const existing = existingRaw ? JSON.parse(existingRaw) : {};
+
+        const updated = {
+          ...existing,
+          content,
+          design: design || existing.design,
+          templateId: templateId || existing.templateId || "modern",
+          version: expectedVersion + 1,
+          updatedAt: new Date().toISOString(),
+        };
+
+        const serialized = JSON.stringify(updated);
+        if (serialized.length > 204800) {
+          return {
+            ok: false,
+            reason: "oversize",
+            error: "Draft exceeds maximum allowed size of 200 KB",
+          };
+        }
+
+        localStorage.setItem(storageKey, serialized);
+        return {
+          ok: true,
+          version: expectedVersion + 1,
+          updatedAt: updated.updatedAt,
+        };
+      } catch (err: any) {
+        return {
+          ok: false,
+          reason: "error",
+          error: err?.message || "Failed to save draft to local storage",
+        };
+      }
+    },
+
+    async rename(title: string): Promise<RenameResult> {
+      try {
+        if (typeof window === "undefined" || !window.localStorage) {
+          return { ok: true, title };
+        }
+
+        const existingRaw = localStorage.getItem(storageKey);
+        const existing = existingRaw ? JSON.parse(existingRaw) : {};
+        existing.title = title;
+        localStorage.setItem(storageKey, JSON.stringify(existing));
+
+        return { ok: true, title };
+      } catch (err: any) {
+        return {
+          ok: false,
+          error: err?.message || "Failed to update draft title",
+        };
+      }
+    },
+  };
+}
+

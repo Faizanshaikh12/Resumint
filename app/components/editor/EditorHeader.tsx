@@ -16,11 +16,27 @@ import {
 } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "~/components/ui/dialog";
 import { useEditor } from "./EditorContext";
+import { ExportMenu } from "~/components/export/ExportMenu";
+import { ImportDialog } from "~/components/export/ImportDialog";
+import { toast } from "~/components/ui/sonner";
+import { UploadCloud, Sparkles } from "lucide-react";
 
 export function EditorHeader() {
   const {
+    id,
     title,
+    content,
+    design,
+    templateId,
     rename,
     save,
     saveStatus,
@@ -33,11 +49,16 @@ export function EditorHeader() {
     redo,
     canUndo,
     canRedo,
+    onImport,
   } = useEditor();
 
   const [isEditingTitle, setIsEditingTitle] = React.useState(false);
   const [titleInput, setTitleInput] = React.useState(title);
   const titleInputRef = React.useRef<HTMLInputElement>(null);
+
+  // Import Dialog states (for guest / direct import)
+  const [importOpen, setImportOpen] = React.useState(false);
+  const [confirmReplaceOpen, setConfirmReplaceOpen] = React.useState(false);
 
   React.useEffect(() => {
     setTitleInput(title);
@@ -75,13 +96,45 @@ export function EditorHeader() {
     }
   };
 
+  const isDraftNonEmpty = React.useMemo(() => {
+    return Boolean(
+      content.personal?.fullName?.trim() ||
+        content.experience?.length ||
+        content.education?.length ||
+        content.skills?.length ||
+        content.summary?.trim() ||
+        content.projects?.length
+    );
+  }, [content]);
+
+  const handleImportClick = () => {
+    if (isDraftNonEmpty) {
+      setConfirmReplaceOpen(true);
+    } else {
+      setImportOpen(true);
+    }
+  };
+
+  const handleConfirmReplace = () => {
+    setConfirmReplaceOpen(false);
+    setImportOpen(true);
+  };
+
+  const handleExecuteImport = (envelope: any) => {
+    setImportOpen(false);
+    if (onImport) {
+      onImport(envelope);
+      toast.success("Resume imported successfully");
+    }
+  };
+
   return (
     <header className="border-b bg-card px-4 py-3 sm:px-6 flex flex-wrap items-center justify-between gap-3 sticky top-0 z-20">
       <div className="flex items-center gap-3 min-w-0">
-        <Link to="/dashboard">
+        <Link to={id ? "/dashboard" : "/"}>
           <Button variant="ghost" size="sm" className="gap-2 h-9 px-2.5 text-muted-foreground hover:text-foreground">
             <ArrowLeft className="h-4 w-4" />
-            <span className="hidden sm:inline">Dashboard</span>
+            <span className="hidden sm:inline">{id ? "Dashboard" : "Home"}</span>
           </Button>
         </Link>
 
@@ -245,6 +298,21 @@ export function EditorHeader() {
           )}
         </div>
 
+        {/* Guest Import Button */}
+        {onImport && (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={handleImportClick}
+            className="gap-1.5 h-9"
+            data-testid="guest-import-json-button"
+          >
+            <UploadCloud className="h-4 w-4" />
+            <span className="hidden sm:inline">Import JSON</span>
+          </Button>
+        )}
+
         {/* Manual Save Button */}
         <Button
           onClick={() => void save()}
@@ -260,7 +328,66 @@ export function EditorHeader() {
           )}
           <span>Save</span>
         </Button>
+
+        {/* Export Dropdown Menu */}
+        <ExportMenu
+          content={content}
+          design={design}
+          templateId={templateId}
+          title={title}
+        />
+
+        {/* Save to Account CTA for Guests */}
+        {!id && (
+          <Link to="/signup" className="hidden lg:inline-flex">
+            <Button size="sm" className="gap-1.5 h-9 font-medium shadow-xs">
+              <Sparkles className="h-3.5 w-3.5" />
+              <span>Save to Account</span>
+            </Button>
+          </Link>
+        )}
       </div>
+
+      {/* Confirm Replace Draft Dialog */}
+      <Dialog open={confirmReplaceOpen} onOpenChange={setConfirmReplaceOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <div className="flex items-center gap-2 mb-1 text-amber-600">
+              <AlertTriangle className="h-5 w-5" />
+              <DialogTitle>Replace Current Draft?</DialogTitle>
+            </div>
+            <DialogDescription>
+              Importing a backup will replace your current resume draft. Any unsaved edits will be lost.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-0 pt-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setConfirmReplaceOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              size="sm"
+              onClick={handleConfirmReplace}
+              data-testid="confirm-replace-draft-button"
+            >
+              Replace Draft
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Import Dialog */}
+      <ImportDialog
+        open={importOpen}
+        onOpenChange={setImportOpen}
+        onConfirm={handleExecuteImport}
+      />
     </header>
   );
 }

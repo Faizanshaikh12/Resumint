@@ -1,18 +1,133 @@
-/* Resumint Print Stylesheet (Phase 7 full implementation) */
+/* ==========================================================================
+   Resumint Print Engine Stylesheet
+   High-fidelity paged media, orphan control, and exact color preservation.
+   ========================================================================== */
+
+/* Screen media rules */
+@media screen {
+  .print-only,
+  #resumint-print-root {
+    display: none !important;
+  }
+}
+
+/* Print media rules */
 @media print {
   @page {
     margin: 0;
-    size: auto;
   }
 
+  html,
   body {
+    width: 100% !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
     background: #ffffff !important;
-    color: #000000 !important;
+    color: #171717 !important;
+    overflow: visible !important;
+  }
+
+  /* Force browsers (Chromium, Firefox, Safari) to print background colors and images */
+  *,
+  *::before,
+  *::after {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
 
-  .no-print {
+  /* When #resumint-print-root is present, hide all other top-level elements */
+  body:has(#resumint-print-root) > *:not(#resumint-print-root) {
     display: none !important;
+  }
+
+  /* Chrome/UI suppression fallbacks */
+  header:not(.resume-paper header),
+  nav,
+  footer,
+  aside:not(.technical-template aside),
+  button,
+  .no-print,
+  .editor-header,
+  .editor-nav,
+  .editor-controls,
+  .page-break-guide,
+  [role="dialog"],
+  [data-sonner-toaster] {
+    display: none !important;
+  }
+
+  /* Render unscaled print root */
+  #resumint-print-root {
+    display: block !important;
+    position: static !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+  }
+
+  /* In-place screen preview scaler overrides if printing direct preview */
+  .resume-paper-container {
+    padding: 0 !important;
+    margin: 0 !important;
+    transform: none !important;
+  }
+
+  .resume-preview-viewport {
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  .resume-preview-scaler {
+    transform: none !important;
+    width: 100% !important;
+  }
+
+  /* Flatten paper drop shadows and borders for printing */
+  .resume-paper {
+    width: var(--page-width, 210mm) !important;
+    box-shadow: none !important;
+    border: none !important;
+    border-radius: 0 !important;
+    margin: 0 auto !important;
+    background-color: #ffffff !important;
+  }
+
+  /* Pagination & Page Break Guarantees */
+  .resume-section {
+    break-inside: auto;
+  }
+
+  .break-inside-avoid,
+  .resume-item,
+  li,
+  tr {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  h1,
+  h2,
+  h3,
+  .resume-section-heading {
+    break-after: avoid !important;
+    page-break-after: avoid !important;
+  }
+
+  /* Text overflow and wrapping: prevent clipped URLs or headings */
+  p,
+  li,
+  span,
+  a {
+    overflow-wrap: break-word !important;
+    word-break: break-word !important;
+    orphans: 3;
+    widows: 3;
+  }
+
+  /* Suppress browser link URL appending (e.g. "Google (http://google.com)") */
+  a[href]::after {
+    content: none !important;
   }
 }

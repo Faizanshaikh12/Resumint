@@ -36,7 +36,7 @@ export default function Home() {
           </p>
 
           <div className="mt-10 flex flex-col sm:flex-row gap-4 items-center justify-center">
-            <Link to="/resumes/new">
+            <Link to="/build">
               <Button size="lg" className="h-12 px-8 text-base font-semibold gap-2 shadow-md">
                 Start Building Resume <ArrowRight className="h-4 w-4" />
               </Button>

@@ -8,6 +8,7 @@ import { getTemplate } from "~/components/templates/registry";
 import { mergeTouchedDesign } from "~/lib/resume/touched-merge";
 import { normalizeDesign } from "~/lib/resume/normalize-design";
 import { ResumePreview } from "../preview/ResumePreview";
+import { PrintRoot } from "~/components/export/PrintRoot";
 import { EditorContext, type EditorContextValue, type SaveStatus } from "./EditorContext";
 import { EditorHeader } from "./EditorHeader";
 import { EditorNav } from "./EditorNav";
@@ -37,6 +38,7 @@ export interface ResumeEditorProps {
     version?: number;
   };
   persistence: ResumePersistence;
+  onImport?: (envelope: any) => void;
 }
 
 interface HistorySnapshot {
@@ -46,7 +48,7 @@ interface HistorySnapshot {
   touchedFields: string[];
 }
 
-export function ResumeEditor({ initial, persistence }: ResumeEditorProps) {
+export function ResumeEditor({ initial, persistence, onImport }: ResumeEditorProps) {
   const [content, setContent] = React.useState<ResumeContent>(initial.content);
   const [design, setDesign] = React.useState<ResumeDesign>(initial.design);
   const [templateId, setTemplateId] = React.useState<TemplateId>(initial.templateId || "modern");
@@ -396,8 +398,41 @@ export function ResumeEditor({ initial, persistence }: ResumeEditorProps) {
     }
   };
 
+  // Apply imported JSON envelope to editor state
+  const handleApplyImport = React.useCallback(
+    (envelope: any) => {
+      setPast((prev) => [
+        ...prev.slice(-49),
+        {
+          content,
+          design,
+          templateId,
+          touchedFields: Array.from(touchedFields),
+        },
+      ]);
+      setFuture([]);
+
+      if (envelope.resume?.content) {
+        setContent(envelope.resume.content);
+      }
+      if (envelope.resume?.design) {
+        setDesign(envelope.resume.design);
+      }
+      if (envelope.resume?.templateId) {
+        setTemplateId(envelope.resume.templateId);
+      }
+      if (envelope.resume?.title) {
+        setTitle(envelope.resume.title);
+      }
+      setIsDirty(true);
+      onImport?.(envelope);
+    },
+    [content, design, templateId, touchedFields, onImport]
+  );
+
   const contextValue = React.useMemo<EditorContextValue>(
     () => ({
+      id: initial.id,
       content,
       dispatch,
       isDirty,
@@ -423,8 +458,10 @@ export function ResumeEditor({ initial, persistence }: ResumeEditorProps) {
       save: handleSave,
       rename: handleRename,
       persistence,
+      onImport: handleApplyImport,
     }),
     [
+      initial.id,
       content,
       dispatch,
       isDirty,
@@ -448,6 +485,7 @@ export function ResumeEditor({ initial, persistence }: ResumeEditorProps) {
       handleSave,
       handleRename,
       persistence,
+      handleApplyImport,
     ]
   );
 
@@ -539,11 +577,13 @@ export function ResumeEditor({ initial, persistence }: ResumeEditorProps) {
             data-testid="editor-preview-pane"
           >
             <div className="w-full flex justify-center">
-              <ResumePreview
-                content={content}
-                design={design}
-                templateId={templateId}
-              />
+              <PrintRoot design={design}>
+                <ResumePreview
+                  content={content}
+                  design={design}
+                  templateId={templateId}
+                />
+              </PrintRoot>
             </div>
           </div>
         </div>
