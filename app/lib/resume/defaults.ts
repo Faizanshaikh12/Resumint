@@ -5,12 +5,17 @@ export function createDefaultDesign(): ResumeDesign {
   return {
     accentColor: "#2563eb",
     fontFamily: "inter",
-    fontSize: "md",
-    lineSpacing: "normal",
-    margins: "normal",
+    fontScale: 1.0,
+    lineSpacing: 1.3,
+    pageMargin: 16,
+    sectionSpacing: 16,
     pageSize: "A4",
-    sectionSpacing: "normal",
-    columns: "single",
+    columns: 1,
+    headerAlign: "left",
+    dateStyle: "MMM YYYY",
+    showIcons: true,
+    fontSize: "md",
+    margins: "normal",
   };
 }
 

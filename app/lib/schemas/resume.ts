@@ -213,22 +213,92 @@ export const resumeContentSchema = z.object({
 
 export type ResumeContent = z.infer<typeof resumeContentSchema>;
 
-// Resume Design Schema
-export const resumeDesignSchema = z.object({
+export const BUNDLED_FONT_FAMILIES = [
+  "inter",
+  "source-serif-4",
+  "lato",
+  "merriweather",
+  "ibm-plex-sans",
+  "roboto-mono",
+] as const;
+export type BundledFontFamily = (typeof BUNDLED_FONT_FAMILIES)[number];
+
+// Resume Design Schema with backward compatibility
+const rawResumeDesignSchema = z.object({
   accentColor: z
     .string()
     .max(30)
     .regex(/^#([0-9a-fA-F]{3}){1,2}$|^hsl\([^)]+\)$/, "Must be valid hex or hsl color")
     .default("#2563eb"),
   fontFamily: z
-    .enum(["inter", "roboto", "playfair", "merriweather", "source-sans", "fira-code"])
+    .enum(BUNDLED_FONT_FAMILIES)
     .default("inter"),
-  fontSize: z.enum(["sm", "md", "lg"]).default("md"),
-  lineSpacing: z.enum(["compact", "normal", "relaxed"]).default("normal"),
-  margins: z.enum(["compact", "normal", "spacious"]).default("normal"),
+  fontScale: z.number().min(0.85).max(1.25).default(1.0),
+  lineSpacing: z.number().min(1.0).max(1.8).default(1.3),
+  pageMargin: z.number().min(10).max(30).default(16),
+  sectionSpacing: z.number().min(8).max(32).default(16),
   pageSize: z.enum(["A4", "Letter"]).default("A4"),
-  sectionSpacing: z.enum(["compact", "normal", "relaxed"]).default("normal"),
-  columns: z.enum(["single", "double"]).default("single"),
+  columns: z.union([z.literal(1), z.literal(2)]).default(1),
+  headerAlign: z.enum(["left", "center"]).default("left"),
+  dateStyle: z.enum(["MMM YYYY", "MM/YYYY", "YYYY"]).default("MMM YYYY"),
+  showIcons: z.boolean().default(true),
+  // Deprecated backward-compatible fields retained for smooth transitions
+  fontSize: z.enum(["sm", "md", "lg"]).optional().default("md"),
+  margins: z.enum(["compact", "normal", "spacious"]).optional().default("normal"),
 });
 
-export type ResumeDesign = z.infer<typeof resumeDesignSchema>;
+export const resumeDesignSchema = z.preprocess((val) => {
+  if (typeof val !== "object" || val === null) return {};
+  const record = { ...(val as Record<string, unknown>) };
+
+  // Map legacy font families to bundled 6
+  if (typeof record.fontFamily === "string") {
+    const legacyMap: Record<string, BundledFontFamily> = {
+      roboto: "ibm-plex-sans",
+      playfair: "source-serif-4",
+      "source-sans": "inter",
+      "fira-code": "roboto-mono",
+    };
+    if (record.fontFamily in legacyMap) {
+      record.fontFamily = legacyMap[record.fontFamily];
+    } else if (!BUNDLED_FONT_FAMILIES.includes(record.fontFamily as BundledFontFamily)) {
+      record.fontFamily = "inter";
+    }
+  }
+
+  // Map legacy columns ("single" | "double") to 1 | 2
+  if (record.columns === "single") record.columns = 1;
+  else if (record.columns === "double") record.columns = 2;
+
+  // Map legacy fontSize ("sm" | "md" | "lg") to fontScale
+  if (record.fontScale === undefined && typeof record.fontSize === "string") {
+    if (record.fontSize === "sm") record.fontScale = 0.9;
+    else if (record.fontSize === "lg") record.fontScale = 1.15;
+    else record.fontScale = 1.0;
+  }
+
+  // Map legacy lineSpacing ("compact" | "normal" | "relaxed") to number
+  if (typeof record.lineSpacing === "string") {
+    if (record.lineSpacing === "compact") record.lineSpacing = 1.15;
+    else if (record.lineSpacing === "relaxed") record.lineSpacing = 1.5;
+    else record.lineSpacing = 1.3;
+  }
+
+  // Map legacy margins ("compact" | "normal" | "spacious") to pageMargin (mm)
+  if (record.pageMargin === undefined && typeof record.margins === "string") {
+    if (record.margins === "compact") record.pageMargin = 12;
+    else if (record.margins === "spacious") record.pageMargin = 22;
+    else record.pageMargin = 16;
+  }
+
+  // Map legacy sectionSpacing ("compact" | "normal" | "relaxed") to number (mm)
+  if (typeof record.sectionSpacing === "string") {
+    if (record.sectionSpacing === "compact") record.sectionSpacing = 12;
+    else if (record.sectionSpacing === "relaxed") record.sectionSpacing = 22;
+    else record.sectionSpacing = 16;
+  }
+
+  return record;
+}, rawResumeDesignSchema);
+
+export type ResumeDesign = z.infer<typeof rawResumeDesignSchema>;
