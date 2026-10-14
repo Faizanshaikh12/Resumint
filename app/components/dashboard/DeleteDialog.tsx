@@ -66,6 +66,7 @@ export function DeleteDialog({
             variant="destructive"
             onClick={handleDelete}
             disabled={fetcher.state === "submitting"}
+            data-testid="confirm-delete-resume-button"
           >
             Delete Resume
           </Button>

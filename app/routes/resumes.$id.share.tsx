@@ -66,6 +66,7 @@ export function meta() {
   return [
     { title: "Share Settings | Resumint" },
     { name: "description", content: "Manage public link, privacy, and password protection settings for your resume." },
+    { name: "robots", content: "noindex, nofollow" },
   ];
 }
 
@@ -514,7 +515,7 @@ export default function ShareSettingsPage({ loaderData }: Route.ComponentProps) 
                     Ask Search Engines Not to Index
                   </Label>
                   <p className="text-xs text-muted-foreground">
-                    Emits <code className="text-[11px] bg-muted px-1 rounded">X-Robots-Tag: noindex</code> headers so Google and Bing do not list your public resume.
+                    Emits <code className="text-[11px] font-medium text-foreground bg-muted border border-border/40 px-1 rounded">X-Robots-Tag: noindex</code> headers so Google and Bing do not list your public resume.
                   </p>
                 </div>
                 <input

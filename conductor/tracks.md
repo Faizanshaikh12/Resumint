@@ -38,6 +38,11 @@
 
 ---
 
-- [ ] **Track: Phase 9 - ATS Checker, Resume Score, Job Description Match**
+- [x] **Track: Phase 9 - ATS Checker, Resume Score, Job Description Match**
   *Link: [conductor/tracks/phase_9_ats_checker_20261014/index.md](./tracks/phase_9_ats_checker_20261014/index.md)*
+
+---
+
+- [ ] **Track: Phase 10 - Polish, Hardening, and Final Deploy**
+  *Link: [conductor/tracks/phase_10_polish_deploy_20261014/index.md](./tracks/phase_10_polish_deploy_20261014/index.md)*
 

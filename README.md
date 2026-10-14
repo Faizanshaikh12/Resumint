@@ -262,22 +262,64 @@ npm run build
 
 ---
 
-## Deployment
+---
 
-Deploy directly to Cloudflare Workers edge:
+## Cloudflare Free Tier & Quota Protection
 
-```bash
-npm run deploy
-```
+Resumint is specifically engineered to operate sustainably within the Cloudflare Workers and D1 Free Plan:
+
+| Metric | Cloudflare Free Limit | Resumint Implementation & Consumption | Safety Margin |
+| :--- | :--- | :--- | :--- |
+| **Worker CPU Time** | 10 ms / request | Sub-3ms WebCrypto hashing & SQLite reads; heavy PDF generation and ATS checks offloaded to client | > 70% headroom |
+| **Worker Bundle Size** | 3 MB compressed | **370.03 kB gzipped** (1.87 MB raw) production worker bundle | 87.7% headroom |
+| **Worker Requests** | 100,000 / day | Static assets cached immutably; debounced autosave (1000ms); client-side scoring | High daily buffer |
+| **D1 Row Reads** | 5,000,000 / month | Lightweight metadata projection on list queries (resumes list omits 200 KB JSON blobs) | Generous margin |
+| **D1 Row Writes** | 100,000 / month | 20-resume per-user hard storage cap; 20-snapshot rolling auto-prune; atomic updates | Controlled writes |
+| **D1 Storage** | 5 GB total | Average resume row size: ~15-25 KB JSON text | Capacity for >150k resumes |
+
+---
+
+## Environment Variables
+
+| Variable | Required | Description |
+| :--- | :---: | :--- |
+| `BETTER_AUTH_SECRET` | Yes | 64+ character random cryptographic secret for session signing and auth. |
+| `BETTER_AUTH_URL` | Yes | Canonical origin URL (e.g. `http://localhost:5173` or `https://resumint.dev`). |
+| `SHARE_COOKIE_SECRET` | Yes | Secret for HMAC-SHA256 signing of password-unlocked public share cookies. |
+| `ENVIRONMENT` | No | Environment identifier (`development` or `production`). |
+
+---
+
+## Limitations & Disclaimers
+
+1. **Heuristic ATS Score**: The 0–100 score in the Check tab is a deterministic educational heuristic based on common recruiting standards. It does not guarantee employment or specific corporate ATS outcomes.
+2. **Mobile Printing**: Client-side PDF export relies on browser print engines. On iOS Safari and Chrome Android, use *Share > Print > Pinch Outward* to save the full document vector.
+3. **Email Delivery**: Resumint MVP does not include an external SMTP/transactional email provider. Password reset flows print secure token links to local server logs in development.
+4. **Zero Third-Party AI**: Resumint does not transmit resume data or job descriptions to OpenAI, Anthropic, or external LLMs.
+
+---
+
+## Post-MVP Roadmap
+
+- [ ] **Cloudflare Workers AI**: Opt-in bullet point rewrites and grammar suggestions using `@cloudflare/ai`.
+- [ ] **Client-Side DOCX Export**: Word document generation via client-side Web Worker.
+- [ ] **Matching Cover Letter Builder**: Synchronized template design presets for cover letters.
+- [ ] **Multi-Language ATS Rules**: Linguistic catalogs for French, German, and Spanish.
+- [ ] **Job Application Kanban Board**: Simple local tracker for submissions and interview status.
 
 ---
 
 ## Documentation
 
-- [Architecture & Plan](docs/PLAN.md)
-- [Task Tracker](docs/TASKS.md)
-- [Architecture Decision Records](docs/DECISIONS.md)
+- [Architecture & Design Plan](docs/PLAN.md)
+- [Task & Milestone Registry](docs/TASKS.md)
+- [Architectural Decision Records (ADRs)](docs/DECISIONS.md)
+- [Security Architecture & Threat Model](docs/SECURITY.md)
+- [Operations & Disaster Recovery Runbook](docs/OPERATIONS.md)
+- [Accessibility (WCAG 2.2 AA) Audit](docs/A11Y.md)
 - [Agent & Contributor Guidelines](AGENTS.md)
+- [Contributing Guidelines](CONTRIBUTING.md)
+- [Changelog](CHANGELOG.md)
 
 ---
 

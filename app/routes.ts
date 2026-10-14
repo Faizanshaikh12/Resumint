@@ -2,12 +2,16 @@ import { type RouteConfig, index, route } from "@react-router/dev/routes";
 
 export default [
   index("routes/home.tsx"),
+  route("about", "routes/about.tsx"),
+  route("privacy", "routes/privacy.tsx"),
+  route("terms", "routes/terms.tsx"),
   route("health", "routes/health.ts"),
   route("login", "routes/login.tsx"),
   route("signup", "routes/signup.tsx"),
   route("forgot-password", "routes/forgot-password.tsx"),
   route("reset-password", "routes/reset-password.tsx"),
   route("dashboard", "routes/dashboard.tsx"),
+  route("settings", "routes/settings.tsx"),
   route("resumes/new", "routes/resumes.new.tsx"),
   route("resumes/:id/edit", "routes/resumes.$id.edit.tsx"),
   route("resumes/:id/share", "routes/resumes.$id.share.tsx"),
@@ -16,6 +20,9 @@ export default [
   route("r/:slug", "routes/r.$slug.tsx"),
   route("build", "routes/build.tsx"),
   route("logout", "routes/logout.ts"),
+  route("api/export-data", "routes/api.export-data.ts"),
   route("api/auth/*", "routes/api.auth.$.ts"),
+  route("robots.txt", "routes/robots[.]txt.ts"),
+  route("sitemap.xml", "routes/sitemap[.]xml.ts"),
   route("*", "routes/not-found.tsx"),
 ] satisfies RouteConfig;

@@ -94,7 +94,7 @@ function SortableSectionItem({
       style={style}
       className={`group flex items-center justify-between rounded-lg px-2 py-1.5 text-xs transition-colors ${
         isActive
-          ? "bg-primary/10 text-primary font-semibold"
+          ? "bg-accent text-accent-foreground font-semibold"
           : "text-muted-foreground hover:bg-muted hover:text-foreground"
       }`}
     >
@@ -227,7 +227,7 @@ export function EditorNav() {
           onClick={() => setActiveSection("personal")}
           className={`w-full flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs text-left transition-colors ${
             activeSection === "personal"
-              ? "bg-primary/10 text-primary font-semibold"
+              ? "bg-accent text-accent-foreground font-semibold"
               : "text-muted-foreground hover:bg-muted hover:text-foreground"
           }`}
         >

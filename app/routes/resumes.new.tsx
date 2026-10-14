@@ -18,6 +18,7 @@ export function meta() {
   return [
     { title: "Create New Resume | Resumint" },
     { name: "description", content: "Choose how to start your new resume." },
+    { name: "robots", content: "noindex, nofollow" },
   ];
 }
 

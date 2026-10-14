@@ -7,7 +7,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
-import { FileText, User as UserIcon, LogOut, LayoutDashboard } from "lucide-react";
+import { FileText, User as UserIcon, LogOut, LayoutDashboard, Settings } from "lucide-react";
 import type { AuthUser } from "~/auth/helpers.server";
 
 export function Header({ user: propUser }: { user?: AuthUser | null } = {}) {
@@ -50,6 +50,9 @@ export function Header({ user: propUser }: { user?: AuthUser | null } = {}) {
             <Link to="/#features" className="transition-colors hover:text-foreground">
               Features
             </Link>
+            <Link to="/about" className="transition-colors hover:text-foreground">
+              About
+            </Link>
             {user && (
               <Link to="/dashboard" className="transition-colors hover:text-foreground">
                 Dashboard
@@ -82,10 +85,16 @@ export function Header({ user: propUser }: { user?: AuthUser | null } = {}) {
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem>
+                      <Link to="/settings" className="flex items-center gap-2 w-full">
+                        <Settings className="h-4 w-4 text-muted-foreground" />
+                        <span>Settings</span>
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem>
                       <Form method="post" action="/logout" className="w-full">
                         <button
                           type="submit"
-                          className="flex items-center gap-2 w-full text-destructive text-left"
+                          className="flex items-center gap-2 w-full text-destructive text-left cursor-pointer"
                         >
                           <LogOut className="h-4 w-4" />
                           <span>Log out</span>
@@ -97,7 +106,7 @@ export function Header({ user: propUser }: { user?: AuthUser | null } = {}) {
 
                 <Link to="/resumes/new" className="hidden sm:inline-flex">
                   <Button size="sm" className="font-medium shadow-xs">
-                    Build Resume
+                    New Resume
                   </Button>
                 </Link>
               </div>
@@ -113,7 +122,7 @@ export function Header({ user: propUser }: { user?: AuthUser | null } = {}) {
                     Sign up
                   </Button>
                 </Link>
-                <Link to="/resumes/new">
+                <Link to="/build">
                   <Button size="sm" className="font-medium shadow-xs">
                     Build Resume
                   </Button>

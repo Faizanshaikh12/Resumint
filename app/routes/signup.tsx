@@ -5,6 +5,7 @@ export function meta() {
   return [
     { title: "Sign Up | Resumint" },
     { name: "description", content: "Create an account on Resumint to build and save your resumes." },
+    { name: "robots", content: "noindex, nofollow" },
   ];
 }
 

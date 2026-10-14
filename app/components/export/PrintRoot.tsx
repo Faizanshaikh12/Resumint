@@ -16,11 +16,7 @@ export function PrintRoot({ children, design }: PrintRootProps) {
 
   return (
     <div id="resumint-print-root" className="w-full flex justify-center">
-      <style
-        dangerouslySetInnerHTML={{
-          __html: `@page { size: ${pageSizeCss}; margin: 0; }`,
-        }}
-      />
+      <style>{`@page { size: ${pageSizeCss}; margin: 0; }`}</style>
       {children}
     </div>
   );

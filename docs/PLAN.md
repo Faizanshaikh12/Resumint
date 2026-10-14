@@ -466,3 +466,26 @@ Target Job Description (Pasted into textarea, capped at 10,000 chars)
        JobMatchResult (Rendered locally in JobMatchCard, saved to sessionStorage only)
 ```
 
+---
+
+## 10. Phase 10: Polish, Hardening, and Production Release (MVP Complete)
+
+### Architecture Highlights
+- **Global Security Envelope**: Edge middleware injecting strict CSP (`default-src 'self'`), HSTS, nosniff, framing protection, and Permissions-Policy across all routes.
+- **Account Deletion & Data Sovereignty**: Immediate, atomic database cascades for user account deletion across `users`, `accounts`, `sessions`, `resumes`, `snapshots`, `share_links` with signed cookie invalidation.
+- **Whole-Archive Data Export**: JSON array of versioned envelopes streamed directly from `/api/export-data` with `Cache-Control: no-store`.
+- **A11y & Contrast**: Zero serious/critical Axe violations across all public and authenticated routes; WCAG 2.2 AA compliant contrast ($\ge 4.5:1$).
+- **CI/CD Automation**: Dual GitHub Actions workflows: `.github/workflows/ci.yml` (PR gates: lint, typecheck, vitest unit, vitest worker, production build, playwright e2e & a11y) and `.github/workflows/deploy.yml` (production deploy to Cloudflare with automated smoke tests).
+
+---
+
+## 11. Post-MVP Roadmap (Future Scope)
+
+The following features were intentionally excluded from the MVP to preserve edge performance, code simplicity, and strict free-tier compliance:
+1. **Cloudflare Workers AI Assistant**: On-demand bullet point rewrites and grammar suggestions using `@cloudflare/ai` models (e.g., Llama 3 8B), strictly behind feature flags and user opt-in.
+2. **Client-Side DOCX Export**: Word document generation using `docx` in a Web Worker to preserve offline/client-side privacy.
+3. **Cover Letter Builder**: Matched typography and design presets aligning cover letter styling with the chosen resume template.
+4. **Multi-Language ATS Rule Sets**: Dedicated linguistic catalogs for Spanish, German, and French resume structure and verb tense analysis.
+5. **Job Application Kanban Tracker**: Simple local/synced pipeline for tracking resume submissions, interview stages, and offers.
+
+

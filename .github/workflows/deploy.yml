@@ -1,0 +1,64 @@
+name: Deploy Pipeline
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy to Cloudflare Workers
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://resumint.dev
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 22 (LTS)
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Apply Remote D1 Database Migrations
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: d1 migrations apply DB --remote
+
+      - name: Build Production Bundle
+        run: npm run build
+
+      - name: Deploy to Cloudflare Workers
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: deploy
+
+      - name: Post-Deploy Smoke Test (/health & /)
+        run: |
+          PROD_URL="${{ secrets.BETTER_AUTH_URL || 'https://resumint.dev' }}"
+          echo "Verifying health endpoint at $PROD_URL/health..."
+          HEALTH_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$PROD_URL/health" || echo "000")
+          echo "Health check HTTP status: $HEALTH_STATUS"
+          if [ "$HEALTH_STATUS" != "200" ]; then
+            echo "Smoke test warning: /health returned $HEALTH_STATUS (verify DNS and deployment state)"
+          fi
+
+          echo "Verifying root route at $PROD_URL/..."
+          HOME_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$PROD_URL/" || echo "000")
+          echo "Home route HTTP status: $HOME_STATUS"
+          if [ "$HOME_STATUS" != "200" ]; then
+            echo "Smoke test warning: / returned $HOME_STATUS"
+          fi

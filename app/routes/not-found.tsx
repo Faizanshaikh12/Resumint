@@ -16,7 +16,7 @@ export default function NotFound() {
         <FileQuestion className="h-8 w-8" />
       </div>
       <h1 className="mt-6 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
-        Page Not Found
+        404 - Page Not Found
       </h1>
       <p className="mt-3 max-w-md text-muted-foreground text-sm sm:text-base">
         The link you followed might be broken, or the resume may have been unpublished or removed.

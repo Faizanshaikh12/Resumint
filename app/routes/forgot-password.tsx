@@ -12,6 +12,7 @@ export function meta() {
   return [
     { title: "Forgot Password | Resumint" },
     { name: "description", content: "Reset your Resumint account password." },
+    { name: "robots", content: "noindex, nofollow" },
   ];
 }
 

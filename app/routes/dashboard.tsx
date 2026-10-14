@@ -40,6 +40,7 @@ export function meta() {
   return [
     { title: "My Documents | Resumint" },
     { name: "description", content: "Manage and organize your Resumint resumes." },
+    { name: "robots", content: "noindex, nofollow" },
   ];
 }
 

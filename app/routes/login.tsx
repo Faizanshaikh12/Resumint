@@ -5,6 +5,7 @@ export function meta() {
   return [
     { title: "Log In | Resumint" },
     { name: "description", content: "Log in to your Resumint resume workspace." },
+    { name: "robots", content: "noindex, nofollow" },
   ];
 }
 

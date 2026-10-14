@@ -19,6 +19,7 @@ export function meta({ data }: Route.MetaArgs) {
   return [
     { title },
     { name: "description", content: "Resumint resume builder and editor." },
+    { name: "robots", content: "noindex, nofollow" },
   ];
 }
 
