@@ -18,5 +18,10 @@
 
 ---
 
-- [ ] **Track: Phase 5 - Resume Editor, Autosave, Versions, Guest-First Save**
+- [x] **Track: Phase 5 - Resume Editor, Autosave, Versions, Guest-First Save**
   *Link: [conductor/tracks/phase_5_editor_20261013/index.md](./tracks/phase_5_editor_20261013/index.md)*
+
+---
+
+- [ ] **Track: Phase 6 - Templates and Design Customization**
+  *Link: [conductor/tracks/phase_6_templates_20261014/index.md](./tracks/phase_6_templates_20261014/index.md)*
