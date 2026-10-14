@@ -31,3 +31,8 @@
 - [x] **Track: Phase 7 - Export and Import**
   *Link: [conductor/tracks/phase_7_export_import_20261014/index.md](./tracks/phase_7_export_import_20261014/index.md)*
 
+---
+
+- [~] **Track: Phase 8 - Share via Link**
+  *Link: [conductor/tracks/phase_8_share_link_20261014/index.md](./tracks/phase_8_share_link_20261014/index.md)*
+
