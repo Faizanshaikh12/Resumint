@@ -65,7 +65,11 @@ export function Header({ user: propUser }: { user?: AuthUser | null } = {}) {
               About
             </Link>
             {user && (
-              <Link to="/dashboard" className="transition-colors hover:text-foreground">
+              <Link
+                to="/dashboard"
+                className="transition-colors hover:text-foreground"
+                data-testid="nav-dashboard"
+              >
                 Dashboard
               </Link>
             )}

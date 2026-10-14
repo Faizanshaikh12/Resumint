@@ -1,6 +1,7 @@
 import { test, expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 import { signUpUser } from "./test-utils";
+import { goToDashboardViaNav } from "./helpers/navigation";
 
 function assertNoViolations(scan: { violations: any[] }) {
   if (scan.violations && scan.violations.length) {
@@ -48,15 +49,14 @@ test.describe("Dashboard & Resume Management E2E", () => {
     await expect(page.getByText("Untitled Resume")).toBeVisible();
 
     // 5. Navigate back to dashboard and verify card is visible
-    await page.getByRole("link", { name: /dashboard/i }).click();
-    await page.waitForURL("**/dashboard", { timeout: 10000 });
+    await goToDashboardViaNav(page);
 
     const card = page.getByTestId("resume-card");
     await expect(card).toBeVisible();
     await expect(card.getByText("Untitled Resume")).toBeVisible();
 
-    // 6. Create second resume from sample
-    await page.getByRole("button", { name: /new resume/i }).click();
+    // 6. Create second resume from sample (scoped to main content to avoid header button ambiguity)
+    await page.locator("#main-content").getByRole("button", { name: /new resume/i }).click();
     await page.waitForURL("**/resumes/new", { timeout: 10000 });
 
     await page.getByRole("button", { name: /start with software engineer/i }).click();
@@ -65,8 +65,7 @@ test.describe("Dashboard & Resume Management E2E", () => {
     await expect(page.getByText("Alex Morgan")).toBeVisible();
 
     // Return to dashboard
-    await page.getByRole("link", { name: /dashboard/i }).click();
-    await page.waitForURL("**/dashboard", { timeout: 10000 });
+    await goToDashboardViaNav(page);
 
     const cards = page.getByTestId("resume-card");
     await expect(cards).toHaveCount(2);
@@ -193,8 +192,7 @@ test.describe("Dashboard & Resume Management E2E", () => {
 
     await page.getByRole("button", { name: /create blank resume/i }).click();
     await page.waitForURL(/\/resumes\/[a-zA-Z0-9_-]+\/edit/, { timeout: 15000 });
-    await page.getByRole("link", { name: /dashboard/i }).click();
-    await page.waitForURL("**/dashboard", { timeout: 10000 });
+    await goToDashboardViaNav(page);
 
     // 3. Populated Dashboard accessibility scan
     await expect(page.getByTestId("resume-card").first()).toBeVisible({ timeout: 10000 });

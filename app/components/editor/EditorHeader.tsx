@@ -137,7 +137,11 @@ export function EditorHeader() {
   return (
     <header className="border-b bg-card px-4 py-3 sm:px-6 flex flex-wrap items-center justify-between gap-3 sticky top-0 z-20">
       <div className="flex items-center gap-3 min-w-0">
-        <Link to={id ? "/dashboard" : "/"}>
+        <Link
+          to={id ? "/dashboard" : "/"}
+          aria-label={id ? "Back to dashboard" : "Back to home"}
+          data-testid="editor-back-button"
+        >
           <Button variant="ghost" size="sm" className="gap-2 h-9 px-2.5 text-muted-foreground hover:text-foreground">
             <ArrowLeft className="h-4 w-4" />
             <span className="hidden sm:inline">{id ? "Dashboard" : "Home"}</span>
