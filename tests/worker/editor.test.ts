@@ -332,4 +332,78 @@ describe("Resume Editor Route (Worker Integration)", () => {
     const fresh = await getResume(db, user.id, resume.id);
     expect(fresh?.title).toBe("Renamed In Editor");
   });
+
+  it("save action persists design with normalization and rejects invalid templateId", async () => {
+    const db = createTestDb(env);
+    const { user, cookie } = await createAuthenticatedUser("design-save@example.com");
+    const resume = await createResume(db, user.id, { title: "Design Save Test" });
+
+    const content = createDefaultContent();
+
+    // 1. Valid design with out-of-range values is normalized
+    const req1 = new Request(`http://localhost:5173/resumes/${resume.id}/edit`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Origin: "http://localhost:5173",
+        Cookie: cookie,
+      },
+      body: JSON.stringify({
+        intent: "save",
+        expectedVersion: 1,
+        content,
+        templateId: "classic", // Classic only supports single column
+        design: {
+          accentColor: "#059669",
+          fontScale: 2.0, // should clamp to 1.25
+          columns: 2, // should force to 1 for classic
+        },
+      }),
+    });
+
+    const res1 = await editAction({
+      request: req1,
+      params: { id: resume.id },
+      context: { cloudflare: { env } },
+    } as any);
+
+    expect(res1.status).toBe(200);
+    const json1 = (await res1.json()) as any;
+    expect(json1.ok).toBe(true);
+
+    const fresh1 = await getResume(db, user.id, resume.id);
+    expect(fresh1?.templateId).toBe("classic");
+    const freshDesign = fresh1?.design as any;
+    expect(freshDesign.accentColor).toBe("#059669");
+    expect(freshDesign.fontScale).toBe(1.25);
+    expect(freshDesign.columns).toBe(1);
+
+    // 2. Invalid templateId is rejected with 400
+    const req2 = new Request(`http://localhost:5173/resumes/${resume.id}/edit`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Origin: "http://localhost:5173",
+        Cookie: cookie,
+      },
+      body: JSON.stringify({
+        intent: "save",
+        expectedVersion: 2,
+        content,
+        templateId: "unsupported-template-xyz",
+      }),
+    });
+
+    const res2 = await editAction({
+      request: req2,
+      params: { id: resume.id },
+      context: { cloudflare: { env } },
+    } as any);
+
+    expect(res2.status).toBe(400);
+    const json2 = (await res2.json()) as any;
+    expect(json2.ok).toBe(false);
+    expect(json2.error).toBe("Invalid templateId");
+  });
 });
+

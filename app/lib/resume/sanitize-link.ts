@@ -8,7 +8,6 @@ export function sanitizeHref(url: unknown): string {
   if (!trimmed) return "";
 
   // Check against prohibited script protocols
-  // eslint-disable-next-line no-script-url
   const lowercase = trimmed.toLowerCase();
   if (
     lowercase.startsWith("javascript:") ||

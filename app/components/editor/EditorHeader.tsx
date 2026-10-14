@@ -9,6 +9,10 @@ import {
   Save,
   Pencil,
   Check,
+  Undo2,
+  Redo2,
+  FileText,
+  Palette,
 } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
@@ -23,6 +27,12 @@ export function EditorHeader() {
     saveError,
     isDirty,
     version,
+    editorTab,
+    setEditorTab,
+    undo,
+    redo,
+    canUndo,
+    canRedo,
   } = useEditor();
 
   const [isEditingTitle, setIsEditingTitle] = React.useState(false);
@@ -117,6 +127,71 @@ export function EditorHeader() {
           <span className="text-xs text-muted-foreground font-mono hidden md:inline">
             v{version}
           </span>
+        </div>
+      </div>
+
+      {/* Center View Switcher & History Actions */}
+      <div className="flex items-center gap-2">
+        <div
+          role="tablist"
+          aria-label="Editor sections"
+          className="flex items-center rounded-lg border bg-muted/40 p-0.5"
+        >
+          <button
+            type="button"
+            role="tab"
+            aria-selected={editorTab === "content"}
+            onClick={() => setEditorTab("content")}
+            className={`flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-md transition-all ${
+              editorTab === "content"
+                ? "bg-background text-foreground shadow-xs font-semibold"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <FileText className="h-3.5 w-3.5" />
+            <span>Content</span>
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={editorTab === "design"}
+            onClick={() => setEditorTab("design")}
+            className={`flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-md transition-all ${
+              editorTab === "design"
+                ? "bg-background text-foreground shadow-xs font-semibold"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <Palette className="h-3.5 w-3.5" />
+            <span>Design</span>
+          </button>
+        </div>
+
+        <div className="hidden sm:flex items-center border-l pl-2 ml-1 gap-1">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="h-8 w-8 p-0"
+            onClick={undo}
+            disabled={!canUndo}
+            title="Undo (Ctrl+Z)"
+            aria-label="Undo change"
+          >
+            <Undo2 className="h-4 w-4" />
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="h-8 w-8 p-0"
+            onClick={redo}
+            disabled={!canRedo}
+            title="Redo (Ctrl+Y)"
+            aria-label="Redo change"
+          >
+            <Redo2 className="h-4 w-4" />
+          </Button>
         </div>
       </div>
 

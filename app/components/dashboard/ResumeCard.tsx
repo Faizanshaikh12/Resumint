@@ -11,6 +11,7 @@ import {
 import { Button } from "~/components/ui/button";
 import { RenameDialog } from "./RenameDialog";
 import { DeleteDialog } from "./DeleteDialog";
+import { ResumeThumbnail } from "./ResumeThumbnail";
 import {
   MoreVertical,
   ExternalLink,
@@ -92,43 +93,33 @@ export function ResumeCard({ resume, fetcher, atLimit }: ResumeCardProps) {
         data-testid="resume-card"
         className="group relative flex flex-col rounded-xl border bg-card p-4 shadow-xs transition-all hover:border-primary/40 hover:shadow-md focus-within:ring-2 focus-within:ring-ring"
       >
-        {/* Placeholder Thumbnail: Colored Initials Document Miniature */}
+        {/* Thumbnail: Lazy Document Miniature with Initials Fallback */}
         <Link
           to={`/resumes/${resume.id}/edit`}
           tabIndex={-1}
           aria-hidden="true"
-          className="relative aspect-[16/10] w-full overflow-hidden rounded-lg border bg-gradient-to-br p-4 transition-transform group-hover:scale-[1.01]"
+          className="relative aspect-[16/10] w-full overflow-hidden rounded-lg border transition-transform group-hover:scale-[1.01]"
         >
-          <div
-            className={`flex h-full w-full flex-col justify-between rounded border p-3 ${palette}`}
-          >
-            <div className="flex items-center justify-between">
-              <span className="font-mono text-lg font-black tracking-wider">
-                {initials}
-              </span>
-              <div className="flex gap-1.5">
-                {resume.hasShareLink && (
-                  <span
-                    title="Active Share Link"
-                    className="inline-flex items-center gap-1 rounded-full bg-background/80 px-2 py-0.5 text-[10px] font-semibold text-emerald-600 shadow-xs dark:text-emerald-400"
-                  >
-                    <Globe className="h-2.5 w-2.5" />
-                    Shared
-                  </span>
-                )}
-                <span className="inline-flex items-center rounded-md bg-background/80 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-foreground/80 shadow-xs">
-                  {resume.templateId}
-                </span>
-              </div>
-            </div>
+          <ResumeThumbnail
+            resumeId={resume.id}
+            initials={initials}
+            paletteClass={palette}
+            templateId={resume.templateId}
+          />
 
-            {/* Stylized miniature document lines */}
-            <div className="space-y-1.5 opacity-60">
-              <div className="h-1.5 w-1/3 rounded-full bg-current" />
-              <div className="h-1 w-full rounded-full bg-current opacity-40" />
-              <div className="h-1 w-4/5 rounded-full bg-current opacity-40" />
-              <div className="h-1 w-2/3 rounded-full bg-current opacity-40" />
-            </div>
+          <div className="absolute top-2 right-2 flex gap-1.5 z-10">
+            {resume.hasShareLink && (
+              <span
+                title="Active Share Link"
+                className="inline-flex items-center gap-1 rounded-full bg-background/90 backdrop-blur-xs px-2 py-0.5 text-[10px] font-semibold text-emerald-600 shadow-xs dark:text-emerald-400"
+              >
+                <Globe className="h-2.5 w-2.5" />
+                Shared
+              </span>
+            )}
+            <span className="inline-flex items-center rounded-md bg-background/90 backdrop-blur-xs px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-foreground/80 shadow-xs">
+              {resume.templateId}
+            </span>
           </div>
         </Link>
 

@@ -4,10 +4,14 @@ import { Eye, Edit3 } from "lucide-react";
 import { editorReducer, type EditorAction } from "~/lib/resume/editor-state";
 import type { ResumePersistence, SaveResult } from "~/lib/resume/persistence";
 import type { ResumeContent, ResumeDesign, TemplateId } from "~/lib/schemas/resume";
+import { getTemplate } from "~/components/templates/registry";
+import { mergeTouchedDesign } from "~/lib/resume/touched-merge";
+import { normalizeDesign } from "~/lib/resume/normalize-design";
 import { ResumePreview } from "../preview/ResumePreview";
-import { EditorContext, type SaveStatus } from "./EditorContext";
+import { EditorContext, type EditorContextValue, type SaveStatus } from "./EditorContext";
 import { EditorHeader } from "./EditorHeader";
 import { EditorNav } from "./EditorNav";
+import { DesignPanel } from "./DesignPanel";
 import { AwardsForm } from "./forms/AwardsForm";
 import { CertificationsForm } from "./forms/CertificationsForm";
 import { CustomSectionForm } from "./forms/CustomSectionForm";
@@ -35,8 +39,24 @@ export interface ResumeEditorProps {
   persistence: ResumePersistence;
 }
 
+interface HistorySnapshot {
+  content: ResumeContent;
+  design: ResumeDesign;
+  templateId: TemplateId;
+  touchedFields: string[];
+}
+
 export function ResumeEditor({ initial, persistence }: ResumeEditorProps) {
-  const [content, dispatchBase] = React.useReducer(editorReducer, initial.content);
+  const [content, setContent] = React.useState<ResumeContent>(initial.content);
+  const [design, setDesign] = React.useState<ResumeDesign>(initial.design);
+  const [templateId, setTemplateId] = React.useState<TemplateId>(initial.templateId || "modern");
+  const [touchedFields, setTouchedFields] = React.useState<Set<string>>(new Set<string>());
+  const [editorTab, setEditorTab] = React.useState<"content" | "design">("content");
+
+  const [past, setPast] = React.useState<HistorySnapshot[]>([]);
+  const [future, setFuture] = React.useState<HistorySnapshot[]>([]);
+  const lastDesignChangeRef = React.useRef<{ time: number; field?: string }>({ time: 0 });
+
   const [title, setTitle] = React.useState(initial.title);
   const [version, setVersion] = React.useState(initial.version ?? 1);
   const [isDirty, setIsDirty] = React.useState(false);
@@ -48,17 +68,213 @@ export function ResumeEditor({ initial, persistence }: ResumeEditorProps) {
   // Mobile tab state
   const [mobileTab, setMobileTab] = React.useState<"edit" | "preview">("edit");
 
-  // Wrap dispatch to mark dirty on content changes
+  // Content dispatch with undo history
   const dispatch: React.Dispatch<EditorAction> = React.useCallback(
     (action) => {
-      dispatchBase(action);
+      setContent((prevContent) => {
+        const nextContent = editorReducer(prevContent, action);
+        setPast((prevPast) => [
+          ...prevPast.slice(-49),
+          {
+            content: prevContent,
+            design,
+            templateId,
+            touchedFields: Array.from(touchedFields),
+          },
+        ]);
+        setFuture([]);
+        return nextContent;
+      });
+
       setIsDirty(true);
       if (saveStatus === "saved") {
         setSaveStatus("idle");
       }
     },
-    [saveStatus]
+    [design, templateId, touchedFields, saveStatus]
   );
+
+  // Template switching with touched fields merge and normalization
+  const setTemplate = React.useCallback(
+    (newTemplateId: TemplateId) => {
+      if (newTemplateId === templateId) return;
+
+      setPast((prev) => [
+        ...prev.slice(-49),
+        {
+          content,
+          design,
+          templateId,
+          touchedFields: Array.from(touchedFields),
+        },
+      ]);
+      setFuture([]);
+
+      const targetTemplate = getTemplate(newTemplateId);
+      const merged = mergeTouchedDesign(targetTemplate.defaultDesign, design, touchedFields);
+      const normalized = normalizeDesign(merged, targetTemplate.supports);
+
+      setTemplateId(newTemplateId);
+      setDesign(normalized);
+      setIsDirty(true);
+      if (saveStatus === "saved") {
+        setSaveStatus("idle");
+      }
+    },
+    [content, design, templateId, touchedFields, saveStatus]
+  );
+
+  // Design update with slider coalescing and touched tracking
+  const updateDesign = React.useCallback(
+    (patch: Partial<ResumeDesign>, fieldName?: string) => {
+      const now = Date.now();
+      const isCoalescing =
+        fieldName &&
+        lastDesignChangeRef.current.field === fieldName &&
+        now - lastDesignChangeRef.current.time < 400;
+
+      lastDesignChangeRef.current = { time: now, field: fieldName };
+
+      if (!isCoalescing) {
+        setPast((prev) => [
+          ...prev.slice(-49),
+          {
+            content,
+            design,
+            templateId,
+            touchedFields: Array.from(touchedFields),
+          },
+        ]);
+        setFuture([]);
+      }
+
+      if (fieldName) {
+        setTouchedFields((prev) => {
+          const next = new Set(prev);
+          next.add(fieldName);
+          return next;
+        });
+      }
+
+      setDesign((prevDesign) => ({
+        ...prevDesign,
+        ...patch,
+      }));
+      setIsDirty(true);
+      if (saveStatus === "saved") {
+        setSaveStatus("idle");
+      }
+    },
+    [content, design, templateId, touchedFields, saveStatus]
+  );
+
+  // Reset design back to template defaults
+  const resetDesign = React.useCallback(() => {
+    setPast((prev) => [
+      ...prev.slice(-49),
+      {
+        content,
+        design,
+        templateId,
+        touchedFields: Array.from(touchedFields),
+      },
+    ]);
+    setFuture([]);
+
+    const targetTemplate = getTemplate(templateId);
+    setDesign(targetTemplate.defaultDesign);
+    setTouchedFields(new Set<string>());
+    setIsDirty(true);
+    if (saveStatus === "saved") {
+      setSaveStatus("idle");
+    }
+  }, [content, design, templateId, touchedFields, saveStatus]);
+
+  // Undo
+  const undo = React.useCallback(() => {
+    if (past.length === 0) return;
+    const previous = past[past.length - 1];
+    if (!previous) return;
+
+    setFuture((prev) => [
+      {
+        content,
+        design,
+        templateId,
+        touchedFields: Array.from(touchedFields),
+      },
+      ...prev,
+    ]);
+    setPast((prev) => prev.slice(0, -1));
+
+    setContent(previous.content);
+    setDesign(previous.design);
+    setTemplateId(previous.templateId);
+    setTouchedFields(new Set(previous.touchedFields));
+    setIsDirty(true);
+    if (saveStatus === "saved") {
+      setSaveStatus("idle");
+    }
+  }, [past, content, design, templateId, touchedFields, saveStatus]);
+
+  // Redo
+  const redo = React.useCallback(() => {
+    if (future.length === 0) return;
+    const next = future[0];
+    if (!next) return;
+
+    setPast((prev) => [
+      ...prev.slice(-49),
+      {
+        content,
+        design,
+        templateId,
+        touchedFields: Array.from(touchedFields),
+      },
+    ]);
+    setFuture((prev) => prev.slice(1));
+
+    setContent(next.content);
+    setDesign(next.design);
+    setTemplateId(next.templateId);
+    setTouchedFields(new Set(next.touchedFields));
+    setIsDirty(true);
+    if (saveStatus === "saved") {
+      setSaveStatus("idle");
+    }
+  }, [future, content, design, templateId, touchedFields, saveStatus]);
+
+  // Keyboard shortcut listener for Undo/Redo
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (
+        target &&
+        (target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.isContentEditable)
+      ) {
+        return;
+      }
+
+      const isMac =
+        typeof navigator !== "undefined" &&
+        /Mac|iPod|iPhone|iPad/.test(navigator.platform);
+      const mod = isMac ? e.metaKey : e.ctrlKey;
+      if (!mod) return;
+
+      if (e.key === "z" && !e.shiftKey) {
+        e.preventDefault();
+        undo();
+      } else if ((e.key === "z" && e.shiftKey) || e.key === "y") {
+        e.preventDefault();
+        redo();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [undo, redo]);
 
   // Unsaved changes protection: React Router useBlocker
   const blocker = useBlocker(
@@ -95,11 +311,11 @@ export function ResumeEditor({ initial, persistence }: ResumeEditorProps) {
   }, [isDirty]);
 
   // Manual save handler
-  const handleSave = async (): Promise<SaveResult> => {
+  const handleSave = React.useCallback(async (): Promise<SaveResult> => {
     setSaveStatus("saving");
     setSaveError(null);
 
-    const result = await persistence.save(content, version);
+    const result = await persistence.save(content, version, design, templateId);
 
     if (result.ok) {
       setVersion(result.version);
@@ -117,7 +333,18 @@ export function ResumeEditor({ initial, persistence }: ResumeEditorProps) {
     }
 
     return result;
-  };
+  }, [persistence, content, version, design, templateId]);
+
+  // Debounced autosave (2500ms inactivity when dirty)
+  React.useEffect(() => {
+    if (!isDirty || saveStatus === "saving") return;
+
+    const timer = setTimeout(() => {
+      void handleSave();
+    }, 2500);
+
+    return () => clearTimeout(timer);
+  }, [isDirty, content, design, templateId, saveStatus, handleSave]);
 
   // Title rename handler
   const handleRename = async (newTitle: string): Promise<boolean> => {
@@ -169,7 +396,7 @@ export function ResumeEditor({ initial, persistence }: ResumeEditorProps) {
     }
   };
 
-  const contextValue = React.useMemo(
+  const contextValue = React.useMemo<EditorContextValue>(
     () => ({
       content,
       dispatch,
@@ -179,8 +406,18 @@ export function ResumeEditor({ initial, persistence }: ResumeEditorProps) {
       lastSavedAt,
       version,
       title,
-      templateId: initial.templateId,
-      design: initial.design,
+      templateId,
+      design,
+      touchedFields,
+      editorTab,
+      setEditorTab,
+      setTemplate,
+      updateDesign,
+      resetDesign,
+      undo,
+      redo,
+      canUndo: past.length > 0,
+      canRedo: future.length > 0,
       activeSection,
       setActiveSection,
       save: handleSave,
@@ -196,9 +433,20 @@ export function ResumeEditor({ initial, persistence }: ResumeEditorProps) {
       lastSavedAt,
       version,
       title,
-      initial.templateId,
-      initial.design,
+      templateId,
+      design,
+      touchedFields,
+      editorTab,
+      setTemplate,
+      updateDesign,
+      resetDesign,
+      undo,
+      redo,
+      past.length,
+      future.length,
       activeSection,
+      handleSave,
+      handleRename,
       persistence,
     ]
   );
@@ -244,22 +492,40 @@ export function ResumeEditor({ initial, persistence }: ResumeEditorProps) {
               mobileTab === "preview" ? "hidden md:flex" : "flex"
             }`}
           >
-            {/* Left Nav */}
-            <div className="hidden sm:block">
-              <EditorNav />
-            </div>
+            {editorTab === "design" ? (
+              <main
+                tabIndex={-1}
+                className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 max-w-2xl mx-auto focus:outline-none"
+                data-testid="editor-design-pane"
+              >
+                <DesignPanel
+                  templateId={templateId}
+                  design={design}
+                  onSelectTemplate={setTemplate}
+                  onUpdateDesign={updateDesign}
+                  onResetDesign={resetDesign}
+                />
+              </main>
+            ) : (
+              <>
+                {/* Left Nav */}
+                <div className="hidden sm:block">
+                  <EditorNav />
+                </div>
 
-            {/* Active Form */}
-            <main
-              tabIndex={-1}
-              className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 max-w-2xl mx-auto focus:outline-none"
-              data-testid="editor-active-form-container"
-            >
-              <div className="sm:hidden mb-4 pb-3 border-b">
-                <EditorNav />
-              </div>
-              {renderActiveSectionForm()}
-            </main>
+                {/* Active Form */}
+                <main
+                  tabIndex={-1}
+                  className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 max-w-2xl mx-auto focus:outline-none"
+                  data-testid="editor-active-form-container"
+                >
+                  <div className="sm:hidden mb-4 pb-3 border-b">
+                    <EditorNav />
+                  </div>
+                  {renderActiveSectionForm()}
+                </main>
+              </>
+            )}
           </div>
 
           {/* Live Preview Pane */}
@@ -275,8 +541,8 @@ export function ResumeEditor({ initial, persistence }: ResumeEditorProps) {
             <div className="w-full flex justify-center">
               <ResumePreview
                 content={content}
-                design={initial.design}
-                templateId={initial.templateId}
+                design={design}
+                templateId={templateId}
               />
             </div>
           </div>

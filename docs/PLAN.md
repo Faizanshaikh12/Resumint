@@ -182,7 +182,8 @@
 ```
 /                     -> Marketing Landing Page & "Start Building" CTA
 /resumes/new          -> Choose-Start Page (Blank canvas or 3 code samples: developer, student, designer)
-/resumes/:id/edit     -> Authenticated Resume Editor (Phase 4 protected placeholder; responds 404 for non-owned)
+/resumes/:id/edit     -> Authenticated Resume Editor (Phase 5/6: Content & Design panels, continuous preview)
+/resumes/:id/preview-data -> Resource route: JSON preview data with Cache-Control: private, max-age=60
 /dashboard            -> Authenticated Resume Dashboard ("My Documents": search, sort, cursor pagination, CRUD)
 /login                -> Sign In Page with redirect parameter retention
 /signup               -> Account Registration Page with instant session generation
@@ -203,6 +204,7 @@
   - Per-user cap of 20 resumes enforced on both create and duplicate.
   - Safe SQL LIKE wildcard escaping for `%` and `_`.
   - Stable cursor pagination with primary key tie-break (`resumes.id`).
+  - Lazy `ResumeThumbnail` with `IntersectionObserver`, concurrency throttle (max 4 requests), and memory caching.
 
 ---
 
@@ -229,8 +231,8 @@
 - **Phase 2: Database Schema & Migrations** (D1 tables, Drizzle schemas, typed queries, seed script, tests) [DONE]
 - **Phase 3: Authentication & Guest Claiming** (Better Auth, WebCrypto PBKDF2 edge hashing, auth pages, route guards, tests) [DONE]
 - **Phase 4: Resume CRUD & Dashboard** (Resume management, duplicate, delete, search, sort, cursor pagination, 404 isolation, cards) [DONE]
-- **Phase 5: Resume Editor Core** (Two-pane UI, section forms, dynamic lists, bullet points, autosave, guest draft claim flow)
-- **Phase 6: Templates & Customization** (5 ATS-compliant templates, theme & typography styling)
+- **Phase 5: Resume Editor Core** (Two-pane UI, section forms, dynamic lists, bullet points, autosave, guest draft claim flow) [DONE]
+- **Phase 6: Templates & Customization** (5 ATS-compliant templates, theme & typography styling, design panel, thumbnails, continuous preview) [DONE]
 - **Phase 7: Export Systems** (Print stylesheet, client-side PDF download, JSON import/export)
 - **Phase 8: Public Share Links** (Slug generator, public `/r/:slug` page, password/expiry controls)
 - **Phase 9: ATS Checker & Rule Engine** (Rule-based score calculator, ATS guidelines)

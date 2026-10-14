@@ -23,9 +23,13 @@ export function validateDateRange(range?: DateRange | null): boolean {
 }
 
 /**
- * Formats an ISO year or year-month string (e.g. "2023-04" or "2023") into human-friendly text (e.g. "Apr 2023").
+ * Formats an ISO year or year-month string into formatted text according to dateStyle.
+ * Formats: "MMM YYYY" (e.g. "Apr 2023"), "MM/YYYY" (e.g. "04/2023"), or "YYYY" (e.g. "2023").
  */
-export function formatMonthYear(dateString?: string): string {
+export function formatMonthYear(
+  dateString?: string,
+  style: "MMM YYYY" | "MM/YYYY" | "YYYY" | string = "MMM YYYY"
+): string {
   if (!dateString || typeof dateString !== "string") return "";
   const trimmed = dateString.trim();
   if (!trimmed) return "";
@@ -34,7 +38,12 @@ export function formatMonthYear(dateString?: string): string {
   const match = /^(\d{4})-(0[1-9]|1[0-2])$/.exec(trimmed);
   if (match && match[1] && match[2]) {
     const year = match[1];
-    const monthIndex = parseInt(match[2], 10) - 1;
+    const monthNum = match[2];
+    const monthIndex = parseInt(monthNum, 10) - 1;
+
+    if (style === "YYYY") return year;
+    if (style === "MM/YYYY") return `${monthNum}/${year}`;
+
     const months = [
       "Jan",
       "Feb",
@@ -50,9 +59,13 @@ export function formatMonthYear(dateString?: string): string {
       "Dec",
     ];
     const month = months[monthIndex];
-    if (month) {
-      return `${month} ${year}`;
-    }
+    return `${month} ${year}`;
+  }
+
+  // If format is YYYY
+  const yearMatch = /^(\d{4})$/.exec(trimmed);
+  if (yearMatch && yearMatch[1]) {
+    return yearMatch[1];
   }
 
   return trimmed;
@@ -60,17 +73,20 @@ export function formatMonthYear(dateString?: string): string {
 
 /**
  * Formats a DateRange object for display on resumes.
- * Example: "Mar 2022 – Present" or "2015 – 2019" or "Apr 2023"
+ * Example: "Mar 2022 – Present" or "03/2022 – Present" or "2022 – Present"
  */
-export function formatDateRange(range?: DateRange | null): string {
+export function formatDateRange(
+  range?: DateRange | null,
+  style: "MMM YYYY" | "MM/YYYY" | "YYYY" | string = "MMM YYYY"
+): string {
   if (!range) return "";
-  const startStr = formatMonthYear(range.start);
+  const startStr = formatMonthYear(range.start, style);
 
   if (range.current) {
     return startStr ? `${startStr} – Present` : "Present";
   }
 
-  const endStr = formatMonthYear(range.end);
+  const endStr = formatMonthYear(range.end, style);
   if (startStr && endStr) {
     return `${startStr} – ${endStr}`;
   }

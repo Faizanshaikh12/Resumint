@@ -113,11 +113,25 @@
 
 ---
 
-## Phase 6: Templates & Design Customization (Outline)
+## Phase 6: Templates & Design Customization (Resumint)
 
-- [ ] Task 6.1: Template engine with 5 distinct ATS-friendly styles (Modern, Minimal, Classic, Technical, Executive)
-- [ ] Task 6.2: Customization panel (accent colors, typography, margins, spacing, A4/Letter size)
-- [ ] Task 6.3: Separation of design tokens and content payload to ensure loss-free template swapping
+- [x] Task 6.1: Design Contract & Tokens (`app/lib/schemas/resume.ts`, `design-tokens.ts`, `contrast.ts`, `sanitize-link.ts`, `normalize-design.ts`, `touched-merge.ts`)
+- [x] Task 6.2: Pure Presentational Templates (`ModernTemplate.tsx`, `MinimalTemplate.tsx`, `ExecutiveTemplate.tsx`, `ClassicTemplate.tsx`, `TechnicalTemplate.tsx`)
+- [x] Task 6.3: Modular Template Parts (`SectionRenderer.tsx`, `ItemDate.tsx`, `BulletList.tsx`, `LinkList.tsx`, `SkillList.tsx`)
+- [x] Task 6.4: Template Registry (`app/components/templates/registry.ts`) with metadata, capabilities, and fallback handling
+- [x] Task 6.5: Continuous Scaled Preview (`app/components/preview/ResumePreview.tsx`, `ResumeErrorBoundary.tsx`, `resume-page.css`) with page break guides and `@page` rules
+- [x] Task 6.6: Self-hosted Fonts (6 ATS-safe font families bundled with `@fontsource/inter` and native system font fallbacks, zero external Google Fonts CDN calls)
+- [x] Task 6.7: Visual Design Panel UI (`app/components/editor/DesignPanel.tsx`) with template gallery radio cards, color swatches, hex picker with WCAG contrast warnings, typography dropdown, sliders, toggles, and reset confirmation
+- [x] Task 6.8: Editor State & History Integration (`ResumeEditor.tsx`, `EditorContext.tsx`, `EditorHeader.tsx`) with Content/Design view switcher, slider coalescing (<400ms), undo/redo stack, and debounced autosave
+- [x] Task 6.9: Resource Route `/resumes/:id/preview-data` and Lazy `ResumeThumbnail` with `IntersectionObserver`, concurrency throttle, and memory cache
+- [x] Task 6.10: Comprehensive Testing & Verification:
+  - [x] 117 unit and component tests passing
+  - [x] 68 Vitest worker integration tests passing
+  - [x] Playwright E2E tests (`tests/e2e/design.spec.ts`) with template switching, persistence, and Chromium `page.pdf()` print fidelity
+  - [x] 0 ESLint errors and warnings
+  - [x] 0 TypeScript compiler errors
+  - [x] Production build passes cleanly (`react-router build`)
+- [x] Task 6.11: Documentation (`docs/TEMPLATES.md`, `docs/DECISIONS.md` with ADRs 015-017, `docs/PLAN.md`, `docs/TASKS.md`, `README.md`)
 
 ---
 

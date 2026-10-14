@@ -18,6 +18,11 @@ Resumint provides a zero-friction experience: jump straight into creating your r
 
 ## Features
 
+- **5 ATS-Optimized Templates**: `Modern`, `Minimal`, `Executive`, `Classic`, and `Technical`. Pure presentational design guarantees zero content loss during template switching.
+- **Visual Design Customization**: Dedicated Design panel with curated swatches, hex picker with real-time WCAG 2.1 AA contrast warnings, font scale/margin sliders, and typography options.
+- **Continuous Scaled Preview**: Real-time CSS-scaled preview with reactive page-break guides (`Pages: N`) measuring content height with `ResizeObserver`.
+- **Self-Hosted Offline Fonts**: 6 ATS-compliant font families bundled as local woff2 assets with zero external Google Fonts CDN runtime calls.
+- **Lazy Document Miniature Thumbnails**: High-performance dashboard cards with `IntersectionObserver` lazy loading, concurrency-throttled preview fetching (max 4 concurrent), and memory caching.
 - **Document Management ("My Documents")**: Fast, responsive dashboard at `/dashboard` with keyset cursor pagination and optimistic updates.
 - **Flexible Creation**: Start blank or select from 3 industry-tested code samples (Software Engineer, Student / Entry-Level, Product Designer).
 - **In-Place Actions**: Seamless in-place rename dialogs, one-click resume duplication (`<title> (Copy)`), and confirmation dialogs with cascade warnings.

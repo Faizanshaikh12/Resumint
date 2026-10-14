@@ -9,12 +9,7 @@ export interface ItemDateProps {
 export function ItemDate({ date, dateStyle = "MMM YYYY", className = "" }: ItemDateProps) {
   if (!date) return null;
 
-  let text = "";
-  if (typeof date === "string") {
-    text = date;
-  } else {
-    text = formatDateRange(date, dateStyle);
-  }
+  const text = typeof date === "string" ? date : formatDateRange(date, dateStyle);
 
   if (!text) return null;
 

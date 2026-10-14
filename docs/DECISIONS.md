@@ -216,3 +216,44 @@
      - Every section and array item carries an immutable `nanoid` id used as React `key` and `dnd-kit` sortable id. Array indices are never used as identifiers, preventing item transposition bugs during reordering or deletion.
 - **Consequences**: Zero external state libraries, deterministic optimistic concurrency in SQL, robust keyboard-accessible drag-and-drop, instantaneous live preview with zero network latency, and complete decoupling between editor state and storage engines.
 
+---
+
+## ADR-015: Pure Presentational Templates & Zero Content Loss on Switch (Phase 6)
+
+- **Status**: Accepted
+- **Context**: Resume builders often conflate template presentation with resume content schemas, causing data fields to disappear or corrupt when switching templates.
+- **Decision**:
+  - Templates (`Modern`, `Minimal`, `Executive`, `Classic`, `Technical`) are strictly pure presentational components (`(props: TemplateProps) => JSX.Element`).
+  - Zero side-effects, zero network fetching, and zero local state inside templates.
+  - Resume content schema (`ResumeContent`) is 100% decoupled from templates.
+  - Template switching preserves all user content unconditionally.
+  - When switching templates, `mergeTouchedDesign(newTemplateDefaults, currentDesign, touchedFields)` preserves fields explicitly customized by the user while updating uncustomized default properties.
+- **Consequences**: Switching templates never loses candidate data; templates remain lightweight, modular, and easily testable with full Vitest snapshot and semantic HTML tests.
+
+---
+
+## ADR-016: Continuous Preview Model with Dynamic Page Guides vs. True Server Pagination
+
+- **Status**: Accepted
+- **Context**: Emulating exact physical print page breaks inside the live browser editor often causes content clipping, layout jitters, and slow rendering.
+- **Decision**:
+  - Live preview renders continuous flowing content inside a standard CSS-scaled A4/Letter paper container.
+  - Content height is measured reactively with `ResizeObserver` to display dashed page guide overlays (`Pages: N`, with a warning when exceeding 2 pages).
+  - Exact page breaking is handled by standard CSS Paged Media rules (`@page`, `break-inside: avoid-page`, `break-after: avoid`) during browser print (`window.print()`).
+- **Consequences**: Butter-smooth editing experience with immediate responsive feedback, while print and PDF output cleanly avoid breaking headers, dates, or experience items across physical pages.
+
+---
+
+## ADR-017: ATS Compliance Invariants & Font Bundling Discipline
+
+- **Status**: Accepted
+- **Context**: Applicant Tracking Systems (ATS) parse resume documents using text extraction engines that stumble on complex multi-column floats, graphical headers, icons as text, and unencoded fonts.
+- **Decision**:
+  - Semantic HTML only: Exactly one `<h1>` for candidate name, `<h2>` for section titles, `<h3>` for item headings, `<ul>`/`<li>` for bullets, `<time>` for dates.
+  - Strict linear DOM order: Even in 2-column templates (`Technical`), content reads sequentially in the DOM tree, styled via CSS Grid.
+  - Zero text in canvas, SVG, or CSS pseudo-elements (`content: "..."`).
+  - Strict protocol sanitizer (`sanitizeHref`) permitting only `http:`, `https:`, `mailto:`, `tel:`.
+  - Self-hosted woff2 font bundling: 6 ATS-vetted font families (`Inter`, `Source Serif 4`, `Lato`, `Merriweather`, `IBM Plex Sans`, `Roboto Mono`) with zero external Google Fonts CDN runtime dependencies.
+- **Consequences**: Maximized ATS machine-readability across major enterprise parsing engines (Workday, Greenhouse, Taleo) with 100% offline edge privacy compliance.
+
+

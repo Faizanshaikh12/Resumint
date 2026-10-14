@@ -8,7 +8,9 @@ import { Button } from "~/components/ui/button";
 import { ArrowLeft, FileCode, AlertTriangle } from "lucide-react";
 import { ResumeEditor } from "~/components/editor/ResumeEditor";
 import { createServerPersistence } from "~/lib/resume/persistence";
-import { resumeContentSchema, type ResumeContent, type ResumeDesign, type TemplateId } from "~/lib/schemas/resume";
+import { resumeContentSchema, templateIdSchema, type ResumeContent, type ResumeDesign, type TemplateId } from "~/lib/schemas/resume";
+import { normalizeDesign } from "~/lib/resume/normalize-design";
+import { getTemplate } from "~/components/templates/registry";
 import { editorRenameActionSchema, resumeTitleSchema } from "~/lib/schemas/resume-actions";
 import { verifyCsrf } from "~/lib/security/csrf.server";
 
@@ -136,8 +138,27 @@ export async function action({ request, params, context }: Route.ActionArgs) {
       );
     }
 
+    // Validate and normalize design if present
+    let validatedDesign: ResumeDesign | undefined = undefined;
+    if (payload.design !== undefined) {
+      const templateMeta = typeof payload.templateId === "string" ? getTemplate(payload.templateId) : undefined;
+      validatedDesign = normalizeDesign(payload.design, templateMeta?.supports);
+    }
+
+    // Validate templateId if present
+    let validatedTemplate: TemplateId | undefined = undefined;
+    if (payload.templateId !== undefined) {
+      const parsedTemplate = templateIdSchema.safeParse(payload.templateId);
+      if (!parsedTemplate.success) {
+        return Response.json({ ok: false, error: "Invalid templateId" }, { status: 400 });
+      }
+      validatedTemplate = parsedTemplate.data;
+    }
+
     const result = await updateResume(db, user.id, id, {
       content: parsedContent.data,
+      design: validatedDesign,
+      templateId: validatedTemplate,
       expectedVersion: expectedVersionNum,
     });
 

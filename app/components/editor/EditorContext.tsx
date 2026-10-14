@@ -16,6 +16,16 @@ export interface EditorContextValue {
   title: string;
   templateId: TemplateId;
   design: ResumeDesign;
+  touchedFields: Set<string>;
+  editorTab: "content" | "design";
+  setEditorTab: (tab: "content" | "design") => void;
+  setTemplate: (id: TemplateId) => void;
+  updateDesign: (patch: Partial<ResumeDesign>, fieldName?: string) => void;
+  resetDesign: () => void;
+  undo: () => void;
+  redo: () => void;
+  canUndo: boolean;
+  canRedo: boolean;
   activeSection: string;
   setActiveSection: (secId: string) => void;
   save: () => Promise<SaveResult>;

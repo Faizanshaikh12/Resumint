@@ -1,4 +1,4 @@
-import type { ResumeContent } from "../schemas/resume";
+import type { ResumeContent, ResumeDesign, TemplateId } from "../schemas/resume";
 
 export type SaveResult =
   | { ok: true; version: number; updatedAt?: string | Date }
@@ -15,7 +15,12 @@ export type RenameResult =
   | { ok: false; error: string };
 
 export interface ResumePersistence {
-  save(content: ResumeContent, expectedVersion: number): Promise<SaveResult>;
+  save(
+    content: ResumeContent,
+    expectedVersion: number,
+    design?: ResumeDesign,
+    templateId?: TemplateId
+  ): Promise<SaveResult>;
   rename?(title: string): Promise<RenameResult>;
 }
 
@@ -87,12 +92,19 @@ function parseActionResponse(text: string, status: number): any {
  */
 export function createServerPersistence(resumeId: string): ResumePersistence {
   return {
-    async save(content: ResumeContent, expectedVersion: number): Promise<SaveResult> {
+    async save(
+      content: ResumeContent,
+      expectedVersion: number,
+      design?: ResumeDesign,
+      templateId?: TemplateId
+    ): Promise<SaveResult> {
       try {
         const payload = JSON.stringify({
           intent: "save",
           expectedVersion,
           content,
+          design,
+          templateId,
         });
 
         // 200 KB serialized size guard on client before network call

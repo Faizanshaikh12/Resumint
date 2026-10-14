@@ -14,10 +14,11 @@ export function mergeDesignOnTemplateChange(
 
   for (const [key, defaultValue] of Object.entries(newTemplateDefault)) {
     if (defaultValue !== undefined && !touchedSet.has(key)) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (result as any)[key] = defaultValue;
+      (result as Record<string, unknown>)[key] = defaultValue;
     }
   }
 
   return result;
 }
+
+export { mergeDesignOnTemplateChange as mergeTouchedDesign };
