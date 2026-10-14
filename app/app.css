@@ -1,4 +1,6 @@
 @import "tailwindcss" source(".");
+@import "./styles/fonts.css";
+@import "./styles/resume-page.css";
 @import "./styles/print.css";
 
 :root {

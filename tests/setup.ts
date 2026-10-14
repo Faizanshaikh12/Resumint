@@ -14,3 +14,11 @@ Object.defineProperty(window, "matchMedia", {
     dispatchEvent: () => false,
   }),
 });
+
+// Mock ResizeObserver for JSDOM
+// @ts-expect-error global ResizeObserver for jsdom test environment
+global.ResizeObserver = class ResizeObserver {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+};
