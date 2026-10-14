@@ -101,7 +101,7 @@ export function AuthForm({
         if (onSuccess) {
           onSuccess();
         } else {
-          navigate(targetRedirect);
+          window.location.href = targetRedirect;
         }
       } else {
         const res = await signIn.email({
@@ -118,7 +118,7 @@ export function AuthForm({
         if (onSuccess) {
           onSuccess();
         } else {
-          navigate(targetRedirect);
+          window.location.href = targetRedirect;
         }
       }
     } catch {

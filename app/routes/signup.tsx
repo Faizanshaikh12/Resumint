@@ -1,3 +1,4 @@
+import type { Route } from "./+types/signup";
 import { requireGuest } from "~/auth/helpers.server";
 import { AuthForm } from "~/components/auth/AuthForm";
 
@@ -9,8 +10,9 @@ export function meta() {
   ];
 }
 
-export async function loader({ request }: { request: Request }) {
-  await requireGuest(request);
+export async function loader({ request, context }: Route.LoaderArgs) {
+  const env = (context as { cloudflare?: { env?: Env } })?.cloudflare?.env;
+  await requireGuest(request, env);
   const url = new URL(request.url);
   return { redirectTo: url.searchParams.get("redirectTo") || undefined };
 }

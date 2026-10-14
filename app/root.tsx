@@ -17,13 +17,14 @@ import { getSession, type AuthUser } from "./auth/helpers.server";
 
 export async function loader({
   request,
-}: {
-  request: Request;
-}): Promise<{ user: AuthUser | null }> {
+  context,
+}: Route.LoaderArgs): Promise<{ user: AuthUser | null }> {
   try {
-    const session = await getSession(request);
+    const env = (context as { cloudflare?: { env?: Env } })?.cloudflare?.env;
+    const session = await getSession(request, env);
     return { user: session?.user ?? null };
-  } catch {
+  } catch (err) {
+    console.error("[ROOT_LOADER_SESSION_ERROR]", err);
     return { user: null };
   }
 }

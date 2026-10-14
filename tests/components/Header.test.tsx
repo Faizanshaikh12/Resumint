@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { render, screen } from "@testing-library/react";
-import { createMemoryRouter, RouterProvider } from "react-router";
+import { createMemoryRouter, RouterProvider, Outlet } from "react-router";
 import { Header } from "~/components/common/Header";
 import type { AuthUser } from "~/auth/helpers.server";
 
@@ -52,5 +52,42 @@ describe("Header component", () => {
 
     expect(screen.getByRole("button", { name: /user menu/i })).toBeInTheDocument();
     expect(screen.getByText("Jane Doe")).toBeInTheDocument();
+  });
+
+  it("renders user menu when user is provided via active route match (e.g. dashboard)", async () => {
+    const router = createMemoryRouter(
+      [
+        {
+          id: "root",
+          path: "/",
+          element: (
+            <>
+              <Header />
+              <Outlet />
+            </>
+          ),
+          children: [
+            {
+              id: "routes/dashboard",
+              path: "dashboard",
+              loader: () => ({
+                user: {
+                  id: "usr_456",
+                  email: "faizan@example.com",
+                  name: "Faizan Shaikh",
+                  emailVerified: true,
+                },
+              }),
+              element: <div>Dashboard Content</div>,
+            },
+          ],
+        },
+      ],
+      { initialEntries: ["/dashboard"] }
+    );
+
+    render(<RouterProvider router={router} />);
+    expect(await screen.findByRole("button", { name: /user menu/i })).toBeInTheDocument();
+    expect(await screen.findByText("Faizan Shaikh")).toBeInTheDocument();
   });
 });

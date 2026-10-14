@@ -12,9 +12,20 @@ import type { AuthUser } from "~/auth/helpers.server";
 
 export function Header({ user: propUser }: { user?: AuthUser | null } = {}) {
   const matches = useMatches();
-  const rootMatch = matches.find((m) => m.id === "root");
-  const rootUser = (rootMatch?.data as { user?: AuthUser | null } | undefined)?.user;
-  const user = propUser !== undefined ? propUser : (rootUser ?? null);
+  // Find user from any active route match (checking child routes like dashboard/settings first, then root)
+  // React Router v7 uses `loaderData`, while earlier versions used `data`
+  const matchedUser = matches
+    .slice()
+    .reverse()
+    .map(
+      (m) =>
+        (m as { loaderData?: { user?: AuthUser | null }; data?: { user?: AuthUser | null } })
+          .loaderData?.user ??
+        (m as { loaderData?: { user?: AuthUser | null }; data?: { user?: AuthUser | null } })
+          .data?.user
+    )
+    .find((u): u is AuthUser => !!u);
+  const user = propUser !== undefined ? propUser : (matchedUser ?? null);
 
   return (
     <>
