@@ -133,10 +133,20 @@ export function ImportDialog({
         itemsCount: items,
         warnings: result.warnings,
         parsedData: {
+          app: "resumint",
+          schemaVersion: 1,
+          exportedAt: new Date().toISOString(),
+          resume: {
+            title,
+            templateId,
+            content,
+            design,
+          },
           title,
           templateId,
           content,
           design,
+          rawJson: text,
         } as any,
       });
     } catch (err: any) {
@@ -210,6 +220,7 @@ export function ImportDialog({
               onChange={handleFileInputChange}
               className="hidden"
               data-testid="import-file-input"
+              aria-label="Upload resume JSON file"
             />
             <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
               <UploadCloud className="h-5 w-5" />

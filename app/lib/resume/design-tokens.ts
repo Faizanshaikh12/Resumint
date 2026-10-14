@@ -1,4 +1,7 @@
 import type { ResumeDesign, BundledFontFamily } from "../schemas/resume";
+import { createDefaultDesign } from "./defaults";
+
+export const DEFAULT_DESIGN: ResumeDesign = createDefaultDesign();
 
 export const FONT_STACKS: Record<BundledFontFamily, string> = {
   inter: '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',

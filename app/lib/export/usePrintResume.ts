@@ -43,7 +43,7 @@ export function usePrintResume({
   }, []);
 
   const filename = buildFilename({
-    name: content.personal?.fullName,
+    name: (content.personal as any)?.name || (content.personal as any)?.fullName,
     title,
     ext: "pdf",
   });

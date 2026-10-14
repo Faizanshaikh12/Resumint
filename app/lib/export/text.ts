@@ -93,7 +93,8 @@ export function exportResumeText(
       if (items.length > 0) {
         addHeading(SECTION_TITLES["experience"] || "Experience");
         for (const exp of items) {
-          const titleLine = [exp.title, exp.company].filter(Boolean).join(" - ");
+          const position = exp.position || (exp as any).title;
+          const titleLine = [position, exp.company].filter(Boolean).join(" - ");
           const metaLine = [exp.location, formatDateRange(exp.date)].filter(Boolean).join(" | ");
           if (titleLine) lines.push(titleLine);
           if (metaLine) lines.push(metaLine);

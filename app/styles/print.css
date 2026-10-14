@@ -5,8 +5,7 @@
 
 /* Screen media rules */
 @media screen {
-  .print-only,
-  #resumint-print-root {
+  .print-only {
     display: none !important;
   }
 }
@@ -34,11 +33,6 @@
   *::after {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
-  }
-
-  /* When #resumint-print-root is present, hide all other top-level elements */
-  body:has(#resumint-print-root) > *:not(#resumint-print-root) {
-    display: none !important;
   }
 
   /* Chrome/UI suppression fallbacks */

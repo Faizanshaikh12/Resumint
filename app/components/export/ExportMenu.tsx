@@ -55,8 +55,9 @@ export function ExportMenu({
 
   const handleDownloadJson = useCallback(() => {
     try {
+      const candidateName = (content.personal as any)?.name || (content.personal as any)?.fullName;
       const filename = buildFilename({
-        name: content.personal?.fullName,
+        name: candidateName,
         title,
         ext: "json",
       });
@@ -75,8 +76,9 @@ export function ExportMenu({
 
   const handleDownloadText = useCallback(() => {
     try {
+      const candidateName = (content.personal as any)?.name || (content.personal as any)?.fullName;
       const filename = buildFilename({
-        name: content.personal?.fullName,
+        name: candidateName,
         title,
         ext: "txt",
       });

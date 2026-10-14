@@ -135,11 +135,43 @@
 
 ---
 
-## Phase 7: Export Systems (Outline)
+## Phase 7: Export and Import Systems (Resumint)
 
-- [ ] Task 7.1: Print stylesheet (`@page`, zero headers/footers, exact page breaks)
-- [ ] Task 7.2: Client-side PDF export trigger
-- [ ] Task 7.3: JSON export and import with strict Zod validation
+- [x] Task 7.1: Pure Export & Import Logic:
+  - [x] `filename.ts`: Deterministic candidate filename generator (`[A-Za-z0-9_-]`, 80-char cap, Windows reserved names safe)
+  - [x] `json.ts`: Deterministic versioned JSON export with 2-space indentation and trailing newline
+  - [x] `json.ts`: Hardened `parseResumeJson` with pre-parse 220 KB size cap, prototype pollution prevention (`"__proto__"`, `"constructor"`, `"prototype"`), strict Zod content validation, lenient design fallback, and 100% item ID regeneration with `nanoid()`
+  - [x] `text.ts`: Plain-text ATS serialization (`exportResumeText`) with section ordering, hidden section filtering, uppercase headers, and `- ` bullet points
+  - [x] `download.ts`: Browser Blob download helper (`downloadText`) and clipboard writer (`copyToClipboard`) with textarea fallback and toast notifications
+- [x] Task 7.2: PDF Print Pipeline:
+  - [x] `print.ts`: `printResume` with `document.fonts.ready` preflight, temporary `document.title` swap, and `afterprint` restoration
+  - [x] `usePrintResume.ts`: Hook orchestrating print states, hint preference persistence in `localStorage`, and print trigger
+  - [x] `PrintHintDialog.tsx`: One-time print settings modal (Destination: Save as PDF, Margins: None, Headers/Footers: OFF, Background graphics: ON, Mobile tip) with "Don't show this again" checkbox
+  - [x] `PrintRoot.tsx`: Dynamic `@page { size: ...; margin: 0; }` style tag injection for A4 and Letter paper formats
+  - [x] `print.css`: Production print stylesheets with `-webkit-print-color-adjust: exact`, page-break rules (`break-inside: avoid-page`, `break-after: avoid`), and URL wrapping
+- [x] Task 7.3: Export UI Integration:
+  - [x] `ExportMenu.tsx`: Accessible dropdown menu with Download PDF, Download JSON, Download Plain Text, and Copy as Text
+  - [x] `EditorHeader.tsx`: Integrated ExportMenu into both authenticated editor and guest builder header
+  - [x] `ResumeCard.tsx`: Added "Download JSON" direct backup action to dashboard resume action menu
+  - [x] `/resumes/:id/export.json`: Authenticated resource route serving JSON attachment with 404 isolation, ownership check, and `Cache-Control: no-store`
+- [x] Task 7.4: JSON Import Flow & Guest Builder:
+  - [x] `ImportDialog.tsx`: Accessible drag-and-drop modal with file picker, pre-parse 220 KB client size check, summary card preview, error states, and import action
+  - [x] `/resumes/new`: Added "Import JSON" card, handling `intent: "import"` with user cap limit check (< 20), Zod validation, and redirect to editor
+  - [x] `/build`: Guest resume builder route with local storage persistence (`resumint_guest_draft`), export menu, and draft replace confirmation dialog
+  - [x] `app/routes/home.tsx`: Updated hero CTA button to navigate to `/build` for guest-first onboarding
+- [x] Task 7.5: Comprehensive Testing & Verification:
+  - [x] 17 pure unit tests in `tests/unit/export-import.test.ts` (100% passing)
+  - [x] 7 component tests in `tests/components/ExportImport.test.tsx` (100% passing)
+  - [x] 8 worker integration tests in `tests/worker/export-import.test.ts` (100% passing)
+  - [x] Playwright E2E tests in `tests/e2e/export-import.spec.ts` (JSON roundtrip, TXT export, 5 templates PDF print fidelity + text extraction, guest `/build` flow, Axe a11y scans)
+  - [x] 0 ESLint errors and warnings
+  - [x] 0 TypeScript compiler errors
+  - [x] Production build passes cleanly (`react-router build`)
+- [x] Task 7.6: Documentation:
+  - [x] `docs/DECISIONS.md`: ADR-018 (Print CSS vs PDF Libs), ADR-019 (JSON Schema, Prototype Pollution & Nanoid Regeneration), ADR-020 (Plain-Text ATS Export)
+  - [x] `docs/PLAN.md`: Export/Import ASCII architecture data-flow diagrams and updated route map
+  - [x] `docs/TASKS.md`: Phase 7 checklists marked complete
+  - [x] `README.md`: Documented export/import options, browser print configuration, and mobile PDF tips
 
 ---
 

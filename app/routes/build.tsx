@@ -21,13 +21,24 @@ export function meta() {
 const GUEST_DRAFT_KEY = "resumint_guest_draft";
 
 export default function GuestBuildRoute() {
+  const defaultInitial = useMemo(() => {
+    const sample = getSample("developer");
+    return {
+      title: "Untitled Resume",
+      content: sample ? sample.content : ({} as ResumeContent),
+      design: DEFAULT_DESIGN,
+      templateId: "modern" as TemplateId,
+      version: 1,
+    };
+  }, []);
+
   const [initialData, setInitialData] = useState<{
     title: string;
     content: ResumeContent;
     design: ResumeDesign;
     templateId: TemplateId;
     version: number;
-  } | null>(null);
+  }>(defaultInitial);
 
   useEffect(() => {
     try {
@@ -48,46 +59,32 @@ export default function GuestBuildRoute() {
     } catch (e) {
       console.warn("Failed reading guest draft from storage:", e);
     }
-
-    // Default to developer sample for instant guest gratification
-    const sample = getSample("developer");
-    setInitialData({
-      title: "Untitled Resume",
-      content: sample ? sample.content : ({} as ResumeContent),
-      design: DEFAULT_DESIGN,
-      templateId: "modern",
-      version: 1,
-    });
   }, []);
 
   const persistence = useMemo(() => createLocalPersistence(GUEST_DRAFT_KEY), []);
 
-  const handleGuestImport = (envelope: ExportEnvelope) => {
+  const handleGuestImport = (envelope: any) => {
     try {
-      const draft = {
-        title: envelope.resume.title,
-        content: envelope.resume.content,
-        design: envelope.resume.design,
-        templateId: envelope.resume.templateId,
-        version: 1,
-        updatedAt: new Date().toISOString(),
-      };
-      localStorage.setItem(GUEST_DRAFT_KEY, JSON.stringify(draft));
+      const title = envelope.resume?.title || envelope.title || "My Resume";
+      const content = envelope.resume?.content || envelope.content;
+      const design = envelope.resume?.design || envelope.design || DEFAULT_DESIGN;
+      const templateId = envelope.resume?.templateId || envelope.templateId || "modern";
+
+      if (content) {
+        const draft = {
+          title,
+          content,
+          design,
+          templateId,
+          version: 1,
+          updatedAt: new Date().toISOString(),
+        };
+        localStorage.setItem(GUEST_DRAFT_KEY, JSON.stringify(draft));
+      }
     } catch (e) {
       console.warn("Failed storing imported draft in localStorage:", e);
     }
   };
-
-  if (!initialData) {
-    return (
-      <div className="flex h-screen items-center justify-center bg-background">
-        <div className="flex flex-col items-center gap-3">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-          <p className="text-sm font-medium text-muted-foreground">Loading Resume Canvas...</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <ResumeEditor

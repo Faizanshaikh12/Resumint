@@ -165,11 +165,11 @@ export default function NewResumePage({ loaderData }: Route.ComponentProps) {
 
   const isPending = navigation.state === "submitting" || navigation.state === "loading";
 
-  const handleImportConfirm = (envelope: ExportEnvelope) => {
+  const handleImportConfirm = (envelope: any) => {
     submit(
       {
         intent: "import",
-        envelope: JSON.stringify(envelope),
+        envelope: envelope.rawJson || JSON.stringify(envelope),
       },
       { method: "post" }
     );

@@ -19,18 +19,38 @@ Resumint provides a zero-friction experience: jump straight into creating your r
 ## Features
 
 - **5 ATS-Optimized Templates**: `Modern`, `Minimal`, `Executive`, `Classic`, and `Technical`. Pure presentational design guarantees zero content loss during template switching.
+- **Client-Side High-Fidelity PDF Export**: Zero-overhead browser print engine (`@page`, `window.print()`) with automatic paper formatting (`A4` and `US Letter`), pre-flight font readiness, and ATS-readable selectable text vectors.
+- **Complete JSON Backup & Import**: Portable versioned JSON envelope (`$schema: https://resumint.dev/schema/v1.json`), protected by a 220 KB pre-parse size cap, prototype pollution prevention, and 100% item ID regeneration with `nanoid()`.
+- **Plain-Text ATS Export**: Deterministic `.txt` file export and one-click "Copy as Text" to clipboard, optimized for copy-pasting into legacy ATS job portals with standard uppercase headers and clean bullet points.
+- **Guest-First Builder (`/build`)**: Jump directly into editing with local storage persistence (`resumint_guest_draft`), free PDF/JSON/Text export, and draft replacement confirmation dialogs.
 - **Visual Design Customization**: Dedicated Design panel with curated swatches, hex picker with real-time WCAG 2.1 AA contrast warnings, font scale/margin sliders, and typography options.
 - **Continuous Scaled Preview**: Real-time CSS-scaled preview with reactive page-break guides (`Pages: N`) measuring content height with `ResizeObserver`.
 - **Self-Hosted Offline Fonts**: 6 ATS-compliant font families bundled as local woff2 assets with zero external Google Fonts CDN runtime calls.
 - **Lazy Document Miniature Thumbnails**: High-performance dashboard cards with `IntersectionObserver` lazy loading, concurrency-throttled preview fetching (max 4 concurrent), and memory caching.
-- **Document Management ("My Documents")**: Fast, responsive dashboard at `/dashboard` with keyset cursor pagination and optimistic updates.
-- **Flexible Creation**: Start blank or select from 3 industry-tested code samples (Software Engineer, Student / Entry-Level, Product Designer).
+- **Document Management ("My Documents")**: Fast, responsive dashboard at `/dashboard` with keyset cursor pagination, on-demand JSON downloads, and optimistic updates.
+- **Flexible Creation**: Start blank, import existing JSON, or select from 3 industry-tested code samples (Software Engineer, Student / Entry-Level, Product Designer).
 - **In-Place Actions**: Seamless in-place rename dialogs, one-click resume duplication (`<title> (Copy)`), and confirmation dialogs with cascade warnings.
 - **Search & Sort**: Debounced title search with safe SQL LIKE wildcard escaping and multiple sorting criteria (`updated`, `created`, `title`), synchronized with URL search params.
 - **Edge & Free-Tier Optimized**: Lightweight projections (no JSON blobs on list queries) and a strict 20-resume per-user storage cap to protect D1 free quotas.
 - **Enterprise Authorization Isolation**: Non-owned or missing documents consistently respond with HTTP 404 (never 403) to prevent ID enumeration.
 - **WCAG 2.1 AA Compliant**: High-contrast, accessible UI with screen-reader live regions, full keyboard navigation, and zero axe-core violations.
 - **Edge Authentication**: Edge-native WebCrypto PBKDF2-SHA256 password hashing with sub-3ms CPU execution on Cloudflare Workers Free Tier.
+
+---
+
+## PDF Export & Browser Print Settings
+
+Resumint renders print-ready, ATS-optimized PDFs directly in the browser using standard CSS Paged Media rules (`@page`).
+
+### Recommended Browser Print Settings:
+1. **Destination**: Select *"Save as PDF"* (or your preferred PDF printer).
+2. **Paper Size**: Matches your selected design setting (*A4* `210mm x 297mm` or *US Letter* `8.5in x 11in`).
+3. **Margins**: Set to **"None"** or **"Default"** (page margins are built into each template's layout engine).
+4. **Headers and Footers**: Turn **OFF** (removes browser URL, timestamp, and page numbers).
+5. **Background Graphics**: Turn **ON** (preserves theme accents, category sidebars, and divider lines).
+
+### Mobile Export Tip:
+- **iOS Safari / Chrome on Android**: Tap **Share > Print**, preview the document, and use a two-finger pinch-out gesture on the print preview to view and save the full uncompressed vector PDF to Files or Google Drive.
 
 ---
 

@@ -256,4 +256,52 @@
   - Self-hosted woff2 font bundling: 6 ATS-vetted font families (`Inter`, `Source Serif 4`, `Lato`, `Merriweather`, `IBM Plex Sans`, `Roboto Mono`) with zero external Google Fonts CDN runtime dependencies.
 - **Consequences**: Maximized ATS machine-readability across major enterprise parsing engines (Workday, Greenhouse, Taleo) with 100% offline edge privacy compliance.
 
+---
+
+## ADR-018: Native Print CSS (@page) vs. Third-Party PDF Libraries (Phase 7)
+
+- **Status**: Accepted
+- **Context**: In Phase 7, users need to download pixel-perfect PDF resumes. Client-side alternatives include `@react-pdf/renderer` (heavy, duplicate component tree, rendering divergence) or `html2pdf.js`/`jspdf` (rasterizes HTML to canvas, degrading vector text crispness and breaking ATS selectable text). Server-side alternatives (Puppeteer/Browser Rendering) violate Cloudflare Workers free-tier CPU constraints (10ms limit) and introduce substantial operational costs.
+- **Decision**:
+  - Implement 100% client-side PDF export utilizing browser native print engines (`window.print()`) combined with CSS Paged Media (`@page`).
+  - Dynamically inject paper size rules (`@page { size: 210mm 297mm; margin: 0; }` for A4, `8.5in 11in` for Letter) based on user design settings via `<PrintRoot>`.
+  - Enforce exact print styling via `app/styles/print.css`: `-webkit-print-color-adjust: exact`, `print-color-adjust: exact`, page-break rules (`break-inside: avoid-page`, `break-after: avoid`).
+  - Pre-flight `document.fonts.ready` before triggering `window.print()` to guarantee all custom woff2 typography is fully rendered.
+  - Temporarily set `document.title` to the sanitized candidate filename (e.g. `Alexander_Vance_Resume.pdf`) before print and restore on `afterprint` (with timer fallback).
+  - Provide an informative one-time Print Instructions dialog (Destination: Save as PDF, Margins: None, Headers/Footers: OFF, Background graphics: ON) with a "Don't show this again" preference persisted in `localStorage`.
+- **Consequences**: Zero added JavaScript bundle overhead (0 KB server, 0 KB heavy canvas/PDF libraries), exact visual fidelity between live editor preview and generated PDF, selectable ATS-readable text vectors, and full mobile support via native system share/print sheets.
+
+---
+
+## ADR-019: Deterministic JSON Schema Envelope, Prototype Pollution Protection, and Full Nanoid Regeneration (Phase 7)
+
+- **Status**: Accepted
+- **Context**: Resume portability requires exporting full resume data to JSON and importing previously exported resumes or third-party backups. Untrusted JSON inputs present critical vulnerabilities: memory exhaustion from oversized payloads, prototype pollution attacking JavaScript object prototypes, and ID collisions corrupting editor state or relational databases.
+- **Decision**:
+  - Standardize on a versioned schema envelope: `{ $schema: "https://resumint.dev/schema/v1.json", title: string, templateId: string, content: ResumeContent, design: ResumeDesign }`.
+  - **Pre-parse Size Cap**: Enforce a strict 220 KB size cap before running `JSON.parse()`. Rejects abnormally large inputs without memory allocation spikes.
+  - **Prototype Pollution Guard**: Scan raw JSON string for prototype pollution keys (`"__proto__"`, `"constructor"`, `"prototype"`) before parsing.
+  - **Validation & Lenient Fallback**: Validate content strictly against Zod schemas; if legacy or customized design tokens are missing or invalid, fall back smoothly to the template's default design tokens rather than failing the import.
+  - **ID Regeneration**: Completely regenerate all item IDs (`experience[].id`, `education[].id`, `skills[].id`, `links[].id`, etc.) with fresh cryptographically secure `nanoid()` identifiers upon import to eliminate collision risks across existing database resumes.
+  - **Deterministic Formatting**: Export JSON with deterministic 2-space indentation and trailing newline for clean version control diffs.
+- **Consequences**: Rock-solid defense against denial-of-service, injection, and prototype pollution attacks. 100% interoperability between guest sessions, local downloads, and cloud-synced user resumes.
+
+---
+
+## ADR-020: Plain-Text ATS Export Formatting & Clipboard Fallbacks (Phase 7)
+
+- **Status**: Accepted
+- **Context**: Candidates frequently need plain-text resumes for copy-pasting into legacy ATS text boxes (e.g. Taleo, brassring, job boards) that reject PDF uploads or strip all formatting.
+- **Decision**:
+  - Implement deterministic plain-text serialization (`exportResumeText`) adhering to established ATS best practices:
+    - Candidate name in uppercase headline.
+    - Compact contact info block (`email | phone | location | link`).
+    - Standard section headers (`WORK EXPERIENCE`, `EDUCATION`, `SKILLS`) matching the user's customized `sectionOrder`.
+    - Exclude hidden sections (`hiddenSections`) and empty sections.
+    - Bullet points formatted with standard ASCII hyphens (`- `).
+    - Consistent `\n` line endings without trailing whitespace.
+  - Provide both direct `.txt` download via Blob/object URL and one-click "Copy as Text" to clipboard with `navigator.clipboard.writeText` and a hidden `textarea` fallback for legacy or insecure contexts.
+- **Consequences**: Instant accessibility for copy-paste application forms, zero server roundtrips, and optimal keyword parsing in raw text extractors.
+
+
 

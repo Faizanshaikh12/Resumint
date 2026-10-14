@@ -181,10 +181,12 @@
 
 ```
 /                     -> Marketing Landing Page & "Start Building" CTA
-/resumes/new          -> Choose-Start Page (Blank canvas or 3 code samples: developer, student, designer)
-/resumes/:id/edit     -> Authenticated Resume Editor (Phase 5/6: Content & Design panels, continuous preview)
+/build                -> Guest Resume Builder (Local storage persistence, draft replace, print/export)
+/resumes/new          -> Choose-Start Page (Blank canvas, code samples, or Import JSON)
+/resumes/:id/edit     -> Authenticated Resume Editor (Content & Design panels, continuous preview, export menu)
 /resumes/:id/preview-data -> Resource route: JSON preview data with Cache-Control: private, max-age=60
-/dashboard            -> Authenticated Resume Dashboard ("My Documents": search, sort, cursor pagination, CRUD)
+/resumes/:id/export.json  -> Authenticated resource route: On-demand JSON backup download with attachment header
+/dashboard            -> Authenticated Resume Dashboard ("My Documents": search, sort, cursor pagination, CRUD, JSON export)
 /login                -> Sign In Page with redirect parameter retention
 /signup               -> Account Registration Page with instant session generation
 /forgot-password      -> Password reset request
@@ -193,6 +195,67 @@
 /health               -> Resource route: returns status, D1 ping & table count verification
 /api/auth/*           -> Better Auth endpoints (Session, Signin, Signup)
 /logout               -> Session invalidation endpoint
+```
+
+### 5.2 Export & Import Architecture (Phase 7)
+
+```
+========================= EXPORT PIPELINE =========================
+
++-----------------------------------------------------------------+
+|                       Editor Header / Guest                     |
++-----------------------------------------------------------------+
+           |                     |                      |
+           v                     v                      v
+    [Download PDF]        [Download JSON]        [Download Plain Text]
+           |                     |                      |
+           v                     v                      v
++--------------------+ +--------------------+ +--------------------+
+|  usePrintResume    | |  exportResumeJson  | |  exportResumeText  |
+|  - Check hint pref | |  - Versioned env   | |  - Section order   |
+|  - Font pre-flight | |  - 2-space indent  | |  - Hidden filter   |
+|  - Title swap      | |  - Deterministic   | |  - Clean bullets   |
+|  - window.print()  | |  - Blob download   | |  - Blob / copy     |
++--------------------+ +--------------------+ +--------------------+
+           |
+           v
++-----------------------------------------------------------------+
+|  CSS Paged Media Engine (@page { size: ...; margin: 0; })       |
+|  - break-inside: avoid-page                                     |
+|  - -webkit-print-color-adjust: exact                            |
+|  - Native OS print sheet -> Save as PDF (Vector ATS output)     |
++-----------------------------------------------------------------+
+
+========================= IMPORT PIPELINE =========================
+
++-----------------------------------------------------------------+
+|               ImportDialog (Drag & Drop or Select)              |
++-----------------------------------------------------------------+
+           |
+           v
++-----------------------------------------------------------------+
+|  parseResumeJson(rawText) Security Barrier:                     |
+|  1. Pre-parse Size Check: byteLength <= 220 KB (OOM defense)   |
+|  2. Prototype Pollution Guard: regex("__proto__"|"constructor") |
+|  3. Schema Version Verification ($schema / version)             |
+|  4. Strict Zod Validation (content) + Lenient Fallback (design) |
+|  5. Nanoid ID Regeneration (100% fresh IDs for all items)       |
++-----------------------------------------------------------------+
+           |
+           v
++-----------------------------------------------------------------+
+|  Summary Card Preview (Title, Template, Sections, Items count)  |
++-----------------------------------------------------------------+
+           |
+    +------+------+
+    |             |
+    v (Guest)     v (Authenticated)
++------------+ +--------------------------------------------------+
+| Replace    | | POST /resumes/new (action: import)               |
+| Draft in   | | - Verify user resume count < 20                  |
+| LocalState | | - Create resume row in D1                        |
++------------+ | - Redirect to /resumes/:id/edit                  |
+               +--------------------------------------------------+
 ```
 
 ### Dashboard Behavior & Free Tier Protections
@@ -233,7 +296,7 @@
 - **Phase 4: Resume CRUD & Dashboard** (Resume management, duplicate, delete, search, sort, cursor pagination, 404 isolation, cards) [DONE]
 - **Phase 5: Resume Editor Core** (Two-pane UI, section forms, dynamic lists, bullet points, autosave, guest draft claim flow) [DONE]
 - **Phase 6: Templates & Customization** (5 ATS-compliant templates, theme & typography styling, design panel, thumbnails, continuous preview) [DONE]
-- **Phase 7: Export Systems** (Print stylesheet, client-side PDF download, JSON import/export)
+- **Phase 7: Export Systems** (Print stylesheet, client-side PDF download, JSON import/export, plain-text export) [DONE]
 - **Phase 8: Public Share Links** (Slug generator, public `/r/:slug` page, password/expiry controls)
 - **Phase 9: ATS Checker & Rule Engine** (Rule-based score calculator, ATS guidelines)
 - **Phase 10: Polish, Hardening & Production Deploy** (Performance audit, axe a11y, live Cloudflare deploy)

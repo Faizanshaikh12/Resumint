@@ -412,17 +412,22 @@ export function ResumeEditor({ initial, persistence, onImport }: ResumeEditorPro
       ]);
       setFuture([]);
 
-      if (envelope.resume?.content) {
-        setContent(envelope.resume.content);
+      const nextContent = envelope.resume?.content || envelope.content;
+      const nextDesign = envelope.resume?.design || envelope.design;
+      const nextTemplateId = envelope.resume?.templateId || envelope.templateId;
+      const nextTitle = envelope.resume?.title || envelope.title;
+
+      if (nextContent) {
+        setContent(nextContent);
       }
-      if (envelope.resume?.design) {
-        setDesign(envelope.resume.design);
+      if (nextDesign) {
+        setDesign(nextDesign);
       }
-      if (envelope.resume?.templateId) {
-        setTemplateId(envelope.resume.templateId);
+      if (nextTemplateId) {
+        setTemplateId(nextTemplateId);
       }
-      if (envelope.resume?.title) {
-        setTitle(envelope.resume.title);
+      if (nextTitle) {
+        setTitle(nextTitle);
       }
       setIsDirty(true);
       onImport?.(envelope);
