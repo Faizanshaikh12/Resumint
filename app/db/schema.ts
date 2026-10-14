@@ -143,6 +143,7 @@ export const shareLinks = sqliteTable("share_links", {
   isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
   allowDownload: integer("allow_download", { mode: "boolean" }).notNull().default(true),
   noindex: integer("noindex", { mode: "boolean" }).notNull().default(true),
+  hideContact: integer("hide_contact", { mode: "boolean" }).notNull().default(false),
   passwordHash: text("password_hash"),
   expiresAt: integer("expires_at", { mode: "timestamp" }),
   viewCount: integer("view_count").notNull().default(0),

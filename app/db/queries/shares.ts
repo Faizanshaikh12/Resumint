@@ -8,6 +8,7 @@ import type { ResumeContent, ResumeDesign } from "~/lib/schemas/resume";
 export interface UpsertShareLinkOptions {
   allowDownload?: boolean;
   noindex?: boolean;
+  hideContact?: boolean;
   passwordHash?: string | null;
   expiresAt?: Date | null;
 }
@@ -34,6 +35,7 @@ export async function upsertShareLink(
         isActive: true,
         allowDownload: options?.allowDownload ?? existing.allowDownload,
         noindex: options?.noindex ?? existing.noindex,
+        hideContact: options?.hideContact ?? existing.hideContact,
         passwordHash:
           options?.passwordHash !== undefined ? options.passwordHash : existing.passwordHash,
         expiresAt: options?.expiresAt !== undefined ? options.expiresAt : existing.expiresAt,
@@ -50,6 +52,7 @@ export async function upsertShareLink(
     isActive: true,
     allowDownload: options?.allowDownload ?? true,
     noindex: options?.noindex ?? true,
+    hideContact: options?.hideContact ?? false,
     passwordHash: options?.passwordHash ?? null,
     expiresAt: options?.expiresAt ?? null,
     viewCount: 0,
@@ -115,6 +118,7 @@ export interface PublicResumeData {
   design: ResumeDesign;
   allowDownload: boolean;
   noindex: boolean;
+  hideContact: boolean;
   hasPassword: boolean;
 }
 
@@ -136,6 +140,7 @@ export async function getPublicResumeBySlug(
       isActive: shareLinks.isActive,
       allowDownload: shareLinks.allowDownload,
       noindex: shareLinks.noindex,
+      hideContact: shareLinks.hideContact,
       passwordHash: shareLinks.passwordHash,
       expiresAt: shareLinks.expiresAt,
     })
@@ -184,9 +189,124 @@ export async function getPublicResumeBySlug(
       design: resume.design,
       allowDownload: link.allowDownload,
       noindex: link.noindex,
+      hideContact: link.hideContact,
       hasPassword: false,
     },
   };
+}
+
+export interface OwnerShareLink {
+  enabled: boolean;
+  slug: string;
+  slugUrl: string;
+  allowDownload: boolean;
+  noindex: boolean;
+  hideContact: boolean;
+  expiresAt: Date | null;
+  hasPassword: boolean;
+  viewCount: number;
+  status: "active" | "disabled" | "expired" | "protected";
+}
+
+export async function getShareLinkByResumeId(
+  db: Database,
+  userId: string,
+  resumeId: string
+): Promise<OwnerShareLink | null> {
+  const resume = await getResume(db, userId, resumeId);
+  if (!resume) return null;
+
+  const [link] = await db
+    .select({
+      id: shareLinks.id,
+      slug: shareLinks.slug,
+      isActive: shareLinks.isActive,
+      allowDownload: shareLinks.allowDownload,
+      noindex: shareLinks.noindex,
+      hideContact: shareLinks.hideContact,
+      expiresAt: shareLinks.expiresAt,
+      passwordHash: shareLinks.passwordHash,
+      viewCount: shareLinks.viewCount,
+    })
+    .from(shareLinks)
+    .where(eq(shareLinks.resumeId, resumeId))
+    .limit(1);
+
+  if (!link) return null;
+
+  const isExpired = link.expiresAt && new Date(link.expiresAt).getTime() < Date.now();
+  let status: OwnerShareLink["status"] = "active";
+  if (!link.isActive) {
+    status = "disabled";
+  } else if (isExpired) {
+    status = "expired";
+  } else if (link.passwordHash) {
+    status = "protected";
+  }
+
+  return {
+    enabled: link.isActive,
+    slug: link.slug,
+    slugUrl: `/r/${link.slug}`,
+    allowDownload: link.allowDownload,
+    noindex: link.noindex,
+    hideContact: link.hideContact,
+    expiresAt: link.expiresAt,
+    hasPassword: Boolean(link.passwordHash),
+    viewCount: link.viewCount,
+    status,
+  };
+}
+
+export async function countActiveShareLinks(db: Database, userId: string): Promise<number> {
+  const [res] = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(shareLinks)
+    .innerJoin(resumes, eq(shareLinks.resumeId, resumes.id))
+    .where(and(eq(resumes.userId, userId), eq(shareLinks.isActive, true)));
+
+  return res?.count ?? 0;
+}
+
+export async function getRawShareLinkBySlug(
+  db: Database,
+  slug: string
+) {
+  const [link] = await db
+    .select({
+      id: shareLinks.id,
+      resumeId: shareLinks.resumeId,
+      slug: shareLinks.slug,
+      isActive: shareLinks.isActive,
+      allowDownload: shareLinks.allowDownload,
+      noindex: shareLinks.noindex,
+      hideContact: shareLinks.hideContact,
+      passwordHash: shareLinks.passwordHash,
+      expiresAt: shareLinks.expiresAt,
+    })
+    .from(shareLinks)
+    .where(eq(shareLinks.slug, slug))
+    .limit(1);
+
+  return link ?? null;
+}
+
+export async function getPublicResumeById(
+  db: Database,
+  resumeId: string
+) {
+  const [resume] = await db
+    .select({
+      title: resumes.title,
+      templateId: resumes.templateId,
+      content: resumes.content,
+      design: resumes.design,
+    })
+    .from(resumes)
+    .where(eq(resumes.id, resumeId))
+    .limit(1);
+
+  return resume ?? null;
 }
 
 export async function recordView(

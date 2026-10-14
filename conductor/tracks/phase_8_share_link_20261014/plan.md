@@ -1,10 +1,10 @@
 # Track Implementation Plan: Phase 8 - Share via Link
 
 ### Phase 1: Schema Addition & Migration
-- [ ] Task: Add `hideContact` (boolean, default false) to `shareLinks` table in `app/lib/db/schema.ts`
-- [ ] Task: Generate migration via drizzle-kit, review SQL by hand, and apply locally
-- [ ] Task: Update share query functions (`app/lib/db/queries/shares.ts`) and ensure `passwordHash` is never selected into public/UI return types
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Add `hideContact` (boolean, default false) to `shareLinks` table in `app/lib/db/schema.ts`
+- [x] Task: Generate migration via drizzle-kit, review SQL by hand, and apply locally
+- [x] Task: Update share query functions (`app/lib/db/queries/shares.ts`) and ensure `passwordHash` is never selected into public/UI return types
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ### Phase 2: Pure Logic Foundation (`app/lib/share/`) & Unit Tests
 - [ ] Task: Implement `app/lib/share/status.ts` (`getShareStatus(link, now)` with public `unavailable` mapping and expiry boundary)

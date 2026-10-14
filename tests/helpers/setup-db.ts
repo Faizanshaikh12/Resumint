@@ -77,6 +77,7 @@ export const SCHEMA_STATEMENTS = [
     "is_active" integer DEFAULT 1 NOT NULL,
     "allow_download" integer DEFAULT 1 NOT NULL,
     "noindex" integer DEFAULT 1 NOT NULL,
+    "hide_contact" integer DEFAULT 0 NOT NULL,
     "password_hash" text,
     "expires_at" integer,
     "view_count" integer DEFAULT 0 NOT NULL,

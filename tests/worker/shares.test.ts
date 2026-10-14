@@ -10,6 +10,8 @@ import {
   deleteShareLink,
   getPublicResumeBySlug,
   recordView,
+  getShareLinkByResumeId,
+  countActiveShareLinks,
 } from "~/db/queries/shares";
 import { shareLinks } from "~/db/schema";
 import { eq } from "drizzle-orm";
@@ -31,14 +33,17 @@ describe("Shares Query Module", () => {
     expect(share!.isActive).toBe(true);
     expect(share!.allowDownload).toBe(true);
     expect(share!.noindex).toBe(true);
+    expect(share!.hideContact).toBe(false);
     expect(share!.viewCount).toBe(0);
 
     // Upserting again on same resume updates options without creating a new row
     const updated = await upsertShareLink(db, user.id, resume.id, {
       allowDownload: false,
+      hideContact: true,
     });
     expect(updated?.id).toBe(share!.id);
     expect(updated?.allowDownload).toBe(false);
+    expect(updated?.hideContact).toBe(true);
   });
 
   it("regenerates slug preserving options", async () => {
@@ -192,6 +197,37 @@ describe("Shares Query Module", () => {
       // User B attempts to delete share link
       const unauthorizedDelete = await deleteShareLink(db, userB.id, resumeA.id);
       expect(unauthorizedDelete).toBe(false);
+    });
+  });
+
+  describe("Owner Share Link Queries", () => {
+    it("returns owner share link without passwordHash and determines real status", async () => {
+      const db = createTestDb(env);
+      const user = await makeUser(db);
+      const resume = await createResume(db, user.id);
+
+      await upsertShareLink(db, user.id, resume.id, {
+        hideContact: true,
+        passwordHash: "secure-hash-123",
+      });
+
+      const ownerLink = await getShareLinkByResumeId(db, user.id, resume.id);
+      expect(ownerLink).not.toBeNull();
+      expect(ownerLink!.enabled).toBe(true);
+      expect(ownerLink!.hasPassword).toBe(true);
+      expect((ownerLink as any).passwordHash).toBeUndefined();
+      expect(ownerLink!.hideContact).toBe(true);
+      expect(ownerLink!.status).toBe("protected");
+      expect(ownerLink!.slugUrl).toMatch(/^\/r\/[A-Za-z0-9_-]{14}$/);
+
+      const activeCount = await countActiveShareLinks(db, user.id);
+      expect(activeCount).toBe(1);
+
+      // Revoking turns status to disabled
+      await revokeShareLink(db, user.id, resume.id);
+      const revokedOwnerLink = await getShareLinkByResumeId(db, user.id, resume.id);
+      expect(revokedOwnerLink!.status).toBe("disabled");
+      expect(await countActiveShareLinks(db, user.id)).toBe(0);
     });
   });
 });
