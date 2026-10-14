@@ -58,11 +58,12 @@ export function DropdownMenuContent({
   children,
   className,
   align = "end",
+  ...props
 }: {
   children: React.ReactNode;
   className?: string;
   align?: "start" | "end" | "center";
-}) {
+} & React.HTMLAttributes<HTMLDivElement>) {
   const context = React.useContext(DropdownContext);
   if (!context) throw new Error("DropdownMenuContent must be used within DropdownMenu");
 
@@ -82,6 +83,7 @@ export function DropdownMenuContent({
         alignStyles,
         className
       )}
+      {...props}
     >
       {children}
     </div>

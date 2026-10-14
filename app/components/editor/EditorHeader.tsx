@@ -98,7 +98,8 @@ export function EditorHeader() {
 
   const isDraftNonEmpty = React.useMemo(() => {
     return Boolean(
-      content.personal?.fullName?.trim() ||
+      content.personal?.name?.trim() ||
+        (content.personal as any)?.fullName?.trim() ||
         content.experience?.length ||
         content.education?.length ||
         content.skills?.length ||

@@ -12,6 +12,7 @@ import { normalizeSectionOrder } from "~/lib/resume/reorder";
 import { getAllSectionIds } from "~/lib/resume/editor-state";
 
 export const MAX_JSON_PAYLOAD_BYTES = 220 * 1024; // 225,280 bytes (~220 KB)
+export const MAX_EXPORT_JSON_BYTES = MAX_JSON_PAYLOAD_BYTES;
 export const CURRENT_SCHEMA_VERSION = 1;
 
 export interface ResumeExportInput {

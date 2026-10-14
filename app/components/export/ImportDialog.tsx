@@ -94,8 +94,11 @@ export function ImportDialog({
         return;
       }
 
-      const env = result.data;
-      const content = env.resume.content;
+      const env = result.data as any;
+      const content = env.content || env.resume?.content || {};
+      const title = env.title || env.resume?.title || "Imported Resume";
+      const templateId = env.templateId || env.resume?.templateId || "modern";
+      const design = env.design || env.resume?.design;
 
       // Count sections and items
       const sections = [
@@ -123,13 +126,18 @@ export function ImportDialog({
         (content.awards?.length || 0);
 
       setSummary({
-        title: env.resume.title,
-        templateId: env.resume.templateId,
-        name: content.personal?.fullName,
+        title,
+        templateId,
+        name: content.personal?.name || (content.personal as any)?.fullName,
         sectionsCount: sections,
         itemsCount: items,
         warnings: result.warnings,
-        parsedData: env,
+        parsedData: {
+          title,
+          templateId,
+          content,
+          design,
+        } as any,
       });
     } catch (err: any) {
       setError("Failed to read file: " + (err?.message || "Unknown error"));

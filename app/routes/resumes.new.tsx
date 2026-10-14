@@ -76,11 +76,12 @@ export async function action({ request, context }: Route.ActionArgs) {
     if (!parsed.ok) {
       return Response.json({ ok: false, error: parsed.error, issues: parsed.issues }, { status: 400 });
     }
+    const payload = parsed.data as any;
     const created = await createResume(db, user.id, {
-      title: parsed.data.resume.title || "Imported Resume",
-      templateId: parsed.data.resume.templateId,
-      content: parsed.data.resume.content,
-      design: parsed.data.resume.design,
+      title: payload.title || payload.resume?.title || "Imported Resume",
+      templateId: payload.templateId || payload.resume?.templateId || "modern",
+      content: payload.content || payload.resume?.content,
+      design: payload.design || payload.resume?.design,
     });
     return Response.json({ ok: true, id: created.id, redirectUrl: `/resumes/${created.id}/edit` });
   }
@@ -102,11 +103,12 @@ export async function action({ request, context }: Route.ActionArgs) {
     if (!parsed.ok) {
       return Response.json({ ok: false, error: parsed.error, issues: parsed.issues }, { status: 400 });
     }
+    const payload = parsed.data as any;
     const created = await createResume(db, user.id, {
-      title: parsed.data.resume.title || "Imported Resume",
-      templateId: parsed.data.resume.templateId,
-      content: parsed.data.resume.content,
-      design: parsed.data.resume.design,
+      title: payload.title || payload.resume?.title || "Imported Resume",
+      templateId: payload.templateId || payload.resume?.templateId || "modern",
+      content: payload.content || payload.resume?.content,
+      design: payload.design || payload.resume?.design,
     });
     throw redirect(`/resumes/${created.id}/edit`);
   }
