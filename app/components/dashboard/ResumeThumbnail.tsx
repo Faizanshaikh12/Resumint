@@ -118,7 +118,11 @@ export function ResumeThumbnail({
       data-testid="resume-thumbnail"
     >
       {data && !error ? (
-        <div className="absolute inset-0 pointer-events-none select-none origin-top-left overflow-hidden opacity-95">
+        <div
+          inert={true}
+          aria-hidden="true"
+          className="absolute inset-0 pointer-events-none select-none origin-top-left overflow-hidden opacity-95"
+        >
           <div className="w-[800px] transform scale-[0.22] origin-top-left">
             <ResumePreview
               content={data.content}

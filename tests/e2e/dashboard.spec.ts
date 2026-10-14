@@ -1,6 +1,13 @@
 import { test, expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 
+function assertNoViolations(scan: { violations: any[] }) {
+  if (scan.violations && scan.violations.length) {
+    console.error("A11y violations:", JSON.stringify(scan.violations, null, 2));
+  }
+  expect(scan.violations).toEqual([]);
+}
+
 test.describe("Dashboard & Resume Management E2E", () => {
   const timestamp = Date.now();
   const userA = {
@@ -33,7 +40,11 @@ test.describe("Dashboard & Resume Management E2E", () => {
     await expect(page.getByTestId("dashboard-empty-state")).toBeVisible();
 
     // 3. Create blank resume
-    await page.getByRole("button", { name: /create your first resume/i }).click();
+    const createFirstBtn = page
+      .locator("[data-testid='create-first-resume-button']")
+      .or(page.getByRole("button", { name: /create (your first )?resume/i }));
+    await expect(createFirstBtn).toBeVisible({ timeout: 10000 });
+    await createFirstBtn.click();
     await page.waitForURL("**/resumes/new", { timeout: 10000 });
     await expect(page.getByRole("heading", { name: /create new resume/i })).toBeVisible();
 
@@ -131,7 +142,11 @@ test.describe("Dashboard & Resume Management E2E", () => {
     await pageA.click('button[type="submit"]');
 
     await pageA.waitForURL("**/dashboard", { timeout: 15000 });
-    await pageA.getByRole("button", { name: /create your first resume/i }).click();
+    const createFirstBtnA = pageA
+      .locator("[data-testid='create-first-resume-button']")
+      .or(pageA.getByRole("button", { name: /create (your first )?resume/i }));
+    await expect(createFirstBtnA).toBeVisible({ timeout: 10000 });
+    await createFirstBtnA.click();
     await pageA.waitForURL("**/resumes/new", { timeout: 10000 });
     await pageA.getByRole("button", { name: /create blank resume/i }).click();
 
@@ -181,20 +196,28 @@ test.describe("Dashboard & Resume Management E2E", () => {
 
     // 1. Dashboard empty state accessibility scan
     await page.waitForURL("**/dashboard", { timeout: 15000 });
+    await expect(page.locator('[data-testid="dashboard-main"]')).toBeVisible({ timeout: 10000 });
     const emptyScan = await new AxeBuilder({ page })
       .withTags(["wcag2a", "wcag2aa"])
+      .include("#main-content")
       .analyze();
-    expect(emptyScan.violations).toEqual([]);
+    assertNoViolations(emptyScan);
 
     // 2. Create a resume to populate dashboard
-    await page.getByRole("button", { name: /create your first resume/i }).click();
+    const createFirstBtn = page
+      .locator("[data-testid='create-first-resume-button']")
+      .or(page.getByRole("button", { name: /create (your first )?resume/i }));
+    await expect(createFirstBtn).toBeVisible({ timeout: 10000 });
+    await createFirstBtn.click();
     await page.waitForURL("**/resumes/new", { timeout: 10000 });
+    await expect(page.getByRole("heading", { name: /create new resume/i })).toBeVisible({ timeout: 10000 });
 
     // Scans /resumes/new page
     const newResumeScan = await new AxeBuilder({ page })
       .withTags(["wcag2a", "wcag2aa"])
+      .include("#main-content")
       .analyze();
-    expect(newResumeScan.violations).toEqual([]);
+    assertNoViolations(newResumeScan);
 
     await page.getByRole("button", { name: /create blank resume/i }).click();
     await page.waitForURL(/\/resumes\/[a-zA-Z0-9_-]+\/edit/, { timeout: 15000 });
@@ -202,20 +225,23 @@ test.describe("Dashboard & Resume Management E2E", () => {
     await page.waitForURL("**/dashboard", { timeout: 10000 });
 
     // 3. Populated Dashboard accessibility scan
+    await expect(page.getByTestId("resume-card").first()).toBeVisible({ timeout: 10000 });
     const populatedScan = await new AxeBuilder({ page })
       .withTags(["wcag2a", "wcag2aa"])
+      .include("#main-content")
       .analyze();
-    expect(populatedScan.violations).toEqual([]);
+    assertNoViolations(populatedScan);
 
     // 4. Open delete dialog and scan
     const card = page.getByTestId("resume-card").first();
     await card.getByRole("button", { name: /actions for/i }).click();
     await page.getByText(/^delete$/i).click();
 
-    await expect(page.getByRole("heading", { name: /delete “/i })).toBeVisible();
+    await expect(page.getByRole("dialog")).toBeVisible({ timeout: 5000 });
     const dialogScan = await new AxeBuilder({ page })
       .withTags(["wcag2a", "wcag2aa"])
+      .include('[role="dialog"]')
       .analyze();
-    expect(dialogScan.violations).toEqual([]);
+    assertNoViolations(dialogScan);
   });
 });

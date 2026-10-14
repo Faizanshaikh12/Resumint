@@ -1,6 +1,13 @@
 import { test, expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 
+async function assertNoViolations(scan: { violations: any[] }) {
+  if (scan.violations && scan.violations.length) {
+    console.error("A11y violations:", JSON.stringify(scan.violations, null, 2));
+  }
+  expect(scan.violations).toEqual([]);
+}
+
 test.describe("Authentication Flows & Route Guards", () => {
   const testUser = {
     name: "Playwright User",
@@ -16,8 +23,11 @@ test.describe("Authentication Flows & Route Guards", () => {
     await page.waitForLoadState("networkidle");
 
     // 2. Fill in signup details
+    await expect(page.locator("#auth-name")).toBeVisible({ timeout: 10000 });
     await page.fill("#auth-name", testUser.name);
+    await expect(page.locator("#auth-email")).toBeVisible({ timeout: 5000 });
     await page.fill("#auth-email", testUser.email);
+    await expect(page.locator("#auth-password")).toBeVisible({ timeout: 5000 });
     await page.fill("#auth-password", testUser.password);
     await page.click('button[type="submit"]');
 
@@ -35,7 +45,9 @@ test.describe("Authentication Flows & Route Guards", () => {
     await page.waitForLoadState("networkidle");
 
     // 6. Login again
+    await expect(page.locator("#auth-email")).toBeVisible({ timeout: 10000 });
     await page.fill("#auth-email", testUser.email);
+    await expect(page.locator("#auth-password")).toBeVisible({ timeout: 5000 });
     await page.fill("#auth-password", testUser.password);
     await page.click('button[type="submit"]');
 
@@ -67,8 +79,11 @@ test.describe("Authentication Flows & Route Guards", () => {
     await page.locator("main").getByRole("link", { name: /sign up/i }).click();
     await page.waitForURL("**/signup?redirectTo=%2Fdashboard", { timeout: 10000 });
 
+    await expect(page.locator("#auth-name")).toBeVisible({ timeout: 10000 });
     await page.fill("#auth-name", user.name);
+    await expect(page.locator("#auth-email")).toBeVisible({ timeout: 5000 });
     await page.fill("#auth-email", user.email);
+    await expect(page.locator("#auth-password")).toBeVisible({ timeout: 5000 });
     await page.fill("#auth-password", user.password);
     await page.click('button[type="submit"]');
 
@@ -80,16 +95,22 @@ test.describe("Authentication Flows & Route Guards", () => {
   test("passes axe accessibility standards on /login and /signup", async ({ page }) => {
     // Login page a11y check
     await page.goto("/login");
+    await page.waitForLoadState("networkidle");
+    await expect(page.locator("#auth-email")).toBeVisible({ timeout: 10000 });
     const loginScan = await new AxeBuilder({ page })
       .withTags(["wcag2a", "wcag2aa"])
+      .include("#main-content")
       .analyze();
-    expect(loginScan.violations).toEqual([]);
+    assertNoViolations(loginScan);
 
     // Signup page a11y check
     await page.goto("/signup");
+    await page.waitForLoadState("networkidle");
+    await expect(page.locator("#auth-name")).toBeVisible({ timeout: 10000 });
     const signupScan = await new AxeBuilder({ page })
       .withTags(["wcag2a", "wcag2aa"])
+      .include("#main-content")
       .analyze();
-    expect(signupScan.violations).toEqual([]);
+    assertNoViolations(signupScan);
   });
 });

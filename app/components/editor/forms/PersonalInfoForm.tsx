@@ -46,7 +46,7 @@ export function PersonalInfoForm() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" data-section-id="personal">
       <div>
         <h2 className="text-lg font-bold text-foreground">Personal Information</h2>
         <p className="text-xs text-muted-foreground mt-0.5">
@@ -61,6 +61,7 @@ export function PersonalInfoForm() {
           </Label>
           <Input
             id="personal-name"
+            data-field-path="personal.name"
             value={personal.name || ""}
             onChange={(e) => handleUpdate("name", e.target.value)}
             placeholder="Alex Morgan"
@@ -75,6 +76,7 @@ export function PersonalInfoForm() {
           </Label>
           <Input
             id="personal-title"
+            data-field-path="personal.title"
             value={personal.title || ""}
             onChange={(e) => handleUpdate("title", e.target.value)}
             placeholder="Senior Full-Stack Engineer"
@@ -89,6 +91,7 @@ export function PersonalInfoForm() {
           </Label>
           <Input
             id="personal-email"
+            data-field-path="personal.email"
             type="email"
             value={personal.email || ""}
             onChange={(e) => handleUpdate("email", e.target.value)}
@@ -104,6 +107,7 @@ export function PersonalInfoForm() {
           </Label>
           <Input
             id="personal-phone"
+            data-field-path="personal.phone"
             type="tel"
             value={personal.phone || ""}
             onChange={(e) => handleUpdate("phone", e.target.value)}
@@ -119,6 +123,7 @@ export function PersonalInfoForm() {
           </Label>
           <Input
             id="personal-location"
+            data-field-path="personal.location"
             value={personal.location || ""}
             onChange={(e) => handleUpdate("location", e.target.value)}
             placeholder="San Francisco, CA (or Remote)"

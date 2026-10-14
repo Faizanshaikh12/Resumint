@@ -832,8 +832,8 @@ export default function ShareSettingsPage({ loaderData }: Route.ComponentProps) 
       <Dialog open={confirmRegenOpen} onOpenChange={setConfirmRegenOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <div className="flex items-center gap-2 mb-1 text-amber-600">
-              <AlertTriangle className="h-5 w-5" />
+            <div className="flex items-center gap-2 mb-1">
+              <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-500 shrink-0" />
               <DialogTitle>Regenerate Share Link?</DialogTitle>
             </div>
             <DialogDescription className="text-xs">

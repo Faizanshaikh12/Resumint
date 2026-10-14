@@ -5,6 +5,8 @@ import type { ResumeContent, ResumeDesign, TemplateId } from "~/lib/schemas/resu
 
 export type SaveStatus = "idle" | "saving" | "saved" | "conflict" | "error";
 
+export type EditorTab = "content" | "design" | "check";
+
 export interface EditorContextValue {
   content: ResumeContent;
   dispatch: React.Dispatch<EditorAction>;
@@ -17,8 +19,12 @@ export interface EditorContextValue {
   templateId: TemplateId;
   design: ResumeDesign;
   touchedFields: Set<string>;
-  editorTab: "content" | "design";
-  setEditorTab: (tab: "content" | "design") => void;
+  editorTab: EditorTab;
+  setEditorTab: (tab: EditorTab) => void;
+  pageCount?: number;
+  atsReport?: any;
+  atsContext?: any;
+  isAtsUpdating?: boolean;
   setTemplate: (id: TemplateId) => void;
   updateDesign: (patch: Partial<ResumeDesign>, fieldName?: string) => void;
   resetDesign: () => void;

@@ -18,6 +18,8 @@ Resumint provides a zero-friction experience: jump straight into creating your r
 
 ## Features
 
+- **ATS Checklist Score & Real-Time Checker**: Explainable 0-100 score evaluating contact basics, structure, summary, experience action verbs and quantifiers, dates, length, and tone. Every point lost maps to an actionable fix with clickable editor field navigation.
+- **100% Client-Side Job Description Match**: Match pasted job descriptions against visible resume content with canonical skill dictionary matching, requirement heading boost, and keyword stuffing detection. Job text is processed 100% locally and never leaves your browser.
 - **Public Share Links (`/r/:slug`)**: Share formatted resumes instantly via secret web links with zero login friction for recipients. Live updates reflect author edits in real-time.
 - **Granular Privacy Controls**:
   - **Password Protection**: Require visitors to enter a password before viewing candidate name, summary, or details. Protected by constant-time WebCrypto PBKDF2 verification, in-memory IP rate limiting, and signed HMAC-SHA256 unlock cookies (`rs_<slug>`).
@@ -45,6 +47,72 @@ Resumint provides a zero-friction experience: jump straight into creating your r
 - **Enterprise Authorization Isolation**: Non-owned or missing documents consistently respond with HTTP 404 (never 403) to prevent ID enumeration.
 - **WCAG 2.1 AA Compliant**: High-contrast, accessible UI with screen-reader live regions, full keyboard navigation, and zero axe-core violations.
 - **Edge Authentication**: Edge-native WebCrypto PBKDF2-SHA256 password hashing with sub-3ms CPU execution on Cloudflare Workers Free Tier.
+
+---
+
+## ATS Checker & Resume Score
+
+Resumint includes a pure, client-side, rule-based resume checker in the **Check** tab of the editor.
+
+> [!NOTE]
+> **Resumint checklist score (a guide, not a guarantee)**  
+> No real applicant tracking system publishes a score, and Resumint does not claim that any resume is "ATS approved" or guaranteed to pass ATS filters. This heuristic score highlights formatting pitfalls, missing quantifications, vague verbs, and structure issues so you can put your best foot forward.
+
+### How the Score Works
+
+The score ranges from 0 to 100 and is grouped into four tiers:
+- **0–39**: Needs work
+- **40–69**: Good start
+- **70–89**: Strong
+- **90–100**: Excellent
+
+Points are allocated across 7 categories totaling 100 points:
+
+| Category | Weight | What We Check |
+| :--- | :---: | :--- |
+| **Contact and basics** | 15 pts | Full name present, valid email format, plausible phone number, location, HTTPS links, and absence of sample/placeholder values. |
+| **Structure** | 15 pts | Core sections (Experience or Projects + Education + Skills), standard section headings, logical section ordering, and no duplicate sections. |
+| **Summary** | 10 pts | Present, optimal length (~25-80 words), avoids first-person "I", and avoids buzzword-only fluff. |
+| **Experience bullets** | 30 pts | Strong action verbs (past tense for past roles, present for current), quantified achievements (numbers, %, currencies), optimal length (8-30 words), 2-6 bullets per role, and verb diversity. |
+| **Dates and order** | 10 pts | Valid chronological ordering, reverse-chronological consistency, current roles marked "Present", and flags unexplained employment gaps > 12 months as a warning. |
+| **Length and readability** | 10 pts | Page budget (1-2 pages via layout page model), sensible word count (150-1000), avoids dense paragraph walls, and 5-25 skills items. |
+| **Language and tone** | 10 pts | No leftover placeholder/Lorem text, avoids first-person pronouns, low buzzword density, double spaces, repeated words, and consistent bullet punctuation. |
+
+### Fair Scoring: The `na` Renormalization Formula
+Career changers, students, or recent graduates who have a **Projects** section instead of formal Work Experience are not penalized. Applicable checks evaluate to `"na"` (Not Applicable) and are excluded from the denominator:
+$$\text{Score} = \text{round}\left( \frac{\sum \text{Earned Credit} \times \text{Weight}}{\sum \text{Active Weights}} \times 100 \right)$$
+
+### 100% Client-Side Job Description Match
+Compare your resume against any target job posting:
+1. Paste the target job posting into the **Job Description Match** card (capped at 10,000 characters).
+2. The tokenizer preserves technical tokens (`C++`, `C#`, `.NET`, `Node.js`, `Next.js`, `CI/CD`, `Wi-Fi`, `R`, `Go`) and boosts requirements/qualifications headings (1.8x).
+3. Evaluates matched keywords vs missing keywords using an in-repo dictionary of ~300 common skills and aliases.
+4. Missing keyword hints indicate where terms could belong (Skills, Summary, Experience) alongside the disclaimer: *"Add only if true for you"*.
+5. Includes a keyword stuffing guard that warns if terms are unnaturally repeated (>4% density).
+6. **Privacy Guarantee**: Pasted job descriptions are never transmitted over the network and remain strictly in memory and browser `sessionStorage`.
+
+### Adding a New Rule
+Adding a new rule to Resumint is modular and requires just three steps:
+1. Create a pure rule function in `app/lib/ats/rules/<category>.ts` returning a `Check`:
+   ```ts
+   export function myRule(ctx: AtsContext): Check {
+     const passed = ...;
+     return {
+       id: "my-rule-id",
+       category: "structure",
+       weight: 3,
+       status: passed ? "pass" : "warn",
+       credit: passed ? 1 : 0.5,
+       title: "Rule title",
+       message: "Human description of what was evaluated",
+       fix: "Actionable step to resolve the issue",
+       targets: [{ sectionId: "skills" }],
+     };
+   }
+   ```
+2. Register the rule in `app/lib/ats/rules/registry.ts`.
+3. Add table-driven unit tests in `tests/unit/ats-rules.test.ts` asserting `pass`, `warn`, `fail`, `na`, and edge cases (empty strings, Unicode, etc.).
+
 
 ---
 

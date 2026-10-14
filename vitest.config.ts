@@ -42,7 +42,11 @@ export default defineConfig({
     coverage: {
       provider: "v8",
       reporter: ["text", "json", "html"],
-      include: ["app/auth/**/*.ts", "app/lib/schemas/auth.ts"],
+      include: [
+        "app/auth/**/*.ts",
+        "app/lib/schemas/auth.ts",
+        "app/lib/ats/**/*.ts",
+      ],
     },
   },
 });

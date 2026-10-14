@@ -13,6 +13,12 @@ import { EditorContext, type EditorContextValue, type SaveStatus } from "./Edito
 import { EditorHeader } from "./EditorHeader";
 import { EditorNav } from "./EditorNav";
 import { DesignPanel } from "./DesignPanel";
+import { AtsCheckerPanel } from "~/components/ats/AtsCheckerPanel";
+import { buildAtsContext } from "~/lib/ats/context";
+import { analyze } from "~/lib/ats/analyze";
+import { focusField } from "~/lib/ats/field-focus";
+import type { FieldTarget } from "~/lib/ats/types";
+import type { EditorTab } from "./EditorContext";
 import { AwardsForm } from "./forms/AwardsForm";
 import { CertificationsForm } from "./forms/CertificationsForm";
 import { CustomSectionForm } from "./forms/CustomSectionForm";
@@ -53,7 +59,33 @@ export function ResumeEditor({ initial, persistence, onImport }: ResumeEditorPro
   const [design, setDesign] = React.useState<ResumeDesign>(initial.design);
   const [templateId, setTemplateId] = React.useState<TemplateId>(initial.templateId || "modern");
   const [touchedFields, setTouchedFields] = React.useState<Set<string>>(new Set<string>());
-  const [editorTab, setEditorTab] = React.useState<"content" | "design">("content");
+  const [editorTab, setEditorTab] = React.useState<EditorTab>("content");
+  const [pageCount, setPageCount] = React.useState<number | undefined>(undefined);
+
+  // Debounced ATS analysis using React 19 / 18 useDeferredValue
+  const deferredContent = React.useDeferredValue(content);
+  const deferredDesign = React.useDeferredValue(design);
+
+  const atsContext = React.useMemo(
+    () => buildAtsContext(deferredContent, deferredDesign, { pageCount }),
+    [deferredContent, deferredDesign, pageCount]
+  );
+
+  const atsReport = React.useMemo(
+    () => analyze(deferredContent, deferredDesign, { pageCount }),
+    [deferredContent, deferredDesign, pageCount]
+  );
+
+  const isAtsUpdating = content !== deferredContent;
+
+  const handleNavigateToField = React.useCallback(
+    (targets?: FieldTarget[]) => {
+      if (!targets || targets.length === 0) return;
+      const target = targets[0]!;
+      focusField(target, { setActiveSection, setEditorTab });
+    },
+    []
+  );
 
   const [past, setPast] = React.useState<HistorySnapshot[]>([]);
   const [future, setFuture] = React.useState<HistorySnapshot[]>([]);
@@ -451,6 +483,10 @@ export function ResumeEditor({ initial, persistence, onImport }: ResumeEditorPro
       touchedFields,
       editorTab,
       setEditorTab,
+      pageCount,
+      atsReport,
+      atsContext,
+      isAtsUpdating,
       setTemplate,
       updateDesign,
       resetDesign,
@@ -479,6 +515,10 @@ export function ResumeEditor({ initial, persistence, onImport }: ResumeEditorPro
       design,
       touchedFields,
       editorTab,
+      pageCount,
+      atsReport,
+      atsContext,
+      isAtsUpdating,
       setTemplate,
       updateDesign,
       resetDesign,
@@ -535,7 +575,21 @@ export function ResumeEditor({ initial, persistence, onImport }: ResumeEditorPro
               mobileTab === "preview" ? "hidden md:flex" : "flex"
             }`}
           >
-            {editorTab === "design" ? (
+            {editorTab === "check" ? (
+              <main
+                tabIndex={-1}
+                className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 max-w-2xl mx-auto focus:outline-none"
+                data-testid="editor-check-pane"
+              >
+                <AtsCheckerPanel
+                  report={atsReport}
+                  context={atsContext}
+                  resumeId={initial.id}
+                  onNavigate={handleNavigateToField}
+                  isUpdating={isAtsUpdating}
+                />
+              </main>
+            ) : editorTab === "design" ? (
               <main
                 tabIndex={-1}
                 className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 max-w-2xl mx-auto focus:outline-none"
@@ -587,6 +641,7 @@ export function ResumeEditor({ initial, persistence, onImport }: ResumeEditorPro
                   content={content}
                   design={design}
                   templateId={templateId}
+                  onPageCountChange={setPageCount}
                 />
               </PrintRoot>
             </div>

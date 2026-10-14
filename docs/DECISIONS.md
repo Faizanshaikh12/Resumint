@@ -426,6 +426,151 @@
   - Render directly to an HTML5 `<canvas>` element and support one-click PNG download via `canvas.toDataURL("image/png")`.
 - **Consequences**: Zero server CPU overhead, zero impact on initial bundle size, accessible keyboard and screen-reader dialog controls.
 
+---
+
+## ADR-031: 100% Client-Side Pure Resume Scoring & Free-Tier Budget Compliance
+
+- **Status**: Accepted
+- **Context**: Performing resume analysis or keyword parsing on Cloudflare Workers would consume precious CPU time (10ms budget on free tier) and introduce network latency for every keystroke.
+- **Decision**:
+  - Implement resume analysis and job description matching 100% client-side inside `app/lib/ats/`.
+  - Zero server endpoints, zero D1 reads or writes, zero schema migrations.
+  - Works identically for authenticated users (`/resumes/:id/edit`) and unauthenticated guests (`/build`).
+- **Consequences**: Instantaneous evaluation without consuming Cloudflare Worker CPU limits or incurring database read/write costs.
+
+---
+
+## ADR-032: Category Weights & Explainable Checklist Rationale
+
+- **Status**: Accepted
+- **Context**: Commercial resume checkers often show arbitrary numbers without explaining point loss, misleading job applicants into believing there is an industry-standard ATS formula.
+- **Decision**:
+  - Base score = 100 points distributed across 7 transparent, explainable categories:
+    - **Contact and basics (15 pts)**: Name, email, phone, location, links, no placeholder values.
+    - **Structure (15 pts)**: Experience/Projects, Education, Skills, standard headings, sensible order, no duplicates.
+    - **Summary (10 pts)**: Present, 25-80 words, avoids first-person "I", avoids buzzword-only fluff.
+    - **Experience bullets (30 pts)**: Strong action verbs, quantified results (numbers/percentages/currencies), length (8-30 words), 2-6 bullets per role, no repetitive opening verbs.
+    - **Dates and order (10 pts)**: Valid chronology, reverse-chronological order, unexplained gaps > 12m flagged as warning, current roles have "Present".
+    - **Length and readability (10 pts)**: Page budget (1-2 pages via Phase 6 page model), total word count (150-1000), no giant walls of text, 5-25 skills items.
+    - **Language and tone (10 pts)**: No leftover placeholders/lorem, avoids first-person pronouns, low buzzword density, double spaces, repeated words, trailing punctuation consistency.
+  - Every lost point maps directly to a visible checklist item with human explanation and an actionable fix hint.
+  - Display honesty disclaimer prominently: *"Resumint checklist score (a guide, not a guarantee)"*.
+- **Consequences**: Complete transparency; users understand why points were deducted and how to recover them.
+
+---
+
+## ADR-033: `na` Check Renormalization Formula (Exclusion from Denominator)
+
+- **Status**: Accepted
+- **Context**: Career switchers, recent graduates, or students may have a Projects section without formal Work Experience, or non-English resumes may not apply to English-specific grammar checks. Punishing them unfairly produces artificially low scores.
+- **Decision**:
+  - Rules can return status `"na"` (Not Applicable).
+  - Renormalize score by excluding `na` checks from the denominator:
+    `Score = round((Sum(earned_credit * weight) / Sum(active_weight)) * 100)`
+  - If a student has no Experience section but has Projects, experience rules are marked `na` and reallocated.
+- **Consequences**: Fair, student- and transition-friendly scoring without gaming or artificial penalization.
+
+---
+
+## ADR-034: Separation of Job Match Coverage from Base Main Score
+
+- **Status**: Accepted
+- **Context**: Tying job description keyword matching into the 0-100 base score would penalize candidates who haven't yet targeted a specific job opening, rendering the score meaningless during initial drafting.
+- **Decision**:
+  - Keep the resume checklist score (0-100) and the Job Description match coverage (0-100%) completely separate.
+  - The job match is displayed on a dedicated card alongside the checklist.
+  - Missing job descriptions never reduce the resume's base score.
+- **Consequences**: Resume quality evaluation remains independently valid; candidates can tailor for specific roles on demand.
+
+---
+
+## ADR-035: In-Repo Curated Wordlists & Zero-Dependency Authoring Approach
+
+- **Status**: Accepted
+- **Context**: Relying on external dictionary packages (e.g. natural, wink-nlp, large corpora) bloats client bundles by hundreds of kilobytes. Copying proprietary word lists from commercial services introduces copyright risks.
+- **Decision**:
+  - Author and maintain self-contained, in-repo wordlists under `app/lib/ats/data/`:
+    - `action-verbs.ts`: ~180 past tense verbs, ~160 present tense verbs, weak phrases.
+    - `buzzwords.ts`: ~70 corporate clichés, filler phrases, and buzzwords.
+    - `stopwords.ts`: Common English stopwords and boilerplate JD text.
+    - `placeholders.ts`: Dummy names, emails, phones, and Lorem Ipsum tokens.
+    - `skills.ts`: ~300 curated technical, analytical, marketing, and healthcare skills with canonical alias mapping.
+  - Zero runtime dependencies added. Total bundle impact is strictly under 15 KiB uncompressed.
+- **Consequences**: Zero dependency supply chain risk, zero bundle bloat, 100% offline edge compliance.
+
+---
+
+## ADR-036: Heuristic Limitations & Safety Constraints (Soft Tense, Unexplained Gaps Warn-Only)
+
+- **Status**: Accepted
+- **Context**: Automated tense detection and employment gap analysis without full semantic parsing can produce false positives (e.g., career breaks for education, current contracts, irregular verb forms).
+- **Decision**:
+  - Mark tense mismatches and employment gaps (>12 months) as heuristic warnings (`"warn"`, 50% credit), never hard failures (`"fail"`, 0% credit).
+  - Include non-coercive fix suggestions (e.g. "If this was an intentional sabbatical or caregiving break, consider a brief note").
+- **Consequences**: Avoids frustrating false negatives while providing constructive nudges.
+
+---
+
+## ADR-037: English-Only MVP Language Scope & Graceful Fallback
+
+- **Status**: Accepted
+- **Context**: Resumint rules rely on English morphology, action verbs, and stopwords. Running English rules on Spanish, French, or German resumes produces misleading failures.
+- **Decision**:
+  - Detect document language by calculating the ratio of English stopwords to total words.
+  - If English stopword ratio < 0.08 and document has > 20 words, classify language as `"other"`.
+  - In non-English mode, language-dependent rules (action verbs, first-person pronouns, buzzwords) evaluate to `"na"`.
+  - Display a polite notice in the UI: *"English-optimized checks were paused for non-English content"*.
+- **Consequences**: Clean international degradation without false failures.
+
+---
+
+## ADR-038: Privacy Architecture: Job Description In-Memory and `sessionStorage` Only
+
+- **Status**: Accepted
+- **Context**: Pasted job descriptions may contain internal requisition numbers, confidential project details, or client-sensitive job requirements.
+- **Decision**:
+  - Job descriptions are never sent over the network.
+  - Kept strictly in client memory and synced to browser `sessionStorage` keyed by resume ID (`resumint_jd_${resumeId}`).
+  - Provide an explicit "Clear" button that removes text from both memory and `sessionStorage`.
+  - Verified via Playwright network monitoring assertion (`page.on("request")`).
+- **Consequences**: Ironclad applicant privacy and enterprise data security.
+
+---
+
+## ADR-039: Exclusion of AI / LLM Generation from MVP
+
+- **Status**: Accepted
+- **Context**: Adding LLM resume rewrites or bullet generation introduces third-party API dependencies, latency, non-deterministic scoring, and recurring token costs.
+- **Decision**:
+  - Exclude AI rewrites and generation from Phase 9.
+  - Scoring is 100% deterministic, rule-based, and explainable: same input always equals identical output.
+- **Consequences**: Fast, predictable, and zero-cost operation on Cloudflare Workers free tier.
+
+---
+
+## ADR-040: Rejection of Job Posting URL Fetching (SSRF & Resource Abuse Mitigation)
+
+- **Status**: Accepted
+- **Context**: Allowing users to input a job URL for automatic scraping introduces Server-Side Request Forgery (SSRF) vulnerabilities, IP bans from job boards (LinkedIn, Indeed), and heavy headless browser dependencies.
+- **Decision**:
+  - Strictly support user-pasted job description text via `<textarea>`.
+  - Cap input length at 10,000 characters before processing.
+  - Never initiate outbound HTTP requests from either client or server to retrieve external job postings.
+- **Consequences**: Eliminates SSRF risks, avoids IP reputation issues, and guarantees fast client-side execution.
+
+---
+
+## ADR-041: Debounced Performance Budget & Sub-50ms Execution on Max-Sized Resumes
+
+- **Status**: Accepted
+- **Context**: Re-running scoring on every single keystroke could cause UI stutter or typing lag on low-power mobile or laptop devices.
+- **Decision**:
+  - Debounce resume analysis by 500ms using `useDeferredValue` and deferred state.
+  - Optimized pure context extraction (`buildAtsContext`) and rule loops execute in **< 15 ms** on maximum-size resumes (~200 KB schema caps).
+  - Announce score changes to assistive technology via `aria-live="polite"` only when the score stabilizes, preventing screen reader announcement spam.
+- **Consequences**: Smooth 60fps typing experience, accessible auditory announcements, and verified sub-50ms benchmark compliance.
+
+
 
 
 

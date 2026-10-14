@@ -55,7 +55,7 @@ export function DashboardEmptyState({
       </p>
       <div className="mt-6">
         <Link to="/resumes/new">
-          <Button disabled={atLimit} className="gap-2">
+          <Button disabled={atLimit} className="gap-2" data-testid="create-first-resume-button">
             <Plus className="h-4 w-4" />
             Create Your First Resume
           </Button>

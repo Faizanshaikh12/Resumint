@@ -82,6 +82,8 @@ function SortableBulletItem({
       <input
         ref={inputRef}
         type="text"
+        data-bullet-index={index}
+        data-field-path={`bullet.${index}`}
         value={text}
         maxLength={maxChars}
         onChange={(e) => onChange(e.target.value)}

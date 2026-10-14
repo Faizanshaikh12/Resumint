@@ -222,25 +222,69 @@
 
 ---
 
-## Phase 9: ATS Checker & Rule Engine (Refined Outline)
+## Phase 9: ATS Checker, Resume Score & Job Matcher (Resumint)
 
-- [ ] Task 9.1: Pure ATS Evaluation Engine (`app/lib/ats/`):
-  - [ ] Action verb validator (detect strong vs weak verbs per bullet point)
-  - [ ] Quantifiable metric detector (numbers, percentages, currencies, multipliers)
-  - [ ] Contact info & length hygiene rules (email, phone, LinkedIn, total bullet count, page estimation)
-  - [ ] Formatting & section structure rules (standard headers, chronological ordering)
-  - [ ] Score calculation model (0-100 deterministic weighted score)
-- [ ] Task 9.2: ATS Scoring UI & Recommendations:
-  - [ ] Real-time score gauge & breakdown badge in EditorHeader
-  - [ ] Side drawer / panel with actionable suggestions ("Add quantifiable metrics", "Replace passive verbs")
-  - [ ] One-click jump to problematic sections in the editor
-- [ ] Task 9.3: Unit, Component & E2E Testing for ATS Evaluator
+- [x] Task 9.1: Types, Framework & Normalization Engine (`app/lib/ats/`):
+  - [x] `types.ts`: Defined `CheckStatus`, `CategoryId`, `FieldTarget`, `Check`, `CategoryScore`, `AtsReport`, `AtsContext`, `AtsRule`, and `CATEGORY_DEFINITIONS` with weights
+  - [x] `context.ts`: Pure context builder (`buildAtsContext`) indexing visible sections, word count, plain text, bullets with metadata, and language detection via stopword ratio
+  - [x] `analyze.ts`: Deterministic evaluation with `na` check renormalization formula (`round((earned / active) * 100)`), score label mapping, and top 3 high-impact fixes
+  - [x] In-repo curated dictionaries in `data/`: `action-verbs.ts` (180 past, 160 present, weak phrases), `buzzwords.ts` (70 clichés), `stopwords.ts`, `placeholders.ts`, and `skills.ts` (~300 tech/business/clinical skills with aliases)
+- [x] Task 9.2: Complete ATS Rule Set in `app/lib/ats/rules/`:
+  - [x] `contact.ts` (15 pts): Full name present, valid email, plausible phone, location, HTTPS links, no placeholder values
+  - [x] `structure.ts` (15 pts): Essential sections (Experience/Projects + Education + Skills), standard section headings, sensible order, no duplicates
+  - [x] `summary.ts` (10 pts): Presence, 25-80 words, avoids first-person "I", avoids buzzword-only fluff
+  - [x] `experience.ts` (30 pts): Action verbs (past tense for past roles, present for current), quantified metrics (percentages, numbers, currencies), length (8-30 words), 2-6 bullets per role, no repetitive opening verbs (>2x)
+  - [x] `dates.ts` (10 pts): Parseable dates, chronological consistency, reverse-chronological order, unexplained gaps > 12m (warn-only), current roles have "Present"
+  - [x] `length.ts` (10 pts): Page budget (1-2 pages via Phase 6 page model), total word count (150-1000), paragraph density, 5-25 skills items
+  - [x] `language.ts` (10 pts): Leftover placeholder/Lorem text, first-person pronouns in bullets, buzzword density, double spaces, repeated words, ALL CAPS runs, trailing punctuation consistency
+  - [x] `registry.ts`: Clean modular registry mapping pure rules
+- [x] Task 9.3: 100% Client-Side Job Description Matcher (`app/lib/ats/keywords/`):
+  - [x] `tokenize.ts`: Special-token preservation (`C++`, `C#`, `.NET`, `Node.js`, `Next.js`, `CI/CD`, `Wi-Fi`, `R`, `Go`), URL/email stripping, 10,000 char cap
+  - [x] `extract.ts`: Section-aware extraction (1.8x boost for requirements/qualifications/must-have headers), skills dictionary matching, generic word exclusion, light stemming
+  - [x] `match.ts`: Strict word-boundary matching, canonical alias mapping, weighted coverage percentage, matched chips, ranked missing chips with non-coercive hints ("Add only if true for you"), and stuffing alert (>4% density or comma dumps)
+- [x] Task 9.4: UI Components & Navigation (`app/components/ats/`):
+  - [x] Editor left-pane third tab: **Content | Design | Check**
+  - [x] `ScoreGauge.tsx`: Circular SVG meter, accessible score label, category progress bars, and honesty disclaimer: *"Resumint checklist score (a guide, not a guarantee)"*
+  - [x] `ChecklistItem.tsx`: Status icons + text (never color alone), title, message, fix block, keyboard-accessible target navigation
+  - [x] `TopFixesCard.tsx`: Top 3 high-impact fixes ranked by recoverable points with WCAG AA compliant badge
+  - [x] `JobMatchCard.tsx`: Character counter, local analysis, coverage bar, matched chips, missing chips with placement hints, stuffing alert, `sessionStorage` sync, and clear button
+  - [x] `ScoreBadge.tsx`: Debounced dynamic score pill in `EditorHeader.tsx` opening Check tab on click
+  - [x] `field-focus.ts`: `focusField()` DOM selector navigating to `data-field-path` attributes and auto-scrolling
+  - [x] `data-field-path` attributes added across all editor form inputs
+- [x] Task 9.5: Comprehensive Testing & Verification:
+  - [x] 43 unit tests across framework, rules, and keywords in `tests/unit/ats-*.test.ts` (100% passing)
+  - [x] 5 component tests in `tests/components/AtsChecker.test.tsx` (100% passing)
+  - [x] 4 Playwright E2E tests in `tests/e2e/ats.spec.ts` (100% passing): guest flow, issue navigation, fix & score update, local JD match & privacy network assertion, score badge, Axe a11y scan
+  - [x] Zero network requests containing sensitive JD text asserted in E2E
+  - [x] Analysis performance budget verified (< 15ms pure compute, 500ms debounced UI)
+  - [x] 0 ESLint errors and warnings
+  - [x] 0 TypeScript compiler errors
+  - [x] Production build passes cleanly (`react-router build`)
+- [x] Task 9.6: Documentation:
+  - [x] `docs/PLAN.md`: Resume analysis and JD match pipeline ASCII diagrams, Phase 9 marked complete
+  - [x] `docs/DECISIONS.md`: Added ADR-031 to ADR-041 covering client-side scoring, weights, NA renormalization, separate JD match, wordlist authoring, heuristic limits, English scope, JD privacy, zero AI, SSRF prevention, and performance budget
+  - [x] `docs/TASKS.md`: Phase 9 ticked and Phase 10 outline refined
+  - [x] `README.md`: Feature section, category weights table, honesty disclaimer, and new rule authoring guide
 
 ---
 
-## Phase 10: Polish, Hardening & Production Deploy (Outline)
+## Phase 10: Polish, Hardening & Production Deploy (Refined Outline)
 
-- [ ] Task 10.1: Accessibility review (WCAG AA compliance, Axe verification)
-- [ ] Task 10.2: Performance audit and bundle size minimization
-- [ ] Task 10.3: Remote D1 migration and Cloudflare Workers production deployment
-- [ ] Task 10.4: Live smoke tests and final documentation updates
+- [ ] Task 10.1: Accessibility & Design Audit:
+  - [ ] Complete automated Axe scans across all routes (`/`, `/build`, `/dashboard`, `/resumes/:id/edit`, `/r/:slug`)
+  - [ ] Keyboard navigation, focus rings, reduced-motion preferences, and screen reader announcements
+  - [ ] Color contrast verification across all 5 resume templates and dark/light UI modes
+- [ ] Task 10.2: Performance, Bundle Size & Core Web Vitals:
+  - [ ] Audit client bundle chunks and assets; verify zero unnecessary dependencies
+  - [ ] Measure First Contentful Paint (FCP), Largest Contentful Paint (LCP), and Interaction to Next Paint (INP)
+  - [ ] Fine-tune caching headers and asset immutability
+- [ ] Task 10.3: Edge Hardening & Error Handling:
+  - [ ] Verify rate limiting on auth and share unlock endpoints
+  - [ ] Production 404 and 500 error boundary presentation
+  - [ ] D1 quota verification and edge memory safety
+- [ ] Task 10.4: Production Deployment & Verification:
+  - [ ] Execute remote D1 migrations on live Cloudflare environment
+  - [ ] Deploy worker bundle to production via Wrangler
+  - [ ] Conduct end-to-end smoke verification on live `.workers.dev` domain
+  - [ ] Finalize production documentation and project wrap-up
+

@@ -363,7 +363,7 @@ export default function DashboardRoute({ loaderData }: Route.ComponentProps) {
       <DashboardToolbar initialSearch={q} initialSort={sort} />
 
       {/* Main Content Area */}
-      <main aria-label="Resume list">
+      <section aria-label="Resume list" data-testid="dashboard-main">
         {isSearchingOrSorting ? (
           <DashboardSkeleton />
         ) : isEmpty ? (
@@ -404,7 +404,7 @@ export default function DashboardRoute({ loaderData }: Route.ComponentProps) {
             )}
           </div>
         )}
-      </main>
+      </section>
     </div>
   );
 }

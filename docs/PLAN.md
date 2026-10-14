@@ -298,7 +298,7 @@
 - **Phase 6: Templates & Customization** (5 ATS-compliant templates, theme & typography styling, design panel, thumbnails, continuous preview) [DONE]
 - **Phase 7: Export Systems** (Print stylesheet, client-side PDF download, JSON import/export, plain-text export) [DONE]
 - **Phase 8: Public Share Links** (Slug generator, public `/r/:slug` page, password/expiry controls, HMAC cookies, bot-filtered view counting) [DONE]
-- **Phase 9: ATS Checker & Rule Engine** (Rule-based score calculator, ATS guidelines)
+- **Phase 9: ATS Checker & Rule Engine** (Rule-based score calculator, ATS guidelines, keywords matcher) [DONE]
 - **Phase 10: Polish, Hardening & Production Deploy** (Performance audit, axe a11y, live Cloudflare deploy)
 
 ---
@@ -395,3 +395,74 @@ Visitor Browser                     Worker Edge (/r/:oldSlug)             Cloudf
      |<-- 6. Immediate 404 Unavailable -----|                                  |
      |    (Zero stale cache, no-store)      |                                  |
 ```
+
+---
+
+## 9. Phase 9: ATS Checker & Job Description Matcher Architecture
+
+### Diagram 1: Resume Analysis Pipeline
+```
+ResumeContent + ResumeDesign + PageCount
+                  │
+                  ▼
+       buildAtsContext(content, design, { now, pageCount })
+       - Filter visible sections in configured order
+       - Flatten plain text and count words
+       - Index bullets with (sectionId, itemId, bulletIndex)
+       - Detect language via English stopword ratio (>= 0.08)
+                  │
+                  ▼
+           Rule Registry (Pure Rule Execution)
+   ┌──────────────┬──────────────┬──────────────┐
+   │ Contact (15) │ Structure(15)│ Summary (10) │
+   ├──────────────┼──────────────┼──────────────┤
+   │ Experience(30│ Dates (10)   │ Length (10)  │
+   ├──────────────┴──────────────┴──────────────┤
+   │ Language / Tone (10)                       │
+   └────────────────────────────────────────────┘
+                  │
+                  ▼
+        Raw Checks Array [Check, Check, ...]
+                  │
+                  ▼
+       analyze() Normalization Engine
+       - Exclude `na` checks from denominator:
+         Score = round((Sum(earned_credit * weight) / Sum(active_weight)) * 100)
+       - Score label mapping:
+         0-39: "Needs work", 40-69: "Good start", 70-89: "Strong", 90-100: "Excellent"
+       - Rank top 3 recoverable fixes by unearned weight
+                  │
+                  ▼
+              AtsReport
+       (score, label, categories, checks, topFixes, meta)
+```
+
+### Diagram 2: Job Description Match Pipeline (100% Client-Side)
+```
+Target Job Description (Pasted into textarea, capped at 10,000 chars)
+                  │
+                  ▼
+       tokenize(rawText)
+       - Strip URLs & email addresses
+       - Preserve special tokens: C++, C#, .NET, Node.js, Next.js, CI/CD, Wi-Fi, R, Go
+       - Split hyphenated & slash tokens while preserving compound boundaries
+                  │
+                  ▼
+       extractKeywords(jobDescription)
+       - Segment headers: Requirements, Qualifications, Must Have, Responsibilities
+       - Boost tokens in requirement sections (1.8x multiplier)
+       - Match 1-to-3-gram phrases against ~300 in-repo skills dictionary
+       - Filter generic stopwords and light-stem non-catalog words
+                  │
+                  ▼
+       matchJobDescription(jobDescription, atsContext)
+       - Compare canonical keywords against visible resume text (strict boundaries)
+       - Keyword coverage calculation weighted by keyword importance
+       - Classify into Matched Chips (count) and Missing Chips (ranked)
+       - Generate non-coercive placement hints ("Add only if true for you")
+       - Detect keyword stuffing (repeated density > 4% or long comma dumps)
+                  │
+                  ▼
+       JobMatchResult (Rendered locally in JobMatchCard, saved to sessionStorage only)
+```
+

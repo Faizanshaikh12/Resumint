@@ -30,6 +30,7 @@ import { ImportDialog } from "~/components/export/ImportDialog";
 import { UploadCloud, Sparkles, Share2 } from "lucide-react";
 import { AuthDialog } from "~/components/auth/AuthDialog";
 import { useNavigate } from "react-router";
+import { ScoreBadge } from "~/components/ats/ScoreBadge";
 
 export function EditorHeader() {
   const {
@@ -46,6 +47,8 @@ export function EditorHeader() {
     version,
     editorTab,
     setEditorTab,
+    atsReport,
+    isAtsUpdating,
     undo,
     redo,
     canUndo,
@@ -221,7 +224,31 @@ export function EditorHeader() {
             <Palette className="h-3.5 w-3.5" />
             <span>Design</span>
           </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={editorTab === "check"}
+            onClick={() => setEditorTab("check")}
+            className={`flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-md transition-all ${
+              editorTab === "check"
+                ? "bg-background text-foreground shadow-xs font-semibold"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+            data-testid="editor-header-tab-check"
+          >
+            <CheckCircle2 className="h-3.5 w-3.5" />
+            <span>Check</span>
+          </button>
         </div>
+
+        {/* Score Badge */}
+        {atsReport && (
+          <ScoreBadge
+            report={atsReport}
+            onClick={() => setEditorTab("check")}
+            isUpdating={isAtsUpdating}
+          />
+        )}
 
         <div className="hidden sm:flex items-center border-l pl-2 ml-1 gap-1">
           <Button
@@ -378,8 +405,8 @@ export function EditorHeader() {
       <Dialog open={confirmReplaceOpen} onOpenChange={setConfirmReplaceOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <div className="flex items-center gap-2 mb-1 text-amber-600">
-              <AlertTriangle className="h-5 w-5" />
+            <div className="flex items-center gap-2 mb-1">
+              <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-500 shrink-0" />
               <DialogTitle>Replace Current Draft?</DialogTitle>
             </div>
             <DialogDescription>

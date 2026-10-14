@@ -59,7 +59,7 @@ export function SkillsForm() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" data-section-id="skills">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-lg font-bold text-foreground">Skills</h2>
@@ -75,6 +75,7 @@ export function SkillsForm() {
       {/* Input box */}
       <div className="flex items-center gap-2">
         <Input
+          data-field-path="skills"
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
           onKeyDown={handleKeyDown}

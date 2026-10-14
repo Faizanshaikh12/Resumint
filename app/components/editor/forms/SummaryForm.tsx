@@ -15,7 +15,7 @@ export function SummaryForm() {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" data-section-id="summary">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-lg font-bold text-foreground">Professional Summary</h2>
@@ -38,6 +38,7 @@ export function SummaryForm() {
         </Label>
         <textarea
           id="summary-textarea"
+          data-field-path="summary.body"
           value={summary}
           maxLength={maxLength}
           onChange={(e) => handleChange(e.target.value)}

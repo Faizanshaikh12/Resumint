@@ -12,6 +12,7 @@ export interface ResumePreviewProps {
   templateId?: string;
   className?: string;
   showGuides?: boolean;
+  onPageCountChange?: (count: number) => void;
 }
 
 export function ResumePreview({
@@ -20,6 +21,7 @@ export function ResumePreview({
   templateId,
   className = "",
   showGuides = true,
+  onPageCountChange,
 }: ResumePreviewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const paperRef = useRef<HTMLDivElement>(null);
@@ -86,6 +88,10 @@ export function ResumePreview({
 
   const pageCount = Math.max(1, Math.ceil(paperHeight / standardPageHeightPx));
   const hasPageOverflowWarning = pageCount > 2;
+
+  useEffect(() => {
+    onPageCountChange?.(pageCount);
+  }, [pageCount, onPageCountChange]);
 
   // Render guides for each multiple of standard page height
   const guides = [];

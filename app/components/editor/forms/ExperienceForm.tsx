@@ -74,7 +74,7 @@ export function ExperienceForm() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" data-section-id="experience">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-lg font-bold text-foreground">Work Experience</h2>
@@ -106,6 +106,7 @@ export function ExperienceForm() {
           return (
             <div
               key={item.id}
+              data-item-id={item.id}
               className="border rounded-lg bg-card shadow-xs overflow-hidden transition-all"
             >
               {/* Card Header */}
@@ -169,6 +170,7 @@ export function ExperienceForm() {
                       </Label>
                       <Input
                         id={`exp-pos-${item.id}`}
+                        data-field-path="experience.position"
                         value={item.position || ""}
                         onChange={(e) => handleUpdate(item.id, "position", e.target.value)}
                         placeholder="Senior Software Engineer"
@@ -183,6 +185,7 @@ export function ExperienceForm() {
                       </Label>
                       <Input
                         id={`exp-comp-${item.id}`}
+                        data-field-path="experience.company"
                         value={item.company || ""}
                         onChange={(e) => handleUpdate(item.id, "company", e.target.value)}
                         placeholder="Google / Acme Corp"
@@ -197,6 +200,7 @@ export function ExperienceForm() {
                       </Label>
                       <Input
                         id={`exp-loc-${item.id}`}
+                        data-field-path="experience.location"
                         value={item.location || ""}
                         onChange={(e) => handleUpdate(item.id, "location", e.target.value)}
                         placeholder="New York, NY (or Remote)"
@@ -214,6 +218,7 @@ export function ExperienceForm() {
                           </Label>
                           <Input
                             id={`exp-start-${item.id}`}
+                            data-field-path="experience.startDate"
                             value={item.date?.start || ""}
                             onChange={(e) => handleDateUpdate(item.id, "start", e.target.value)}
                             placeholder="2021-03"
@@ -228,6 +233,7 @@ export function ExperienceForm() {
                           </Label>
                           <Input
                             id={`exp-end-${item.id}`}
+                            data-field-path="experience.endDate"
                             disabled={item.date?.current}
                             value={item.date?.current ? "Present" : item.date?.end || ""}
                             onChange={(e) => handleDateUpdate(item.id, "end", e.target.value)}
@@ -259,6 +265,7 @@ export function ExperienceForm() {
                       </Label>
                       <textarea
                         id={`exp-desc-${item.id}`}
+                        data-field-path="experience.summary"
                         value={item.description || ""}
                         maxLength={2000}
                         onChange={(e) => handleUpdate(item.id, "description", e.target.value)}

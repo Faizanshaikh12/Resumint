@@ -74,7 +74,7 @@ export function EducationForm() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" data-section-id="education">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-lg font-bold text-foreground">Education</h2>
@@ -106,6 +106,7 @@ export function EducationForm() {
           return (
             <div
               key={item.id}
+              data-item-id={item.id}
               className="border rounded-lg bg-card shadow-xs overflow-hidden transition-all"
             >
               {/* Card Header */}
@@ -169,6 +170,7 @@ export function EducationForm() {
                       </Label>
                       <Input
                         id={`edu-inst-${item.id}`}
+                        data-field-path="education.institution"
                         value={item.institution || ""}
                         onChange={(e) => handleUpdate(item.id, "institution", e.target.value)}
                         placeholder="University of California, Berkeley"
@@ -183,6 +185,7 @@ export function EducationForm() {
                       </Label>
                       <Input
                         id={`edu-deg-${item.id}`}
+                        data-field-path="education.degree"
                         value={item.degree || ""}
                         onChange={(e) => handleUpdate(item.id, "degree", e.target.value)}
                         placeholder="Bachelor of Science"

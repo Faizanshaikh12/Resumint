@@ -63,7 +63,7 @@ export function ProjectsForm() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" data-section-id="projects">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-lg font-bold text-foreground">Projects</h2>
@@ -93,6 +93,7 @@ export function ProjectsForm() {
           return (
             <div
               key={item.id}
+              data-item-id={item.id}
               className="border rounded-lg bg-card shadow-xs overflow-hidden transition-all"
             >
               <div className="flex items-center justify-between bg-muted/40 px-4 py-2.5 border-b text-xs">
@@ -149,6 +150,7 @@ export function ProjectsForm() {
                       </Label>
                       <Input
                         id={`proj-name-${item.id}`}
+                        data-field-path="projects.name"
                         value={item.name || ""}
                         onChange={(e) => handleUpdate(item.id, "name", e.target.value)}
                         placeholder="Resumint / Distributed Key-Value Store"
@@ -163,6 +165,7 @@ export function ProjectsForm() {
                       </Label>
                       <Input
                         id={`proj-url-${item.id}`}
+                        data-field-path="projects.url"
                         value={item.url || ""}
                         onChange={(e) => handleUpdate(item.id, "url", e.target.value)}
                         placeholder="https://github.com/..."
@@ -177,6 +180,7 @@ export function ProjectsForm() {
                       </Label>
                       <textarea
                         id={`proj-desc-${item.id}`}
+                        data-field-path="projects.description"
                         value={item.description || ""}
                         maxLength={2000}
                         onChange={(e) => handleUpdate(item.id, "description", e.target.value)}

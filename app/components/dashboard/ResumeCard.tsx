@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Link, type FetcherWithComponents } from "react-router";
+import { Link, useNavigate, type FetcherWithComponents } from "react-router";
 import type { ResumeSummary } from "~/db/queries/resumes";
 import { formatRelativeTime } from "~/lib/utils/format";
 import {
@@ -60,6 +60,7 @@ function getInitials(title: string): string {
 }
 
 export function ResumeCard({ resume, fetcher, atLimit }: ResumeCardProps) {
+  const navigate = useNavigate();
   const [renameOpen, setRenameOpen] = React.useState(false);
   const [deleteOpen, setDeleteOpen] = React.useState(false);
 
@@ -110,11 +111,9 @@ export function ResumeCard({ resume, fetcher, atLimit }: ResumeCardProps) {
         className="group relative flex flex-col rounded-xl border bg-card p-4 shadow-xs transition-all hover:border-primary/40 hover:shadow-md focus-within:ring-2 focus-within:ring-ring"
       >
         {/* Thumbnail: Lazy Document Miniature with Initials Fallback */}
-        <Link
-          to={`/resumes/${resume.id}/edit`}
-          tabIndex={-1}
-          aria-hidden="true"
-          className="relative aspect-[16/10] w-full overflow-hidden rounded-lg border transition-transform group-hover:scale-[1.01]"
+        <div
+          onClick={() => navigate(`/resumes/${resume.id}/edit`)}
+          className="relative aspect-[16/10] w-full overflow-hidden rounded-lg border transition-transform group-hover:scale-[1.01] cursor-pointer"
         >
           <ResumeThumbnail
             resumeId={resume.id}
@@ -127,7 +126,7 @@ export function ResumeCard({ resume, fetcher, atLimit }: ResumeCardProps) {
             {resume.shareStatus === "not_shared" && (
               <span
                 title="Not Shared"
-                className="inline-flex items-center gap-1 rounded-full bg-background/90 backdrop-blur-xs px-2 py-0.5 text-[10px] font-medium text-muted-foreground/70 shadow-xs"
+                className="inline-flex items-center gap-1 rounded-full bg-background/95 border border-border/80 backdrop-blur-xs px-2 py-0.5 text-[10px] font-semibold text-foreground/80 shadow-xs"
                 data-testid="share-badge-not_shared"
               >
                 Not shared
@@ -136,7 +135,7 @@ export function ResumeCard({ resume, fetcher, atLimit }: ResumeCardProps) {
             {(resume.shareStatus === "shared" || (!resume.shareStatus && (resume as any).hasShareLink)) && (
               <span
                 title="Active Share Link"
-                className="inline-flex items-center gap-1 rounded-full bg-background/90 backdrop-blur-xs px-2 py-0.5 text-[10px] font-semibold text-emerald-600 shadow-xs dark:text-emerald-400"
+                className="inline-flex items-center gap-1 rounded-full bg-background/95 border border-emerald-300 dark:border-emerald-800 backdrop-blur-xs px-2 py-0.5 text-[10px] font-semibold text-emerald-700 shadow-xs dark:text-emerald-400"
                 data-testid="share-badge-shared"
               >
                 <Globe className="h-2.5 w-2.5" />
@@ -146,7 +145,7 @@ export function ResumeCard({ resume, fetcher, atLimit }: ResumeCardProps) {
             {resume.shareStatus === "protected" && (
               <span
                 title="Password Protected Share Link"
-                className="inline-flex items-center gap-1 rounded-full bg-background/90 backdrop-blur-xs px-2 py-0.5 text-[10px] font-semibold text-amber-600 shadow-xs dark:text-amber-400"
+                className="inline-flex items-center gap-1 rounded-full bg-background/95 border border-amber-300 dark:border-amber-800 backdrop-blur-xs px-2 py-0.5 text-[10px] font-semibold text-amber-800 shadow-xs dark:text-amber-300"
                 data-testid="share-badge-protected"
               >
                 <Lock className="h-2.5 w-2.5" />
@@ -156,7 +155,7 @@ export function ResumeCard({ resume, fetcher, atLimit }: ResumeCardProps) {
             {resume.shareStatus === "expired" && (
               <span
                 title="Expired Share Link"
-                className="inline-flex items-center gap-1 rounded-full bg-background/90 backdrop-blur-xs px-2 py-0.5 text-[10px] font-semibold text-rose-600 shadow-xs dark:text-rose-400"
+                className="inline-flex items-center gap-1 rounded-full bg-background/95 border border-rose-300 dark:border-rose-800 backdrop-blur-xs px-2 py-0.5 text-[10px] font-semibold text-rose-700 shadow-xs dark:text-rose-400"
                 data-testid="share-badge-expired"
               >
                 <Clock className="h-2.5 w-2.5" />
@@ -166,18 +165,18 @@ export function ResumeCard({ resume, fetcher, atLimit }: ResumeCardProps) {
             {resume.shareStatus === "disabled" && (
               <span
                 title="Disabled Share Link"
-                className="inline-flex items-center gap-1 rounded-full bg-background/90 backdrop-blur-xs px-2 py-0.5 text-[10px] font-semibold text-muted-foreground shadow-xs"
+                className="inline-flex items-center gap-1 rounded-full bg-background/95 border border-border/80 backdrop-blur-xs px-2 py-0.5 text-[10px] font-semibold text-foreground/80 shadow-xs"
                 data-testid="share-badge-disabled"
               >
                 <Globe className="h-2.5 w-2.5" />
                 Disabled
               </span>
             )}
-            <span className="inline-flex items-center rounded-md bg-background/90 backdrop-blur-xs px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-foreground/80 shadow-xs">
+            <span className="inline-flex items-center rounded-md bg-background/95 border border-border/80 backdrop-blur-xs px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-foreground/80 shadow-xs">
               {resume.templateId}
             </span>
           </div>
-        </Link>
+        </div>
 
         {/* Card Content & Metadata */}
         <div className="mt-3 flex items-start justify-between gap-2">
