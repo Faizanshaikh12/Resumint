@@ -7,15 +7,15 @@
 - [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ### Phase 2: Pure Logic Foundation (`app/lib/share/`) & Unit Tests
-- [ ] Task: Implement `app/lib/share/status.ts` (`getShareStatus(link, now)` with public `unavailable` mapping and expiry boundary)
-- [ ] Task: Implement `app/lib/share/expiry.ts` (presets 7/30/90 days/custom/never, UTC end-of-day timestamp, past date rejection)
-- [ ] Task: Implement `app/lib/share/redact.ts` (`redactContactDetails` removing email and phone when `hideContact` is true)
-- [ ] Task: Implement `app/lib/share/password.ts` (constant-time compare, random salt, PBKDF2 WebCrypto, 6-128 chars)
-- [ ] Task: Implement `app/lib/share/unlock-cookie.ts` (HMAC-SHA256 signed cookie `rs_<slug>`, 24h expiration, password fingerprint invalidation)
-- [ ] Task: Implement `app/lib/share/bots.ts` (`isLikelyBot` detection table for crawlers, link previews, prefetch, non-HTML accept)
-- [ ] Task: Implement `app/lib/share/meta.ts` (`buildShareMeta` with profile tags, truncated summary, robots tags, generic fallback)
-- [ ] Task: Implement comprehensive unit tests in `tests/unit/share.test.ts`
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Implement `app/lib/share/status.ts` (`getShareStatus(link, now)` with public `unavailable` mapping and expiry boundary)
+- [x] Task: Implement `app/lib/share/expiry.ts` (presets 7/30/90 days/custom/never, UTC end-of-day timestamp, past date rejection)
+- [x] Task: Implement `app/lib/share/redact.ts` (`redactContactDetails` removing email and phone when `hideContact` is true)
+- [x] Task: Implement `app/lib/share/password.ts` (constant-time compare, random salt, PBKDF2 WebCrypto, 6-128 chars)
+- [x] Task: Implement `app/lib/share/unlock-cookie.ts` (HMAC-SHA256 signed cookie `rs_<slug>`, 24h expiration, password fingerprint invalidation)
+- [x] Task: Implement `app/lib/share/bots.ts` (`isLikelyBot` detection table for crawlers, link previews, prefetch, non-HTML accept)
+- [x] Task: Implement `app/lib/share/meta.ts` (`buildShareMeta` with profile tags, truncated summary, robots tags, generic fallback)
+- [x] Task: Implement comprehensive unit tests in `tests/unit/share.test.ts`
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ### Phase 3: Owner Management Route (`/resumes/:id/share`)
 - [ ] Task: Create `app/routes/resumes.$id.share.tsx` loader with `requireUser`, ownership 404, returning share configuration without `passwordHash`
