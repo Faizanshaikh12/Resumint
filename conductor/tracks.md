@@ -48,7 +48,7 @@
 
 ---
 
-- [ ] **Track: Phase 11 - DB-Driven Templates (Template Master)**
+- [~] **Track: Phase 11 - DB-Driven Templates (Template Master)**
   *Link: [conductor/tracks/phase_11_templates_20261015/index.md](./tracks/phase_11_templates_20261015/index.md)*
 
 
