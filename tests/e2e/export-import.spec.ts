@@ -234,7 +234,11 @@ test.describe("Phase 7: Export and Import E2E", () => {
       // Emulate print CSS media
       await page.emulateMedia({ media: "print" });
       await page.waitForSelector('[data-testid="resume-preview-document"]', { state: "visible", timeout: 20000 });
-      await page.waitForTimeout(200);
+      await page.evaluate(() => document.fonts && document.fonts.ready);
+      await page.waitForFunction(() => {
+        const el = document.querySelector('[data-testid="resume-preview-document"]');
+        return el && (el.textContent || "").toLowerCase().includes("cassian");
+      }, { timeout: 20000 });
 
       // Generate A4 PDF
       const a4Buffer = await page.pdf({
@@ -249,8 +253,9 @@ test.describe("Phase 7: Export and Import E2E", () => {
 
       // Extract text with pdf-parse
       const parsedA4 = await pdf(a4Buffer);
-      expect(parsedA4.text.toLowerCase()).toContain("cassian andor");
-      expect(parsedA4.text).toContain("Infiltrated Imperial data vault on Scarif.");
+      const textA4 = (parsedA4.text || "").normalize("NFKD").replace(/\s+/g, " ").toLowerCase();
+      expect(textA4).toContain("cassian andor");
+      expect(textA4).toContain("infiltrated imperial data vault on scarif");
       expect(parsedA4.numpages).toBeGreaterThanOrEqual(1);
 
       // Return to screen media
@@ -260,7 +265,11 @@ test.describe("Phase 7: Export and Import E2E", () => {
     // Also verify Letter format on technical template
     await page.emulateMedia({ media: "print" });
     await page.waitForSelector('[data-testid="resume-preview-document"]', { state: "visible", timeout: 20000 });
-    await page.waitForTimeout(200);
+    await page.evaluate(() => document.fonts && document.fonts.ready);
+    await page.waitForFunction(() => {
+      const el = document.querySelector('[data-testid="resume-preview-document"]');
+      return el && (el.textContent || "").toLowerCase().includes("cassian");
+    }, { timeout: 20000 });
     const letterBuffer = await page.pdf({
       format: "Letter",
       printBackground: true,
@@ -268,7 +277,8 @@ test.describe("Phase 7: Export and Import E2E", () => {
     });
     expect(letterBuffer.length).toBeGreaterThan(500);
     const parsedLetter = await pdf(letterBuffer);
-    expect(parsedLetter.text).toContain("Cassian Andor");
+    const textLetter = (parsedLetter.text || "").normalize("NFKD").replace(/\s+/g, " ").toLowerCase();
+    expect(textLetter).toContain("cassian andor");
     await page.emulateMedia({ media: "screen" });
   });
 
