@@ -76,14 +76,14 @@
 - [x] Task: Phase 6 Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 7: Resume Duplication Workflows
-- [ ] Task: Verify & Enhance Dashboard Duplicate Action
-  - [ ] Verify Dashboard duplicate functionality: copies content and design, generates new nanoid, strips `shareSlug`, verifies resume count cap
-  - [ ] Add worker tests in `tests/worker/resume-duplicate.test.ts`
-- [ ] Task: Implement Editor Header Menu Duplication
-  - [ ] Add dropdown menu in Editor header with "Duplicate Resume" and "Duplicate and try another template"
-  - [ ] "Duplicate Resume": creates copy and redirects to new resume editor
-  - [ ] "Duplicate and try another template": creates copy, redirects, and automatically opens Template Gallery modal
-- [ ] Task: Phase 7 Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Verify & Enhance Dashboard Duplicate Action
+  - [x] Verify Dashboard duplicate functionality: copies content and design, generates new nanoid, strips `shareSlug`, verifies resume count cap
+  - [x] Add worker tests in `tests/worker/resume-duplicate.test.ts`
+- [x] Task: Implement Editor Header Menu Duplication
+  - [x] Add dropdown menu in Editor header with "Duplicate Resume" and "Duplicate and try another template"
+  - [x] "Duplicate Resume": creates copy and redirects to new resume editor
+  - [x] "Duplicate and try another template": creates copy, redirects, and automatically opens Template Gallery modal
+- [x] Task: Phase 7 Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 8: Comprehensive Verification, Testing & Documentation
 - [ ] Task: End-to-End Playwright Tests

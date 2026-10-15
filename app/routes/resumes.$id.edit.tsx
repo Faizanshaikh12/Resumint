@@ -3,7 +3,8 @@ import { Link, isRouteErrorResponse, useRouteError } from "react-router";
 import type { Route } from "./+types/resumes.$id.edit";
 import { requireUser } from "~/auth/helpers.server";
 import { getDatabase } from "~/db/helpers.server";
-import { getResume, renameResume, updateResume } from "~/db/queries/resumes";
+import { getResume, renameResume, updateResume, duplicateResume, countResumes } from "~/db/queries/resumes";
+import { MAX_RESUMES_PER_USER } from "~/lib/resume/limits";
 import { Button } from "~/components/ui/button";
 import { ArrowLeft, FileCode, AlertTriangle } from "lucide-react";
 import { ResumeEditor } from "~/components/editor/ResumeEditor";
@@ -114,6 +115,29 @@ export async function action({ request, params, context }: Route.ActionArgs) {
     }
 
     return Response.json({ ok: true, title: parsed.data.title.trim() });
+  }
+
+  if (intent === "duplicate") {
+    const currentCount = await countResumes(db, user.id);
+    if (currentCount >= MAX_RESUMES_PER_USER) {
+      return Response.json(
+        {
+          ok: false,
+          error: `Resume limit reached (${MAX_RESUMES_PER_USER} maximum). Delete an existing resume to duplicate.`,
+        },
+        { status: 400 }
+      );
+    }
+
+    const duplicated = await duplicateResume(db, user.id, id);
+    if (!duplicated) {
+      return Response.json({ ok: false, error: "Resume not found" }, { status: 404 });
+    }
+
+    return Response.json({
+      ok: true,
+      resume: duplicated,
+    });
   }
 
   if (intent === "save") {

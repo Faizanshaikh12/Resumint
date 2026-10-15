@@ -27,13 +27,19 @@ import {
 import { useEditor } from "./EditorContext";
 import { ExportMenu } from "~/components/export/ExportMenu";
 import { ImportDialog } from "~/components/export/ImportDialog";
-import { UploadCloud, Sparkles, Share2 } from "lucide-react";
+import { UploadCloud, Sparkles, Share2, Copy } from "lucide-react";
 import { AuthDialog } from "~/components/auth/AuthDialog";
 import { useNavigate } from "react-router";
 import { ScoreBadge } from "~/components/ats/ScoreBadge";
 import { toast } from "~/components/ui/sonner";
 import { isBlankResume } from "~/components/templates/generic/GenericResumeRenderer";
 import { getSampleResumeContent } from "~/lib/resume/sample-content";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "~/components/ui/dropdown-menu";
 
 export function EditorHeader() {
   const {
@@ -73,6 +79,35 @@ export function EditorHeader() {
         onClick: () => undo(),
       },
     });
+  };
+
+  const navigate = useNavigate();
+  const [isDuplicating, setIsDuplicating] = React.useState(false);
+
+  const performDuplicate = async (openGalleryOnRedirect: boolean) => {
+    if (!id || isDuplicating) return;
+    setIsDuplicating(true);
+    try {
+      const res = await fetch(`/resumes/${encodeURIComponent(id)}/edit`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ intent: "duplicate" }),
+      });
+      const data = (await res.json()) as any;
+      if (res.ok && data.ok && data.resume?.id) {
+        toast.success("Resume duplicated successfully");
+        const redirectUrl = openGalleryOnRedirect
+          ? `/resumes/${data.resume.id}/edit?openGallery=true`
+          : `/resumes/${data.resume.id}/edit`;
+        navigate(redirectUrl);
+      } else {
+        toast.error(data.error || "Failed to duplicate resume");
+      }
+    } catch {
+      toast.error("Network error while duplicating resume");
+    } finally {
+      setIsDuplicating(false);
+    }
   };
 
   const [isEditingTitle, setIsEditingTitle] = React.useState(false);
@@ -406,6 +441,49 @@ export function EditorHeader() {
           templateId={templateId}
           title={title}
         />
+
+        {/* Duplicate Dropdown Menu (for authenticated resumes) */}
+        {id && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={isDuplicating}
+                className="gap-1.5 h-9"
+                data-testid="editor-duplicate-menu-button"
+                title="Duplicate resume"
+              >
+                <Copy className="h-4 w-4" />
+                <span className="hidden xl:inline">Duplicate</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-60">
+              <DropdownMenuItem
+                onClick={() => performDuplicate(false)}
+                data-testid="editor-duplicate-resume-option"
+                className="gap-2.5 cursor-pointer py-2"
+              >
+                <Copy className="h-4 w-4 text-muted-foreground shrink-0" />
+                <div className="flex flex-col">
+                  <span className="font-semibold text-xs text-foreground">Duplicate Resume</span>
+                  <span className="text-[10px] text-muted-foreground">Keep current template & style</span>
+                </div>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => performDuplicate(true)}
+                data-testid="editor-duplicate-and-change-template-option"
+                className="gap-2.5 cursor-pointer py-2"
+              >
+                <Sparkles className="h-4 w-4 text-primary shrink-0" />
+                <div className="flex flex-col">
+                  <span className="font-semibold text-xs text-foreground">Duplicate & Try Template</span>
+                  <span className="text-[10px] text-muted-foreground">Create copy & open gallery</span>
+                </div>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
 
         {/* Share Button */}
         {id ? (
