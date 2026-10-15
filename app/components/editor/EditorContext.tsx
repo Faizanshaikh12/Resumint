@@ -25,7 +25,8 @@ export interface EditorContextValue {
   atsReport?: any;
   atsContext?: any;
   isAtsUpdating?: boolean;
-  setTemplate: (id: TemplateId) => void;
+  setTemplate: (id: TemplateId, options?: { keepColorAndPageSize?: boolean }) => void;
+  openTemplateGallery?: () => void;
   updateDesign: (patch: Partial<ResumeDesign>, fieldName?: string) => void;
   resetDesign: () => void;
   undo: () => void;

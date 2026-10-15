@@ -54,15 +54,15 @@
 - [x] Task: Phase 4 Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 5: Template Gallery & Copy-on-Apply Flow in Editor
-- [ ] Task: Build Live Template Gallery Modal
-  - [ ] Create `TemplateGalleryModal.tsx` in `app/components/editor/` showing all 10 templates grouped by tier (Basic, Standard, Premium)
-  - [ ] Render live miniature previews using standard sample content
-  - [ ] Add "Keep my accent color and page size" toggle checkbox
-- [ ] Task: Implement Copy-on-Apply & 1-Step Undo
-  - [ ] Write tests for apply logic in `tests/unit/template-apply.test.ts` (content deep equality, design copy, undo snapshot)
-  - [ ] Implement style resolution and copy into `resumes.design` and `resumes.templateId` upon selection
-  - [ ] Add 1-step undo state in Editor to allow reverting applied template with one click
-- [ ] Task: Phase 5 Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Build Live Template Gallery Modal
+  - [x] Create `TemplateGalleryModal.tsx` in `app/components/editor/` showing all 10 templates grouped by tier (Basic, Standard, Premium)
+  - [x] Render live miniature previews using standard sample content
+  - [x] Add "Keep my accent color and page size" toggle checkbox
+- [x] Task: Implement Copy-on-Apply & 1-Step Undo
+  - [x] Write tests for apply logic in `tests/unit/template-apply.test.ts` (content deep equality, design copy, undo snapshot)
+  - [x] Implement style resolution and copy into `resumes.design` and `resumes.templateId` upon selection
+  - [x] Add 1-step undo state in Editor to allow reverting applied template with one click
+- [x] Task: Phase 5 Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 6: Blank Resume & Empty State UX
 - [ ] Task: Implement Empty Default Content Initializer

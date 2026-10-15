@@ -32,6 +32,27 @@ describe("DesignPanel Component", () => {
     expect(onSelectTemplate).toHaveBeenCalledWith("minimal");
   });
 
+  it("passes keepColorAndPageSize option when toggle is checked", () => {
+    const onSelectTemplate = vi.fn();
+    render(
+      <DesignPanel
+        templateId="modern"
+        design={defaultDesign}
+        onSelectTemplate={onSelectTemplate}
+        onUpdateDesign={vi.fn()}
+        onResetDesign={vi.fn()}
+      />
+    );
+
+    const toggle = screen.getByTestId("design-panel-keep-color");
+    fireEvent.click(toggle);
+
+    const minimalRadio = screen.getByRole("radio", { name: /Minimal/i });
+    fireEvent.click(minimalRadio);
+
+    expect(onSelectTemplate).toHaveBeenCalledWith("minimal", { keepColorAndPageSize: true });
+  });
+
   it("clicking color swatch calls onUpdateDesign with accent color", () => {
     const onUpdateDesign = vi.fn();
     render(

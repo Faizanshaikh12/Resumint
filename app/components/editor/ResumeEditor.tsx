@@ -1,10 +1,12 @@
 import * as React from "react";
-import { useBlocker } from "react-router";
+import { useBlocker, useSearchParams } from "react-router";
 import { Eye, Edit3 } from "lucide-react";
+import { toast } from "~/components/ui/sonner";
 import { editorReducer, type EditorAction } from "~/lib/resume/editor-state";
 import type { ResumePersistence, SaveResult } from "~/lib/resume/persistence";
 import type { ResumeContent, ResumeDesign, TemplateId } from "~/lib/schemas/resume";
 import { getTemplate } from "~/components/templates/registry";
+import { applyTemplateToResume } from "~/lib/resume/template-apply";
 import { mergeTouchedDesign } from "~/lib/resume/touched-merge";
 import { normalizeDesign } from "~/lib/resume/normalize-design";
 import { ResumePreview } from "../preview/ResumePreview";
@@ -13,6 +15,7 @@ import { EditorContext, type EditorContextValue, type SaveStatus } from "./Edito
 import { EditorHeader } from "./EditorHeader";
 import { EditorNav } from "./EditorNav";
 import { DesignPanel } from "./DesignPanel";
+import { TemplateGalleryModal } from "./TemplateGalleryModal";
 import { AtsCheckerPanel } from "~/components/ats/AtsCheckerPanel";
 import { buildAtsContext } from "~/lib/ats/context";
 import { analyze } from "~/lib/ats/analyze";
@@ -91,6 +94,14 @@ export function ResumeEditor({ initial, persistence, onImport }: ResumeEditorPro
   const [future, setFuture] = React.useState<HistorySnapshot[]>([]);
   const lastDesignChangeRef = React.useRef<{ time: number; field?: string }>({ time: 0 });
 
+  const [searchParams] = useSearchParams();
+  const [galleryOpen, setGalleryOpen] = React.useState(() => {
+    return (
+      searchParams.get("openGallery") === "true" ||
+      searchParams.get("action") === "templates"
+    );
+  });
+
   const [title, setTitle] = React.useState(initial.title);
   const [version, setVersion] = React.useState(initial.version ?? 1);
   const [isDirty, setIsDirty] = React.useState(false);
@@ -101,6 +112,60 @@ export function ResumeEditor({ initial, persistence, onImport }: ResumeEditorPro
 
   // Mobile tab state
   const [mobileTab, setMobileTab] = React.useState<"edit" | "preview">("edit");
+
+  // Undo
+  const undo = React.useCallback(() => {
+    if (past.length === 0) return;
+    const previous = past[past.length - 1];
+    if (!previous) return;
+
+    setFuture((prev) => [
+      {
+        content,
+        design,
+        templateId,
+        touchedFields: Array.from(touchedFields),
+      },
+      ...prev,
+    ]);
+    setPast((prev) => prev.slice(0, -1));
+
+    setContent(previous.content);
+    setDesign(previous.design);
+    setTemplateId(previous.templateId);
+    setTouchedFields(new Set(previous.touchedFields));
+    setIsDirty(true);
+    if (saveStatus === "saved") {
+      setSaveStatus("idle");
+    }
+  }, [past, content, design, templateId, touchedFields, saveStatus]);
+
+  // Redo
+  const redo = React.useCallback(() => {
+    if (future.length === 0) return;
+    const next = future[0];
+    if (!next) return;
+
+    setPast((prev) => [
+      ...prev.slice(-49),
+      {
+        content,
+        design,
+        templateId,
+        touchedFields: Array.from(touchedFields),
+      },
+    ]);
+    setFuture((prev) => prev.slice(1));
+
+    setContent(next.content);
+    setDesign(next.design);
+    setTemplateId(next.templateId);
+    setTouchedFields(new Set(next.touchedFields));
+    setIsDirty(true);
+    if (saveStatus === "saved") {
+      setSaveStatus("idle");
+    }
+  }, [future, content, design, templateId, touchedFields, saveStatus]);
 
   // Content dispatch with undo history
   const dispatch: React.Dispatch<EditorAction> = React.useCallback(
@@ -128,10 +193,10 @@ export function ResumeEditor({ initial, persistence, onImport }: ResumeEditorPro
     [design, templateId, touchedFields, saveStatus]
   );
 
-  // Template switching with touched fields merge and normalization
+  // Template switching with copy-on-apply architecture
   const setTemplate = React.useCallback(
-    (newTemplateId: TemplateId) => {
-      if (newTemplateId === templateId) return;
+    (newTemplateId: TemplateId, options?: { keepColorAndPageSize?: boolean }) => {
+      if (newTemplateId === templateId && !options) return;
 
       setPast((prev) => [
         ...prev.slice(-49),
@@ -144,18 +209,24 @@ export function ResumeEditor({ initial, persistence, onImport }: ResumeEditorPro
       ]);
       setFuture([]);
 
-      const targetTemplate = getTemplate(newTemplateId);
-      const merged = mergeTouchedDesign(targetTemplate.defaultDesign, design, touchedFields);
-      const normalized = normalizeDesign(merged, targetTemplate.supports);
+      const result = applyTemplateToResume(design, newTemplateId, options);
 
-      setTemplateId(newTemplateId);
-      setDesign(normalized);
+      setTemplateId(result.newTemplateId);
+      setDesign(result.newDesign);
       setIsDirty(true);
       if (saveStatus === "saved") {
         setSaveStatus("idle");
       }
+
+      const targetTemplate = getTemplate(newTemplateId);
+      toast.success(`Applied ${targetTemplate.name} template`, {
+        action: {
+          label: "Undo",
+          onClick: () => undo(),
+        },
+      });
     },
-    [content, design, templateId, touchedFields, saveStatus]
+    [content, design, templateId, touchedFields, saveStatus, undo]
   );
 
   // Design update with slider coalescing and touched tracking
@@ -223,60 +294,6 @@ export function ResumeEditor({ initial, persistence, onImport }: ResumeEditorPro
       setSaveStatus("idle");
     }
   }, [content, design, templateId, touchedFields, saveStatus]);
-
-  // Undo
-  const undo = React.useCallback(() => {
-    if (past.length === 0) return;
-    const previous = past[past.length - 1];
-    if (!previous) return;
-
-    setFuture((prev) => [
-      {
-        content,
-        design,
-        templateId,
-        touchedFields: Array.from(touchedFields),
-      },
-      ...prev,
-    ]);
-    setPast((prev) => prev.slice(0, -1));
-
-    setContent(previous.content);
-    setDesign(previous.design);
-    setTemplateId(previous.templateId);
-    setTouchedFields(new Set(previous.touchedFields));
-    setIsDirty(true);
-    if (saveStatus === "saved") {
-      setSaveStatus("idle");
-    }
-  }, [past, content, design, templateId, touchedFields, saveStatus]);
-
-  // Redo
-  const redo = React.useCallback(() => {
-    if (future.length === 0) return;
-    const next = future[0];
-    if (!next) return;
-
-    setPast((prev) => [
-      ...prev.slice(-49),
-      {
-        content,
-        design,
-        templateId,
-        touchedFields: Array.from(touchedFields),
-      },
-    ]);
-    setFuture((prev) => prev.slice(1));
-
-    setContent(next.content);
-    setDesign(next.design);
-    setTemplateId(next.templateId);
-    setTouchedFields(new Set(next.touchedFields));
-    setIsDirty(true);
-    if (saveStatus === "saved") {
-      setSaveStatus("idle");
-    }
-  }, [future, content, design, templateId, touchedFields, saveStatus]);
 
   // Keyboard shortcut listener for Undo/Redo
   React.useEffect(() => {
@@ -488,6 +505,7 @@ export function ResumeEditor({ initial, persistence, onImport }: ResumeEditorPro
       atsContext,
       isAtsUpdating,
       setTemplate,
+      openTemplateGallery: () => setGalleryOpen(true),
       updateDesign,
       resetDesign,
       undo,
@@ -647,6 +665,16 @@ export function ResumeEditor({ initial, persistence, onImport }: ResumeEditorPro
             </div>
           </div>
         </div>
+
+        <TemplateGalleryModal
+          open={galleryOpen}
+          onOpenChange={setGalleryOpen}
+          currentTemplateId={templateId}
+          currentDesign={design}
+          onApplyTemplate={setTemplate}
+          onUndo={undo}
+          canUndo={past.length > 0}
+        />
       </div>
     </EditorContext.Provider>
   );

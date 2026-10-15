@@ -29,7 +29,10 @@ import { EditorContext } from "./EditorContext";
 export interface DesignPanelProps {
   templateId?: TemplateId;
   design?: ResumeDesign;
-  onSelectTemplate?: (templateId: TemplateId) => void;
+  onSelectTemplate?: (
+    templateId: TemplateId,
+    options?: { keepColorAndPageSize?: boolean }
+  ) => void;
   onUpdateDesign?: (partial: Partial<ResumeDesign>, fieldName?: string) => void;
   onResetDesign?: () => void;
 }
@@ -68,6 +71,7 @@ export function DesignPanel(props: DesignPanelProps = {}) {
 
   const [hexInput, setHexInput] = useState(design.accentColor || "#2563eb");
   const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [keepColorAndPageSize, setKeepColorAndPageSize] = useState(false);
 
   React.useEffect(() => {
     setHexInput(design.accentColor || "#2563eb");
@@ -96,14 +100,42 @@ export function DesignPanel(props: DesignPanelProps = {}) {
     <div className="space-y-8 p-4 sm:p-6 max-w-2xl mx-auto" data-testid="design-panel">
       {/* 1. Template Gallery */}
       <section className="space-y-3" aria-labelledby="template-gallery-heading">
-        <div>
-          <h2 id="template-gallery-heading" className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
-            Template Gallery
-          </h2>
-          <p className="text-xs text-neutral-500">
-            Switch styles instantly. Your resume content is always preserved.
-          </p>
+        <div className="flex items-start justify-between gap-2">
+          <div>
+            <h2 id="template-gallery-heading" className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
+              Template Gallery
+            </h2>
+            <p className="text-xs text-neutral-500">
+              Switch styles instantly. Your resume content is always preserved.
+            </p>
+          </div>
+
+          {context?.openTemplateGallery && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={context.openTemplateGallery}
+              className="text-xs h-8 gap-1.5 shrink-0"
+              data-testid="browse-all-templates-button"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-primary" />
+              <span>Browse All</span>
+            </Button>
+          )}
         </div>
+
+        {/* Keep my color & page size preference */}
+        <label className="flex items-center gap-2 cursor-pointer text-xs font-medium text-neutral-700 dark:text-neutral-300 select-none pt-0.5">
+          <input
+            type="checkbox"
+            checked={keepColorAndPageSize}
+            onChange={(e) => setKeepColorAndPageSize(e.target.checked)}
+            className="w-3.5 h-3.5 rounded border-neutral-300 text-blue-600 focus:ring-blue-600 cursor-pointer"
+            data-testid="design-panel-keep-color"
+          />
+          <span>Keep my accent color and page size when applying</span>
+        </label>
 
         <div
           role="radiogroup"
@@ -120,7 +152,11 @@ export function DesignPanel(props: DesignPanelProps = {}) {
                 aria-label={t.name}
                 aria-checked={isSelected}
                 tabIndex={0}
-                onClick={() => onSelectTemplate(t.id)}
+                onClick={() =>
+                  keepColorAndPageSize
+                    ? onSelectTemplate(t.id, { keepColorAndPageSize: true })
+                    : onSelectTemplate(t.id)
+                }
                 className={`flex flex-col text-left p-3.5 rounded-lg border text-xs transition-all relative cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 ${
                   isSelected
                     ? "border-blue-600 bg-blue-50/50 dark:bg-blue-950/20 shadow-xs ring-1 ring-blue-600"
