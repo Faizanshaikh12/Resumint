@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { formatDateRange, formatMonthYear, validateDateRange } from "~/lib/resume/dates";
-import { createDefaultContent } from "~/lib/resume/defaults";
+import { createDefaultContent, createSampleContent } from "~/lib/resume/defaults";
 import { editorReducer, getAllSectionIds } from "~/lib/resume/editor-state";
 import { arrayMove, normalizeSectionOrder } from "~/lib/resume/reorder";
 import {
@@ -26,7 +26,7 @@ import { resumeContentSchema } from "~/lib/schemas/resume";
 
 describe("editor-state reducer", () => {
   it("maintains immutability and updates personal info fields", () => {
-    const initial = createDefaultContent();
+    const initial = createSampleContent();
     const updated = editorReducer(initial, {
       type: "UPDATE_FIELD",
       section: "personal",
@@ -53,7 +53,7 @@ describe("editor-state reducer", () => {
   });
 
   it("updates personal links", () => {
-    const initial = createDefaultContent();
+    const initial = createSampleContent();
     const linkId = initial.personal.links[0]?.id;
     expect(linkId).toBeDefined();
 
@@ -70,7 +70,7 @@ describe("editor-state reducer", () => {
   });
 
   it("updates item in standard multi-item section", () => {
-    const initial = createDefaultContent();
+    const initial = createSampleContent();
     const expId = initial.experience[0]?.id;
     expect(expId).toBeDefined();
 
@@ -190,7 +190,7 @@ describe("editor-state reducer", () => {
   });
 
   it("manages bullets: add, remove, and move within items", () => {
-    const initial = createDefaultContent();
+    const initial = createSampleContent();
     const expId = initial.experience[0]?.id;
     expect(expId).toBeDefined();
 

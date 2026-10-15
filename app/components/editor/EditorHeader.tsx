@@ -31,6 +31,9 @@ import { UploadCloud, Sparkles, Share2 } from "lucide-react";
 import { AuthDialog } from "~/components/auth/AuthDialog";
 import { useNavigate } from "react-router";
 import { ScoreBadge } from "~/components/ats/ScoreBadge";
+import { toast } from "~/components/ui/sonner";
+import { isBlankResume } from "~/components/templates/generic/GenericResumeRenderer";
+import { getSampleResumeContent } from "~/lib/resume/sample-content";
 
 export function EditorHeader() {
   const {
@@ -39,6 +42,7 @@ export function EditorHeader() {
     content,
     design,
     templateId,
+    dispatch,
     rename,
     save,
     saveStatus,
@@ -55,6 +59,21 @@ export function EditorHeader() {
     canRedo,
     onImport,
   } = useEditor();
+
+  const isBlank = React.useMemo(() => isBlankResume(content), [content]);
+
+  const handleLoadSampleContent = () => {
+    dispatch({
+      type: "REPLACE_CONTENT",
+      content: getSampleResumeContent(),
+    });
+    toast.success("Sample content loaded", {
+      action: {
+        label: "Undo",
+        onClick: () => undo(),
+      },
+    });
+  };
 
   const [isEditingTitle, setIsEditingTitle] = React.useState(false);
   const [titleInput, setTitleInput] = React.useState(title);
@@ -251,6 +270,7 @@ export function EditorHeader() {
             report={atsReport}
             onClick={() => setEditorTab("check")}
             isUpdating={isAtsUpdating}
+            isBlank={isBlank}
           />
         )}
 
@@ -331,6 +351,22 @@ export function EditorHeader() {
             </span>
           )}
         </div>
+
+        {/* Load Sample Content Button for Blank Resumes */}
+        {isBlank && (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={handleLoadSampleContent}
+            className="gap-1.5 h-9 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-900 bg-blue-50/50 dark:bg-blue-950/20 hover:bg-blue-100 dark:hover:bg-blue-900/40"
+            data-testid="load-sample-content-button"
+            title="Pre-populate with sample profile to test layouts"
+          >
+            <Sparkles className="h-4 w-4" />
+            <span className="hidden sm:inline">Load Sample</span>
+          </Button>
+        )}
 
         {/* Guest Import Button */}
         {onImport && (

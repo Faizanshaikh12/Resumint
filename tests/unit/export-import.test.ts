@@ -7,7 +7,7 @@ import {
 } from "~/lib/export/json";
 import { exportResumeText } from "~/lib/export/text";
 import { downloadText, copyToClipboard } from "~/lib/export/download";
-import { createDefaultContent, createDefaultDesign } from "~/lib/resume/defaults";
+import { createDefaultContent, createDefaultDesign, createSampleContent } from "~/lib/resume/defaults";
 import type { ResumeContent } from "~/lib/schemas/resume";
 
 describe("Export & Import Pure Logic", () => {
@@ -163,7 +163,7 @@ describe("Export & Import Pure Logic", () => {
 
   describe("Plain Text Export", () => {
     it("formats resume content with uppercase headings and bullet points", () => {
-      const content = createDefaultContent();
+      const content = createSampleContent();
       content.personal.name = "Diana Prince";
       content.personal.title = "Lead Security Architect";
 
@@ -177,7 +177,7 @@ describe("Export & Import Pure Logic", () => {
     });
 
     it("omits hidden sections and empty sections", () => {
-      const content = createDefaultContent();
+      const content = createSampleContent();
       content.hiddenSections = ["summary", "references"];
       content.volunteering = [];
 

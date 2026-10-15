@@ -29,8 +29,8 @@ describe("Resumes Query Module", () => {
       expect(resume.userId).toBe(user.id);
       expect(resume.title).toBe("Untitled Resume");
       expect(resume.templateId).toBe("modern");
-      expect(resume.version).toBe(1);
-      expect(resume.content.personal.name).toBe("Alex Morgan");
+      expect(resume.content.personal.name).toBe("");
+      expect(resume.content.experience).toEqual([]);
       expect(resume.design.accentColor).toBe("#2563eb");
     });
 

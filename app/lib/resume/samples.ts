@@ -6,7 +6,7 @@ import {
   type ResumeDesign,
   type TemplateId,
 } from "../schemas/resume";
-import { createDefaultContent, createDefaultDesign } from "./defaults";
+import { createDefaultContent, createDefaultDesign, createSampleContent } from "./defaults";
 import type { SampleId } from "../schemas/resume-actions";
 
 export interface SampleResume {
@@ -20,7 +20,7 @@ export interface SampleResume {
 }
 
 export function createDeveloperSample(): SampleResume {
-  const content = createDefaultContent();
+  const content = createSampleContent();
   const design = createDefaultDesign();
   design.accentColor = "#2563eb"; // Blue
   design.templateId = "technical";
@@ -37,7 +37,7 @@ export function createDeveloperSample(): SampleResume {
 }
 
 export function createStudentSample(): SampleResume {
-  const base = createDefaultContent();
+  const base = createSampleContent();
   const design = createDefaultDesign();
   design.accentColor = "#059669"; // Emerald green
   design.templateId = "minimal";
@@ -107,7 +107,7 @@ export function createStudentSample(): SampleResume {
 }
 
 export function createDesignerSample(): SampleResume {
-  const base = createDefaultContent();
+  const base = createSampleContent();
   const design = createDefaultDesign();
   design.accentColor = "#7c3aed"; // Violet
   design.templateId = "modern";

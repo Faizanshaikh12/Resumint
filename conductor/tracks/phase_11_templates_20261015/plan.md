@@ -65,15 +65,15 @@
 - [x] Task: Phase 5 Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 6: Blank Resume & Empty State UX
-- [ ] Task: Implement Empty Default Content Initializer
-  - [ ] Update `createDefaultContent()` in `app/lib/schemas/resume.ts` to return completely empty fields
-  - [ ] Write unit tests verifying empty content output
-- [ ] Task: Clean Preview & Helpful Editor Hints
-  - [ ] Ensure `GenericResumeRenderer` renders a pristine white page when content is empty (zero placeholder text leaks)
-  - [ ] Ensure input fields display guidance placeholders (`placeholder="e.g. Software Engineer"`)
-  - [ ] Update ATS score widget to display a welcoming "Start filling your resume" empty state when no content is entered
-  - [ ] Add "Load sample content" button in Editor toolbar for users who want prefilled data
-- [ ] Task: Phase 6 Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Implement Empty Default Content Initializer
+  - [x] Update `createDefaultContent()` in `app/lib/schemas/resume.ts` to return completely empty fields
+  - [x] Write unit tests verifying empty content output
+- [x] Task: Clean Preview & Helpful Editor Hints
+  - [x] Ensure `GenericResumeRenderer` renders a pristine white page when content is empty (zero placeholder text leaks)
+  - [x] Ensure input fields display guidance placeholders (`placeholder="e.g. Software Engineer"`)
+  - [x] Update ATS score widget to display a welcoming "Start filling your resume" empty state when no content is entered
+  - [x] Add "Load sample content" button in Editor toolbar for users who want prefilled data
+- [x] Task: Phase 6 Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 7: Resume Duplication Workflows
 - [ ] Task: Verify & Enhance Dashboard Duplicate Action

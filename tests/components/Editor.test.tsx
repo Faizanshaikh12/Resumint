@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { screen, fireEvent, waitFor, render } from "@testing-library/react";
 import { createMemoryRouter, RouterProvider } from "react-router";
 import { ResumeEditor } from "~/components/editor/ResumeEditor";
-import { createDefaultContent, createDefaultDesign } from "~/lib/resume/defaults";
+import { createDefaultContent, createDefaultDesign, createSampleContent } from "~/lib/resume/defaults";
 import type { ResumePersistence } from "~/lib/resume/persistence";
 
 function createMockPersistence(): ResumePersistence {
@@ -17,7 +17,7 @@ function renderEditorWithRouter(props: {
   initialDesign?: any;
   persistence?: ResumePersistence;
 }) {
-  const content = props.initialContent || createDefaultContent();
+  const content = props.initialContent || createSampleContent();
   const design = props.initialDesign || createDefaultDesign();
   const persistence = props.persistence || createMockPersistence();
 
@@ -179,5 +179,30 @@ describe("ResumeEditor Component Tests", () => {
 
     // Live preview shows the custom section
     expect(screen.getAllByText("Kubernetes SIG Contributor").length).toBeGreaterThan(0);
+  });
+
+  it("handles blank resume: shows blank canvas, Start filling badge, and Load Sample button", () => {
+    const blankContent = createDefaultContent();
+    renderEditorWithRouter({ initialContent: blankContent });
+
+    // Pristine blank canvas is rendered
+    expect(screen.getByTestId("blank-resume-canvas")).toBeInTheDocument();
+
+    // ATS badge shows welcoming "Start filling" state
+    expect(screen.getByText("Start filling")).toBeInTheDocument();
+
+    // Load Sample button is visible
+    const loadSampleBtn = screen.getByTestId("load-sample-content-button");
+    expect(loadSampleBtn).toBeInTheDocument();
+
+    // Click Load Sample
+    fireEvent.click(loadSampleBtn);
+
+    // Canvas now shows populated resume
+    expect(screen.queryByTestId("blank-resume-canvas")).not.toBeInTheDocument();
+    expect(screen.getAllByText("Alex Morgan").length).toBeGreaterThan(0);
+
+    // Load Sample button disappears
+    expect(screen.queryByTestId("load-sample-content-button")).not.toBeInTheDocument();
   });
 });
