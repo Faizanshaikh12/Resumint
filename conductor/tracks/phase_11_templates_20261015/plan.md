@@ -17,21 +17,21 @@
 - [x] Task: Phase 1 Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 2: Fonts & Generic Configurable Resume Renderer
-- [ ] Task: Setup Local Font Assets & Typography Registry
-  - [ ] Place self-hosted latin-subset WOFF2 fonts in `public/fonts/` (Inter, Source Serif 4, IBM Plex Sans, Merriweather, Roboto Mono, Plus Jakarta Sans)
-  - [ ] Register `@font-face` rules in `app/styles/fonts.css` with `font-display: swap`
-  - [ ] Create font registry helper mapping font keys to CSS family stacks
-- [ ] Task: Implement Layout Variant Components
-  - [ ] Create Header variants (`standard`, `centered`, `banner`, `compact`) in `app/components/templates/generic/headers/`
-  - [ ] Create Section Heading variants (`underlined`, `accent-pill`, `small-caps`, `left-rule`, `minimal`) in `app/components/templates/generic/headings/`
-  - [ ] Create Item variants (`compact-row`, `stacked`, `bulleted`) in `app/components/templates/generic/items/`
-  - [ ] Create Skills variants (`tags`, `pills`, `categorical-list`, `inline-comma`) in `app/components/templates/generic/skills/`
-- [ ] Task: Build Unified `GenericResumeRenderer`
-  - [ ] Implement `GenericResumeRenderer.tsx` mapping design tokens to CSS custom variables (`--resume-accent`, `--resume-font`, `--resume-line-spacing`, `--resume-margin`, `--resume-section-spacing`)
-  - [ ] Support 1-column and 2-column sidebar layouts (`sidebarSections` routing with fallback for unknown sections)
-  - [ ] Ensure strict semantic ATS DOM ordering (h1, h2, section, article, ul, li)
-  - [ ] Add comprehensive ATS contract tests across all 10 templates in `tests/component/template-ats-contract.test.ts`
-- [ ] Task: Phase 2 Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Setup Local Font Assets & Typography Registry
+  - [x] Place self-hosted latin-subset WOFF2 fonts in `public/fonts/` (Inter, Source Serif 4, IBM Plex Sans, Merriweather, Roboto Mono, Plus Jakarta Sans)
+  - [x] Register `@font-face` rules in `app/styles/fonts.css` with `font-display: swap`
+  - [x] Create font registry helper mapping font keys to CSS family stacks
+- [x] Task: Implement Layout Variant Components
+  - [x] Create Header variants (`standard`, `centered`, `banner`, `compact`) in `app/components/templates/generic/headers/`
+  - [x] Create Section Heading variants (`underlined`, `accent-pill`, `small-caps`, `left-rule`, `minimal`) in `app/components/templates/generic/headings/`
+  - [x] Create Item variants (`compact-row`, `stacked`, `bulleted`) in `app/components/templates/generic/items/`
+  - [x] Create Skills variants (`tags`, `pills`, `categorical-list`, `inline-comma`) in `app/components/templates/generic/skills/`
+- [x] Task: Build Unified `GenericResumeRenderer`
+  - [x] Implement `GenericResumeRenderer.tsx` mapping design tokens to CSS custom variables (`--resume-accent`, `--resume-font`, `--resume-line-spacing`, `--resume-margin`, `--resume-section-spacing`)
+  - [x] Support 1-column and 2-column sidebar layouts (`sidebarSections` routing with fallback for unknown sections)
+  - [x] Ensure strict semantic ATS DOM ordering (h1, h2, section, article, ul, li)
+  - [x] Add comprehensive ATS contract tests across all 10 templates in `tests/component/template-ats-contract.test.ts`
+- [x] Task: Phase 2 Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 3: Deprecate Static Components & Legacy Fallback
 - [ ] Task: Implement Backward-Compatible Adapter & Fallback Handler

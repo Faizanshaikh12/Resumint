@@ -107,7 +107,7 @@ p, li {
   /* Hide app chrome, toolbars, dialogs, buttons, banners */
   header:not(.resume-paper header),
   nav,
-  aside:not(.technical-template aside),
+  aside:not(.resume-sidebar):not(.technical-template aside),
   button,
   .no-print,
   .editor-header,

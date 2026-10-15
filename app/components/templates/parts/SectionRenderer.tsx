@@ -1,5 +1,5 @@
 import React from "react";
-import type { ResumeContent, ResumeDesign } from "~/lib/schemas/resume";
+import type { ResumeContent, ResumeDesign, SkillItem } from "~/lib/schemas/resume";
 import { SECTION_REGISTRY, type StandardSectionId } from "~/lib/resume/section-registry";
 import { ItemDate } from "./ItemDate";
 import { BulletList } from "./BulletList";
@@ -13,6 +13,7 @@ export interface SectionRendererProps {
   renderHeader: (title: string, sectionKey: string) => React.ReactNode;
   className?: string;
   itemSpacingClassName?: string;
+  renderSkills?: (skills: SkillItem[]) => React.ReactNode;
 }
 
 export function SectionRenderer({
@@ -22,6 +23,7 @@ export function SectionRenderer({
   renderHeader,
   className = "",
   itemSpacingClassName = "space-y-3",
+  renderSkills,
 }: SectionRendererProps) {
   // Check if section is explicitly hidden
   if (content.hiddenSections?.includes(sectionKey)) {
@@ -135,7 +137,20 @@ export function SectionRenderer({
           className={`resume-section break-inside-avoid ${className}`}
         >
           {renderHeader(SECTION_REGISTRY.skills.label, "skills")}
-          <SkillList skills={skills} />
+          {renderSkills ? (
+            renderSkills(skills)
+          ) : (
+            <SkillList
+              skills={skills}
+              variant={
+                design.skillsVariant === "categorical-list"
+                  ? "grouped"
+                  : design.skillsVariant === "inline-comma"
+                  ? "inline"
+                  : "tags"
+              }
+            />
+          )}
         </section>
       );
     }

@@ -53,3 +53,14 @@
   font-display: swap;
   src: local("Roboto Mono"), local("Menlo"), local("Monaco"), local("Consolas");
 }
+
+/* 7. Plus Jakarta Sans */
+@font-face {
+  font-family: "Plus Jakarta Sans";
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: local("Plus Jakarta Sans"), local("PlusJakartaSans-Regular"),
+       local("Inter"), local("-apple-system"), local("Segoe UI"), local("sans-serif");
+}
+
