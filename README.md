@@ -30,7 +30,7 @@ Resumint provides a zero-friction experience: jump straight into creating your r
   - **Uniform 404 Boundaries**: Missing, revoked, and expired links return identical generic 404 responses to eliminate metadata leakage.
 - **Client-Side QR Code Generator**: One-click QR code dialog generated 100% client-side with instant PNG download.
 - **Non-PII View Counting**: Asynchronous background view counter via `ctx.waitUntil` with 30-minute visitor deduplication (`rv_<slug>`), owner session bypass, and crawler/bot filtering. Zero IP addresses, user agents, or PII stored.
-- **5 ATS-Optimized Templates**: `Modern`, `Minimal`, `Executive`, `Classic`, and `Technical`. Pure presentational design guarantees zero content loss during template switching.
+- **10 ATS-Optimized DB-Driven Templates**: `Plain`, `Classic`, `Compact`, `Minimal`, `Modern`, `Technical`, `Executive`, `Elegant`, `Bold`, and `Creative` across Basic, Standard, and Premium tiers. Copy-on-apply styling guarantees zero content loss and zero extra edge reads.
 - **Client-Side High-Fidelity PDF Export**: Zero-overhead browser print engine (`@page`, `window.print()`) with automatic paper formatting (`A4` and `US Letter`), pre-flight font readiness, and ATS-readable selectable text vectors.
 - **Complete JSON Backup & Import**: Portable versioned JSON envelope (`$schema: https://resumint.dev/schema/v1.json`), protected by a 220 KB pre-parse size cap, prototype pollution prevention, and 100% item ID regeneration with `nanoid()`.
 - **Plain-Text ATS Export**: Deterministic `.txt` file export and one-click "Copy as Text" to clipboard, optimized for copy-pasting into legacy ATS job portals with standard uppercase headers and clean bullet points.
@@ -129,6 +129,23 @@ Resumint renders print-ready, ATS-optimized PDFs directly in the browser using s
 
 ### Mobile Export Tip:
 - **iOS Safari / Chrome on Android**: Tap **Share > Print**, preview the document, and use a two-finger pinch-out gesture on the print preview to view and save the full uncompressed vector PDF to Files or Google Drive.
+
+---
+
+## DB-Driven Templates & Template Master
+
+Resumint renders 10 production-grade templates powered by a centralized database master (`template_master` table in Cloudflare D1) through a single configurable, secure, high-performance generic renderer (`GenericResumeRenderer.tsx`).
+
+### Catalog (10 Templates)
+- **Basic Tier**: `plain` (Clean Sans, 1 col, high-volume ATS), `classic` (Serif, centered header), `compact` (Dense Sans, 1 page fit).
+- **Standard Tier**: `minimal` (Whitespace, divider lines), `modern` (Accent bar header), `technical` (2 col, monospace dates, skills sidebar), `executive` (Two-tone header band, summary-first).
+- **Premium Tier**: `elegant` (Display serif, gold tone, small-caps), `bold` (Geometric sans, full header band), `creative` (2 col, colored sidebar, rounded chips).
+
+### Adding a New Template (1 Seed Row + Optional Variant)
+Adding a new template requires zero new page components or stylesheets:
+1. Add a seed row in `app/db/seed/templates.ts` to `TEMPLATE_SEED_DATA` with design tokens (`accentColor`, `fontFamily`, `fontSize`, `lineSpacing`, `pageMargin`, `sectionSpacing`, `headingStyle`) and layout variant identifiers (`headerVariant`, `sectionHeadingVariant`, `itemVariant`, `skillsVariant`, `columns`, `sidebarSections`).
+2. Run `npm run db:seed`.
+3. *(Optional)* If creating a completely new visual arrangement, implement a pure variant function under `app/components/templates/variants/`.
 
 ---
 

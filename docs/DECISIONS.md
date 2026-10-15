@@ -609,6 +609,22 @@
      - Automated Playwright lifecycle test (`tests/e2e/golden-path.spec.ts`) verifies the entire 11-step journey: Landing -> guest build -> template switch -> personal details edit -> check tab score -> manual save -> dialog signup -> account creation -> dashboard -> new blank resume -> editor save -> export JSON and PDF print hint -> share with link & password -> visitor context test (locked state, bad password rejected, good password unlock, candidate name verified) -> owner revokes -> visitor sees 404 unavailable -> dashboard resume delete -> settings full data export download -> settings permanent account deletion with cascading erase -> redirect to landing page with banner.
 - **Consequences**: Resumint is launch-ready as MVP v1.0.0. Clean architecture, zero telemetry overhead, verifiable security controls, and robust free-tier operational safety.
 
+---
+
+## ADR-043: DB-Driven Template Master & Configurable Generic Renderer (Phase 11)
+
+- **Status**: Accepted
+- **Context**: Prior to Phase 11, Resumint maintained 5 hardcoded React template components. Adding new templates required writing bespoke JSX and CSS files, duplicating layout logic, and increasing the client bundle. Furthermore, storing raw React code or CSS in D1 is unsafe due to XSS, CSS injection, and CSP/ATS violations.
+- **Decision**:
+  - Implement a `template_master` table in Cloudflare D1 containing structured design tokens and layout variant keys.
+  - Deliver 10 production-grade templates spanning Basic (`plain`, `classic`, `compact`), Standard (`minimal`, `modern`, `technical`, `executive`), and Premium (`elegant`, `bold`, `creative`) tiers.
+  - Implement a single, configurable `GenericResumeRenderer` that maps tokens to CSS custom properties and swaps header, section heading, item, and skills layout variants.
+  - Adopt a strict **copy-on-apply** rule: Applying a template copies its resolved tokens into `resumes.design`. This guarantees that master template edits never mutate existing resumes, public share pages require zero extra D1 reads, and user custom adjustments persist.
+  - Cache the public `/api/templates` resource route at the Cloudflare edge (`s-maxage=86400, stale-while-revalidate=604800`).
+  - Provide a pristine blank resume experience with zero sample text leakage on new resumes and a welcoming "Start filling" ATS score indicator.
+- **Consequences**: Adding a new template now requires only 1 seed row in `app/db/seed/templates.ts` (and an optional layout variant function). Full ATS compliance and edge budget safety are guaranteed across all templates.
+
+
 
 
 

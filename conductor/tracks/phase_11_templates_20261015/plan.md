@@ -86,13 +86,14 @@
 - [x] Task: Phase 7 Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 8: Comprehensive Verification, Testing & Documentation
-- [ ] Task: End-to-End Playwright Tests
-  - [ ] Write E2E test `tests/e2e/templates-flow.spec.ts` testing template switching, preview update, blank resume creation, and duplication
-- [ ] Task: Architecture Decision Record (ADR) & Documentation
-  - [ ] Add `docs/decisions/0004-db-driven-template-master.md` detailing the DB token architecture, copy-on-apply rule, and ATS guarantees
-  - [ ] Update `README.md` with instructions on how to add a new template (1 seed row + optional variant)
-- [ ] Task: Final Quality Sweep
-  - [ ] Run `npm run typecheck`
-  - [ ] Run `npm run lint`
-  - [ ] Run `npm test` & `npm run test:worker` & `npm run test:e2e`
-- [ ] Task: Phase 8 Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: End-to-End Playwright Tests
+  - [x] Write E2E test `tests/e2e/templates-flow.spec.ts` testing template switching, preview update, blank resume creation, and duplication
+- [x] Task: Architecture Decision Record (ADR) & Documentation
+  - [x] Add `docs/decisions/0004-db-driven-template-master.md` detailing the DB token architecture, copy-on-apply rule, and ATS guarantees
+  - [x] Update `README.md` with instructions on how to add a new template (1 seed row + optional variant)
+- [x] Task: Final Quality Sweep
+  - [x] Run `npm run typecheck`
+  - [x] Run `npm run lint`
+  - [x] Run `npm test` & `npm run test:worker` & `npm run test:e2e`
+- [x] Task: Phase 8 Verification & Checkpoint (Refer to workflow.md)
+
