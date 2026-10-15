@@ -34,15 +34,15 @@
 - [x] Task: Phase 2 Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 3: Deprecate Static Components & Legacy Fallback
-- [ ] Task: Implement Backward-Compatible Adapter & Fallback Handler
-  - [ ] Write unit tests for legacy template resolution in `tests/unit/template-adapter.test.ts`
-  - [ ] Implement resolver that maps existing legacy resumes (`modern`, `minimal`, `executive`, `classic`, `technical`) to new layout variants and design tokens
-  - [ ] Ensure unknown or disabled template keys gracefully fall back to `modern` without crashes
-- [ ] Task: Replace Static Template Files
-  - [ ] Route `TEMPLATES` in `app/components/templates/registry.ts` to use `GenericResumeRenderer`
-  - [ ] Remove deprecated isolated template components (`app/components/templates/modern`, `minimal`, etc.)
-  - [ ] Run full test suite to guarantee zero regressions on existing resume preview and export
-- [ ] Task: Phase 3 Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Implement Backward-Compatible Adapter & Fallback Handler
+  - [x] Write unit tests for legacy template resolution in `tests/unit/template-adapter.test.ts`
+  - [x] Implement resolver that maps existing legacy resumes (`modern`, `minimal`, `executive`, `classic`, `technical`) to new layout variants and design tokens
+  - [x] Ensure unknown or disabled template keys gracefully fall back to `modern` without crashes
+- [x] Task: Replace Static Template Files
+  - [x] Route `TEMPLATES` in `app/components/templates/registry.ts` to use `GenericResumeRenderer`
+  - [x] Remove deprecated isolated template components (`app/components/templates/modern`, `minimal`, etc.)
+  - [x] Run full test suite to guarantee zero regressions on existing resume preview and export
+- [x] Task: Phase 3 Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 4: Public Templates API (`/api/templates`)
 - [ ] Task: Create Public Templates Resource Route

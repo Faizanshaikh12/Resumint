@@ -1,146 +1,77 @@
 import React from "react";
 import type { ResumeContent, ResumeDesign, TemplateId } from "~/lib/schemas/resume";
-import { ModernTemplate } from "./modern/ModernTemplate";
-import { MinimalTemplate } from "./minimal/MinimalTemplate";
-import { ExecutiveTemplate } from "./executive/ExecutiveTemplate";
-import { ClassicTemplate } from "./classic/ClassicTemplate";
-import { TechnicalTemplate } from "./technical/TechnicalTemplate";
+import { TEMPLATE_SEED_DATA } from "~/db/seed/templates";
+import { GenericResumeRenderer } from "./generic/GenericResumeRenderer";
+import { resolveTemplateDesign } from "~/lib/resume/template-adapter";
 
 export interface TemplateDefinition {
   id: TemplateId;
   name: string;
   description: string;
+  tier: "basic" | "standard" | "premium";
   atsNotes: string;
   supports: {
     columns: (1 | 2)[];
-    headerAlign: ("left" | "center")[];
+    headerAlign: ("left" | "center" | "right")[];
   };
   defaultDesign: Partial<ResumeDesign>;
   Component: React.ComponentType<{ content: ResumeContent; design: ResumeDesign }>;
 }
 
-export const TEMPLATES: Record<TemplateId, TemplateDefinition> = {
-  modern: {
-    id: "modern",
-    name: "Modern",
-    description: "Clean, contemporary layout with accent-colored section headings and subtle rules.",
-    atsNotes: "100% ATS-friendly single-column layout with strict semantic heading hierarchy.",
-    supports: {
-      columns: [1],
-      headerAlign: ["left", "center"],
-    },
-    defaultDesign: {
-      accentColor: "#2563eb",
-      fontFamily: "inter",
-      fontScale: 1.0,
-      lineSpacing: 1.3,
-      pageMargin: 16,
-      sectionSpacing: 16,
-      pageSize: "A4",
-      columns: 1,
-      headerAlign: "left",
-      dateStyle: "MMM YYYY",
-      showIcons: true,
-    },
-    Component: ModernTemplate,
-  },
-  minimal: {
-    id: "minimal",
-    name: "Minimal",
-    description: "Maximum whitespace, distraction-free typography with crisp thin dividers.",
-    atsNotes: "High readability, high parser compatibility; zero decorative distractions.",
-    supports: {
-      columns: [1],
-      headerAlign: ["left", "center"],
-    },
-    defaultDesign: {
-      accentColor: "#171717",
-      fontFamily: "inter",
-      fontScale: 1.0,
-      lineSpacing: 1.35,
-      pageMargin: 18,
-      sectionSpacing: 18,
-      pageSize: "A4",
-      columns: 1,
-      headerAlign: "left",
-      dateStyle: "MMM YYYY",
-      showIcons: false,
-    },
-    Component: MinimalTemplate,
-  },
-  executive: {
-    id: "executive",
-    name: "Executive",
-    description: "Formal serif typography, centered header, restrained accent dividers for leaders.",
-    atsNotes: "Formal traditional structure parses reliably across legacy and enterprise ATS software.",
-    supports: {
-      columns: [1],
-      headerAlign: ["left", "center"],
-    },
-    defaultDesign: {
-      accentColor: "#1e3a8a",
-      fontFamily: "source-serif-4",
-      fontScale: 1.0,
-      lineSpacing: 1.3,
-      pageMargin: 18,
-      sectionSpacing: 16,
-      pageSize: "A4",
-      columns: 1,
-      headerAlign: "center",
-      dateStyle: "MMM YYYY",
-      showIcons: true,
-    },
-    Component: ExecutiveTemplate,
-  },
-  classic: {
-    id: "classic",
-    name: "Classic",
-    description: "Traditional chronological layout with bold uppercase section rules and clear hierarchy.",
-    atsNotes: "Proven chronological standard universally supported by all recruitment scanning algorithms.",
-    supports: {
-      columns: [1],
-      headerAlign: ["left", "center"],
-    },
-    defaultDesign: {
-      accentColor: "#111827",
-      fontFamily: "merriweather",
-      fontScale: 0.95,
-      lineSpacing: 1.25,
-      pageMargin: 16,
-      sectionSpacing: 14,
-      pageSize: "A4",
-      columns: 1,
-      headerAlign: "left",
-      dateStyle: "MMM YYYY",
-      showIcons: true,
-    },
-    Component: ClassicTemplate,
-  },
-  technical: {
-    id: "technical",
-    name: "Technical",
-    description: "Skills-forward compact structure with optional 2-column sidebar for tech stacks.",
-    atsNotes: "Linear DOM reading order maintained even in 2-column mode via accessible CSS grid.",
-    supports: {
-      columns: [1, 2],
-      headerAlign: ["left", "center"],
-    },
-    defaultDesign: {
-      accentColor: "#0284c7",
-      fontFamily: "ibm-plex-sans",
-      fontScale: 0.95,
-      lineSpacing: 1.25,
-      pageMargin: 14,
-      sectionSpacing: 14,
-      pageSize: "A4",
-      columns: 2,
-      headerAlign: "left",
-      dateStyle: "MMM YYYY",
-      showIcons: true,
-    },
-    Component: TechnicalTemplate,
-  },
-};
+function createTemplateComponent(templateKey: TemplateId) {
+  const Component = function BoundTemplateComponent({
+    content,
+    design,
+  }: {
+    content: ResumeContent;
+    design: ResumeDesign;
+  }) {
+    const resolved = resolveTemplateDesign(templateKey, design);
+    return React.createElement(GenericResumeRenderer, { content, design: resolved });
+  };
+  Component.displayName = `Template_${templateKey}`;
+  return Component;
+}
+
+export const TEMPLATES = Object.fromEntries(
+  TEMPLATE_SEED_DATA.map((seed) => [
+    seed.key as TemplateId,
+    {
+      id: seed.key as TemplateId,
+      name: seed.name,
+      description: seed.description,
+      tier: seed.tier,
+      atsNotes:
+        seed.layout.columns === 2
+          ? "Linear DOM reading order maintained even in 2-column mode via accessible CSS grid."
+          : "100% ATS-friendly single-column layout with strict semantic heading hierarchy.",
+      supports: {
+        columns: (seed.layout.columns === 2 ? [1, 2] : [1]) as (1 | 2)[],
+        headerAlign: ["left", "center"],
+      },
+      defaultDesign: {
+        accentColor: seed.design.accentColor,
+        fontFamily: seed.design.fontKey as any,
+        fontScale: seed.design.fontScale,
+        lineSpacing: seed.design.lineSpacing,
+        pageMargin: seed.design.pageMargin,
+        sectionSpacing: seed.design.sectionSpacing,
+        pageSize: seed.design.pageSize,
+        columns: seed.layout.columns,
+        headerAlign: seed.design.headerAlign,
+        dateStyle: seed.design.dateStyle,
+        showIcons: seed.design.showIcons,
+        headerVariant: seed.layout.headerVariant,
+        sidebarSections: seed.layout.sidebarSections,
+        sidebarPosition: seed.layout.sidebarPosition,
+        sectionHeadingVariant: seed.layout.sectionHeadingVariant,
+        itemVariant: seed.layout.itemVariant,
+        skillsVariant: seed.layout.skillsVariant,
+      },
+      Component: createTemplateComponent(seed.key as TemplateId),
+    } satisfies TemplateDefinition,
+  ])
+) as Record<TemplateId, TemplateDefinition>;
 
 export const DEFAULT_TEMPLATE_ID: TemplateId = "modern";
 
@@ -158,11 +89,5 @@ export function getTemplate(templateId?: string | null): TemplateDefinition {
  * Returns all registered templates as an ordered array.
  */
 export function getAllTemplates(): TemplateDefinition[] {
-  return [
-    TEMPLATES.modern,
-    TEMPLATES.minimal,
-    TEMPLATES.executive,
-    TEMPLATES.classic,
-    TEMPLATES.technical,
-  ];
+  return TEMPLATE_SEED_DATA.map((seed) => TEMPLATES[seed.key as TemplateId]);
 }

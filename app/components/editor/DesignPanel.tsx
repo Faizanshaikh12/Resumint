@@ -52,6 +52,7 @@ const FONT_LABELS: Record<BundledFontFamily, string> = {
   merriweather: "Merriweather (Classic Serif)",
   "ibm-plex-sans": "IBM Plex Sans (Technical Sans)",
   "roboto-mono": "Roboto Mono (Monospace Code)",
+  "plus-jakarta-sans": "Plus Jakarta Sans (Creative Sans)",
 };
 
 export function DesignPanel(props: DesignPanelProps = {}) {
@@ -116,6 +117,7 @@ export function DesignPanel(props: DesignPanelProps = {}) {
                 key={t.id}
                 type="button"
                 role="radio"
+                aria-label={t.name}
                 aria-checked={isSelected}
                 tabIndex={0}
                 onClick={() => onSelectTemplate(t.id)}
