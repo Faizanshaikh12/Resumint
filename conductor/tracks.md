@@ -46,3 +46,9 @@
 - [ ] **Track: Phase 10 - Polish, Hardening, and Final Deploy**
   *Link: [conductor/tracks/phase_10_polish_deploy_20261014/index.md](./tracks/phase_10_polish_deploy_20261014/index.md)*
 
+---
+
+- [ ] **Track: Phase 11 - DB-Driven Templates (Template Master)**
+  *Link: [conductor/tracks/phase_11_templates_20261015/index.md](./tracks/phase_11_templates_20261015/index.md)*
+
+
