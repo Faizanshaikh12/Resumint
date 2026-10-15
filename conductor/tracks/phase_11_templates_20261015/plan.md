@@ -45,13 +45,13 @@
 - [x] Task: Phase 3 Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 4: Public Templates API (`/api/templates`)
-- [ ] Task: Create Public Templates Resource Route
-  - [ ] Write endpoint worker tests in `tests/worker/api-templates.test.ts`
-  - [ ] Implement `app/routes/api.templates.ts` querying active templates from D1 with fast sorting
-  - [ ] Configure edge caching headers (`Cache-Control: public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800`)
-- [ ] Task: Integrate API Loader with Guest `/build` Flow
-  - [ ] Update guest builder loader to fetch available templates from `/api/templates` or cached helper
-- [ ] Task: Phase 4 Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Create Public Templates Resource Route
+  - [x] Write endpoint worker tests in `tests/worker/api-templates.test.ts`
+  - [x] Implement `app/routes/api.templates.ts` querying active templates from D1 with fast sorting
+  - [x] Configure edge caching headers (`Cache-Control: public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800`)
+- [x] Task: Integrate API Loader with Guest `/build` Flow
+  - [x] Update guest builder loader to fetch available templates from `/api/templates` or cached helper
+- [x] Task: Phase 4 Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 5: Template Gallery & Copy-on-Apply Flow in Editor
 - [ ] Task: Build Live Template Gallery Modal

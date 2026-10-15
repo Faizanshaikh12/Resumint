@@ -20,6 +20,7 @@ export default [
   route("r/:slug", "routes/r.$slug.tsx"),
   route("build", "routes/build.tsx"),
   route("logout", "routes/logout.ts"),
+  route("api/templates", "routes/api.templates.ts"),
   route("api/export-data", "routes/api.export-data.ts"),
   route("api/auth/*", "routes/api.auth.$.ts"),
   route("robots.txt", "routes/robots[.]txt.ts"),

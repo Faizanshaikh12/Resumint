@@ -6,6 +6,8 @@ import { getSample } from "~/lib/resume/samples";
 import { DEFAULT_DESIGN } from "~/lib/resume/design-tokens";
 import type { ResumeContent, ResumeDesign, TemplateId } from "~/lib/schemas/resume";
 import type { ExportEnvelope } from "~/lib/export/json";
+import { loader as apiTemplatesLoader } from "~/routes/api.templates";
+import type { TemplateMasterRow } from "~/lib/schemas/template";
 
 export function meta() {
   return [
@@ -16,6 +18,12 @@ export function meta() {
         "Build, format, and customize an ATS-safe resume in your browser. No sign up required to start or export.",
     },
   ];
+}
+
+export async function loader({ context }: { context?: { cloudflare?: { env?: Env } } }) {
+  const response = await apiTemplatesLoader({ context });
+  const data = (await response.json()) as { templates: TemplateMasterRow[] };
+  return { templates: data.templates };
 }
 
 const GUEST_DRAFT_KEY = "resumint_guest_draft";
