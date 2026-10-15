@@ -149,7 +149,31 @@ export function TemplateGalleryModal({
           aria-label="Templates list"
           className="flex-1 overflow-y-auto py-4 pr-1 focus:outline-none"
         >
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filteredTemplates.length === 0 ? (
+            <div
+              className="flex flex-col items-center justify-center py-12 text-center"
+              data-testid="template-gallery-empty-state"
+            >
+              <Layers className="h-10 w-10 text-muted-foreground/40 mb-3" />
+              <p className="font-semibold text-foreground text-sm">No templates found</p>
+              <p className="text-xs text-muted-foreground mt-1 max-w-xs">
+                {selectedTier !== "all"
+                  ? `No templates available in the ${selectedTier} tier.`
+                  : "Unable to load templates from the database."}
+              </p>
+              {selectedTier !== "all" && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setSelectedTier("all")}
+                  className="mt-4 text-xs h-8"
+                >
+                  View All Templates
+                </Button>
+              )}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredTemplates.map((t) => {
               const isSelected = t.key === currentTemplateId;
               const isTwoColumn = t.layout.columns === 2;
@@ -280,7 +304,8 @@ export function TemplateGalleryModal({
                 </div>
               );
             })}
-          </div>
+            </div>
+          )}
         </div>
       </DialogContent>
     </Dialog>

@@ -222,6 +222,7 @@ export default function ResumeEditRoute({ loaderData }: Route.ComponentProps) {
 
   return (
     <ResumeEditor
+      key={resume.id}
       initial={{
         id: resume.id,
         title: resume.title,

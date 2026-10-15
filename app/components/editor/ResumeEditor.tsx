@@ -589,7 +589,7 @@ export function ResumeEditor({ initial, persistence, onImport }: ResumeEditorPro
         <div className="flex flex-1 overflow-hidden">
           {/* Edit Pane */}
           <div
-            className={`flex flex-1 md:w-1/2 md:border-r overflow-hidden ${
+            className={`flex flex-1 md:w-1/2 md:border-r overflow-hidden no-print editor-edit-pane ${
               mobileTab === "preview" ? "hidden md:flex" : "flex"
             }`}
           >

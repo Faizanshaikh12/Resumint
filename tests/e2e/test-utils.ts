@@ -10,12 +10,12 @@ export async function signUpUser(
 ) {
   await page.goto("/signup");
   await page.waitForLoadState("networkidle");
-  await expect(page.locator("#auth-name")).toBeVisible({ timeout: 15000 });
-  await page.fill("#auth-name", user.name);
-  await expect(page.locator("#auth-email")).toBeVisible({ timeout: 10000 });
-  await page.fill("#auth-email", user.email);
-  await expect(page.locator("#auth-password")).toBeVisible({ timeout: 10000 });
-  await page.fill("#auth-password", user.password);
+  await expect(page.getByLabel(/Full Name/i)).toBeVisible({ timeout: 15000 });
+  await page.getByLabel(/Full Name/i).fill(user.name);
+  await expect(page.getByLabel(/Email Address/i)).toBeVisible({ timeout: 10000 });
+  await page.getByLabel(/Email Address/i).fill(user.email);
+  await expect(page.getByLabel(/^Password/i)).toBeVisible({ timeout: 10000 });
+  await page.getByLabel(/^Password/i).fill(user.password);
 
   await Promise.all([
     page.waitForURL("**/dashboard", { timeout: 30000 }),

@@ -84,7 +84,7 @@ export function createAuth(env: Env, request?: Request) {
       customRules: {
         "/sign-in/email": {
           window: 60,
-          max: 10,
+          max: isProd ? 10 : 5000,
         },
         "/sign-up/email": {
           window: 60,

@@ -13,12 +13,14 @@
     "test": "vitest run --project=unit",
     "test:unit": "vitest run --project=unit",
     "test:worker": "vitest run --project=worker",
-    "test:e2e": "npm run db:migrate:local && playwright test",
+    "test:e2e": "npm run db:migrate:local && npm run db:seed:templates:local && playwright test",
     "test:coverage": "vitest run --coverage",
     "db:generate": "drizzle-kit generate",
     "db:migrate:local": "wrangler d1 migrations apply DB --local",
     "db:migrate:remote": "wrangler d1 migrations apply DB --remote",
     "db:seed": "tsx scripts/seed.ts",
+    "db:seed:templates:local": "tsx scripts/seed-templates.ts",
+    "db:seed:templates:remote": "tsx scripts/seed-templates.ts --remote",
     "deploy": "wrangler deploy"
   },
   "dependencies": {

@@ -71,8 +71,10 @@ jobs:
         if: steps.playwright-cache.outputs.cache-hit == 'true'
         run: npx playwright install-deps chromium
 
-      - name: Apply Local D1 Migrations
-        run: npx wrangler d1 migrations apply DB --local
+      - name: Apply Local D1 Migrations & Seed Templates
+        run: |
+          npx wrangler d1 migrations apply DB --local
+          npm run db:seed:templates:local
 
       - name: Run Playwright Tests (E2E & Accessibility)
         run: npm run test:e2e

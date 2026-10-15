@@ -44,10 +44,8 @@ export function DialogTrigger({
 export function DialogContent({
   children,
   className,
-}: {
-  children: React.ReactNode;
-  className?: string;
-}) {
+  ...props
+}: React.HTMLAttributes<HTMLDivElement>) {
   const context = React.useContext(DialogContext);
   if (!context) throw new Error("DialogContent must be used within Dialog");
 
@@ -78,6 +76,7 @@ export function DialogContent({
           "relative z-50 grid w-full max-w-lg gap-4 rounded-lg border bg-background p-6 shadow-lg duration-200",
           className
         )}
+        {...props}
       >
         <button
           type="button"

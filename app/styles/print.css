@@ -45,8 +45,14 @@
   .editor-header,
   .editor-nav,
   .editor-controls,
+  .editor-edit-pane,
+  [data-testid="editor-design-pane"],
+  [data-testid="editor-check-pane"],
+  [data-testid="editor-active-form-container"],
   .page-break-guide,
   [role="dialog"],
+  [role="alertdialog"],
+  [data-radix-portal],
   [data-sonner-toaster] {
     display: none !important;
   }

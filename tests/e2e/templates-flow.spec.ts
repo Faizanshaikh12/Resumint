@@ -28,7 +28,7 @@ test.describe("DB-Driven Templates & Duplication Flow E2E", () => {
     // Verify populated content in preview
     const preview = page.getByTestId("resume-preview-document");
     await expect(preview.getByText("Alex Morgan")).toBeVisible();
-    await expect(preview.getByText("Senior Full-Stack Engineer").first()).toBeVisible();
+    await expect(preview.getByText("Apex Cloud Technologies")).toBeVisible();
 
     // 4. Switch to Design tab & open Live Template Gallery Modal
     const designTab = page.getByRole("tab", { name: /^Design/i });

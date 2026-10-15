@@ -25,7 +25,7 @@ export default function SignUpPage({
   return (
     <div className="container mx-auto flex min-h-[calc(100vh-10rem)] items-center justify-center px-4 py-12">
       <div className="w-full max-w-md rounded-2xl border border-border/80 bg-card p-6 sm:p-8 shadow-sm">
-        <AuthForm mode="signup" redirectTo={loaderData.redirectTo} />
+        <AuthForm key="signup" mode="signup" redirectTo={loaderData.redirectTo} />
       </div>
     </div>
   );

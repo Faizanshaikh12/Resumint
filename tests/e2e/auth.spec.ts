@@ -23,12 +23,12 @@ test.describe("Authentication Flows & Route Guards", () => {
     await page.waitForLoadState("networkidle");
 
     // 2. Fill in signup details
-    await expect(page.locator("#auth-name")).toBeVisible({ timeout: 10000 });
-    await page.fill("#auth-name", testUser.name);
-    await expect(page.locator("#auth-email")).toBeVisible({ timeout: 5000 });
-    await page.fill("#auth-email", testUser.email);
-    await expect(page.locator("#auth-password")).toBeVisible({ timeout: 5000 });
-    await page.fill("#auth-password", testUser.password);
+    await expect(page.getByLabel(/Full Name/i)).toBeVisible({ timeout: 10000 });
+    await page.getByLabel(/Full Name/i).fill(testUser.name);
+    await expect(page.getByLabel(/Email Address/i)).toBeVisible({ timeout: 5000 });
+    await page.getByLabel(/Email Address/i).fill(testUser.email);
+    await expect(page.getByLabel(/^Password/i)).toBeVisible({ timeout: 5000 });
+    await page.getByLabel(/^Password/i).fill(testUser.password);
     await Promise.all([
       page.waitForURL("**/dashboard", { timeout: 30000 }),
       page.click('button[type="submit"]'),
@@ -48,10 +48,10 @@ test.describe("Authentication Flows & Route Guards", () => {
     await page.waitForLoadState("networkidle");
 
     // 6. Login again
-    await expect(page.locator("#auth-email")).toBeVisible({ timeout: 10000 });
-    await page.fill("#auth-email", testUser.email);
-    await expect(page.locator("#auth-password")).toBeVisible({ timeout: 5000 });
-    await page.fill("#auth-password", testUser.password);
+    await expect(page.getByLabel(/Email Address/i)).toBeVisible({ timeout: 10000 });
+    await page.getByLabel(/Email Address/i).fill(testUser.email);
+    await expect(page.getByLabel(/^Password/i)).toBeVisible({ timeout: 5000 });
+    await page.getByLabel(/^Password/i).fill(testUser.password);
     await Promise.all([
       page.waitForURL("**/dashboard", { timeout: 30000 }),
       page.click('button[type="submit"]'),
@@ -77,7 +77,7 @@ test.describe("Authentication Flows & Route Guards", () => {
     // Create a new user for this isolated test
     const user = {
       name: "Redirect Tester",
-      email: `redirect-${Date.now()}@resumint.dev`,
+      email: `redirect-${Date.now()}-${Math.floor(Math.random() * 10000)}@resumint.dev`,
       password: "Password123!",
     };
 
@@ -85,12 +85,12 @@ test.describe("Authentication Flows & Route Guards", () => {
     await page.locator("main").getByRole("link", { name: /sign up/i }).click();
     await page.waitForURL("**/signup?redirectTo=%2Fdashboard", { timeout: 10000 });
 
-    await expect(page.locator("#auth-name")).toBeVisible({ timeout: 10000 });
-    await page.fill("#auth-name", user.name);
-    await expect(page.locator("#auth-email")).toBeVisible({ timeout: 5000 });
-    await page.fill("#auth-email", user.email);
-    await expect(page.locator("#auth-password")).toBeVisible({ timeout: 5000 });
-    await page.fill("#auth-password", user.password);
+    await expect(page.getByLabel(/Full Name/i)).toBeVisible({ timeout: 10000 });
+    await page.getByLabel(/Full Name/i).fill(user.name);
+    await expect(page.getByLabel(/Email Address/i)).toBeVisible({ timeout: 5000 });
+    await page.getByLabel(/Email Address/i).fill(user.email);
+    await expect(page.getByLabel(/^Password/i)).toBeVisible({ timeout: 5000 });
+    await page.getByLabel(/^Password/i).fill(user.password);
     await Promise.all([
       page.waitForURL("**/dashboard", { timeout: 30000 }),
       page.click('button[type="submit"]'),

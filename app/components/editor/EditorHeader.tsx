@@ -88,20 +88,53 @@ export function EditorHeader() {
     if (!id || isDuplicating) return;
     setIsDuplicating(true);
     try {
-      const res = await fetch(`/resumes/${encodeURIComponent(id)}/edit`, {
+      const res = await fetch(`/resumes/${encodeURIComponent(id)}/edit.data`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
         body: JSON.stringify({ intent: "duplicate" }),
       });
-      const data = (await res.json()) as any;
-      if (res.ok && data.ok && data.resume?.id) {
+      const rawText = await res.text();
+      let dupId: string | undefined;
+      let errorMsg: string | undefined;
+
+      // 1. Try standard JSON object (e.g. from unit test mocks)
+      try {
+        const data = JSON.parse(rawText);
+        if (data && typeof data === "object" && !Array.isArray(data)) {
+          if (data.ok && data.resume?.id) {
+            dupId = data.resume.id;
+          } else if (data.error) {
+            errorMsg = data.error;
+          }
+        }
+      } catch {
+        // Fall back to stream token parsing
+      }
+
+      // 2. Single-fetch turbo-stream parsing
+      if (!dupId && !errorMsg) {
+        const idMatch = /"id",\s*"([^"]+)"/.exec(rawText);
+        const okMatch = /"ok",\s*(true|false)/.exec(rawText);
+        const errMatch = /"error",\s*"([^"]+)"/.exec(rawText);
+
+        if (okMatch && okMatch[1] === "true" && idMatch && idMatch[1]) {
+          dupId = idMatch[1];
+        } else if (errMatch && errMatch[1]) {
+          errorMsg = errMatch[1];
+        }
+      }
+
+      if (res.ok && dupId) {
         toast.success("Resume duplicated successfully");
         const redirectUrl = openGalleryOnRedirect
-          ? `/resumes/${data.resume.id}/edit?openGallery=true`
-          : `/resumes/${data.resume.id}/edit`;
+          ? `/resumes/${dupId}/edit?openGallery=true`
+          : `/resumes/${dupId}/edit`;
         navigate(redirectUrl);
       } else {
-        toast.error(data.error || "Failed to duplicate resume");
+        toast.error(errorMsg || "Failed to duplicate resume");
       }
     } catch {
       toast.error("Network error while duplicating resume");

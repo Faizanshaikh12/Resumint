@@ -66,6 +66,11 @@ describe("Editor Duplicate Workflows", () => {
   it("clicking Duplicate Resume creates copy and navigates to editor for new id", async () => {
     (global.fetch as any).mockResolvedValueOnce({
       ok: true,
+      text: async () =>
+        JSON.stringify({
+          ok: true,
+          resume: { id: "res-copy-999", title: "Production CV (Copy)" },
+        }),
       json: async () => ({
         ok: true,
         resume: { id: "res-copy-999", title: "Production CV (Copy)" },
@@ -104,7 +109,7 @@ describe("Editor Duplicate Workflows", () => {
 
     await waitFor(() => {
       expect(global.fetch).toHaveBeenCalledWith(
-        "/resumes/res-original-123/edit",
+        "/resumes/res-original-123/edit.data",
         expect.objectContaining({
           method: "POST",
           body: JSON.stringify({ intent: "duplicate" }),
@@ -120,10 +125,11 @@ describe("Editor Duplicate Workflows", () => {
   it("clicking Duplicate & Try Template creates copy and navigates with ?openGallery=true", async () => {
     (global.fetch as any).mockResolvedValueOnce({
       ok: true,
-      json: async () => ({
-        ok: true,
-        resume: { id: "res-copy-999", title: "Production CV (Copy)" },
-      }),
+      text: async () =>
+        JSON.stringify({
+          ok: true,
+          resume: { id: "res-copy-999", title: "Production CV (Copy)" },
+        }),
     });
 
     const router = createMemoryRouter(
@@ -158,7 +164,7 @@ describe("Editor Duplicate Workflows", () => {
 
     await waitFor(() => {
       expect(global.fetch).toHaveBeenCalledWith(
-        "/resumes/res-original-123/edit",
+        "/resumes/res-original-123/edit.data",
         expect.objectContaining({
           method: "POST",
           body: JSON.stringify({ intent: "duplicate" }),
