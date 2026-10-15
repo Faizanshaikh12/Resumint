@@ -1,13 +1,20 @@
 import { z } from "zod";
 
-// Template ID enum
-export const templateIdSchema = z.enum([
-  "modern",
-  "minimal",
-  "executive",
+export const TEMPLATE_IDS = [
+  "plain",
   "classic",
+  "compact",
+  "minimal",
+  "modern",
   "technical",
-]);
+  "executive",
+  "elegant",
+  "bold",
+  "creative",
+] as const;
+
+// Template ID enum
+export const templateIdSchema = z.enum(TEMPLATE_IDS);
 export type TemplateId = z.infer<typeof templateIdSchema>;
 
 // Link Item
@@ -220,6 +227,7 @@ export const BUNDLED_FONT_FAMILIES = [
   "merriweather",
   "ibm-plex-sans",
   "roboto-mono",
+  "plus-jakarta-sans",
 ] as const;
 export type BundledFontFamily = (typeof BUNDLED_FONT_FAMILIES)[number];
 
@@ -239,9 +247,19 @@ const rawResumeDesignSchema = z.object({
   sectionSpacing: z.number().min(8).max(32).default(16),
   pageSize: z.enum(["A4", "Letter"]).default("A4"),
   columns: z.union([z.literal(1), z.literal(2)]).default(1),
-  headerAlign: z.enum(["left", "center"]).default("left"),
+  headerAlign: z.enum(["left", "center", "right"]).default("left"),
   dateStyle: z.enum(["MMM YYYY", "MM/YYYY", "YYYY"]).default("MMM YYYY"),
   showIcons: z.boolean().default(true),
+  // Layout variants & token enhancements
+  headerVariant: z.enum(["standard", "centered", "banner", "compact"]).optional().default("standard"),
+  sidebarSections: z.array(z.string().max(50)).optional().default([]),
+  sidebarPosition: z.enum(["left", "right"]).optional().default("right"),
+  sectionHeadingVariant: z.enum(["underlined", "accent-pill", "small-caps", "left-rule", "minimal"]).optional().default("underlined"),
+  itemVariant: z.enum(["compact-row", "stacked", "bulleted"]).optional().default("stacked"),
+  skillsVariant: z.enum(["tags", "pills", "categorical-list", "inline-comma"]).optional().default("tags"),
+  primaryTextColor: z.string().max(30).optional().default("#111827"),
+  secondaryTextColor: z.string().max(30).optional().default("#4b5563"),
+  backgroundColor: z.string().max(30).optional().default("#ffffff"),
   // Deprecated backward-compatible fields retained for smooth transitions
   fontSize: z.enum(["sm", "md", "lg"]).optional().default("md"),
   margins: z.enum(["compact", "normal", "spacious"]).optional().default("normal"),
@@ -251,7 +269,11 @@ export const resumeDesignSchema = z.preprocess((val) => {
   if (typeof val !== "object" || val === null) return {};
   const record = { ...(val as Record<string, unknown>) };
 
-  // Map legacy font families to bundled 6
+  if (record.fontKey && !record.fontFamily) {
+    record.fontFamily = record.fontKey;
+  }
+
+  // Map legacy font families to bundled fonts
   if (typeof record.fontFamily === "string") {
     const legacyMap: Record<string, BundledFontFamily> = {
       roboto: "ibm-plex-sans",

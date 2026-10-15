@@ -15,6 +15,13 @@
       "when": 1791975609440,
       "tag": "0001_magenta_invaders",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1792048025379,
+      "tag": "0002_lumpy_the_hand",
+      "breakpoints": true
     }
   ]
 }

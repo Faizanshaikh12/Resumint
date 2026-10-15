@@ -1,5 +1,10 @@
 import { sqliteTable, text, integer, index } from "drizzle-orm/sqlite-core";
 import type { ResumeContent, ResumeDesign } from "~/lib/schemas/resume";
+import type {
+  TemplateDesignTokens,
+  TemplateLayoutConfig,
+  TemplateTier,
+} from "~/lib/schemas/template";
 
 // ==========================================
 // 1. Better Auth Tables (SQLite)
@@ -152,6 +157,33 @@ export const shareLinks = sqliteTable("share_links", {
     .$defaultFn(() => new Date()),
 });
 
+export const templateMaster = sqliteTable(
+  "template_master",
+  {
+    id: text("id").primaryKey(),
+    key: text("key").notNull().unique(),
+    name: text("name").notNull(),
+    description: text("description").notNull(),
+    tier: text("tier").$type<TemplateTier>().notNull().default("standard"),
+    design: text("design", { mode: "json" }).$type<TemplateDesignTokens>().notNull(),
+    layout: text("layout", { mode: "json" }).$type<TemplateLayoutConfig>().notNull(),
+    sampleContent: text("sample_content", { mode: "json" }).$type<ResumeContent | null>(),
+    sortOrder: integer("sort_order").notNull().default(0),
+    isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
+    version: integer("version").notNull().default(1),
+    createdAt: integer("created_at", { mode: "timestamp" })
+      .notNull()
+      .$defaultFn(() => new Date()),
+    updatedAt: integer("updated_at", { mode: "timestamp" })
+      .notNull()
+      .$defaultFn(() => new Date()),
+  },
+  (table) => ({
+    keyIdx: index("template_master_key_idx").on(table.key),
+    tierSortIdx: index("template_master_tier_sort_idx").on(table.tier, table.sortOrder),
+  })
+);
+
 // ==========================================
 // 3. Inferred TypeScript Types
 // ==========================================
@@ -176,3 +208,7 @@ export type InsertResumeSnapshot = typeof resumeSnapshots.$inferInsert;
 
 export type ShareLink = typeof shareLinks.$inferSelect;
 export type InsertShareLink = typeof shareLinks.$inferInsert;
+
+export type TemplateMaster = typeof templateMaster.$inferSelect;
+export type InsertTemplateMaster = typeof templateMaster.$inferInsert;
+

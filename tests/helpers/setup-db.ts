@@ -86,6 +86,23 @@ export const SCHEMA_STATEMENTS = [
   )`,
   `CREATE UNIQUE INDEX IF NOT EXISTS "share_links_resume_id_unique" ON "share_links" ("resume_id")`,
   `CREATE UNIQUE INDEX IF NOT EXISTS "share_links_slug_unique" ON "share_links" ("slug")`,
+  `CREATE TABLE IF NOT EXISTS "template_master" (
+    "id" text PRIMARY KEY NOT NULL,
+    "key" text NOT NULL,
+    "name" text NOT NULL,
+    "description" text NOT NULL,
+    "tier" text DEFAULT 'standard' NOT NULL,
+    "design" text NOT NULL,
+    "layout" text NOT NULL,
+    "sample_content" text,
+    "sort_order" integer DEFAULT 0 NOT NULL,
+    "is_active" integer DEFAULT 1 NOT NULL,
+    "version" integer DEFAULT 1 NOT NULL,
+    "created_at" integer NOT NULL,
+    "updated_at" integer NOT NULL
+  )`,
+  `CREATE UNIQUE INDEX IF NOT EXISTS "template_master_key_unique" ON "template_master" ("key")`,
+  `CREATE INDEX IF NOT EXISTS "template_master_tier_sort_idx" ON "template_master" ("tier", "sort_order")`,
 ];
 
 export async function setupTestDatabase(env: Env): Promise<void> {

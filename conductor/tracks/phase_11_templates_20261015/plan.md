@@ -1,20 +1,20 @@
 # Implementation Plan: Phase 11 - DB-Driven Templates (Template Master)
 
 ## Phase 1: Database Schema, Seed & Validation
-- [ ] Task: Define Zod Schemas for Design Tokens & Layout Config
-  - [ ] Write schema tests in `tests/unit/template-schema.test.ts` for `TemplateDesignTokensSchema` and `TemplateLayoutConfigSchema`
-  - [ ] Implement schemas and type definitions in `app/lib/schemas/template.ts`
-  - [ ] Update `app/lib/schemas/resume.ts` to support resolved template tokens and layout variants
-- [ ] Task: Create `template_master` Table & Drizzle Migration
-  - [ ] Add `templateMaster` table in `app/db/schema.ts` with columns: `id`, `key`, `name`, `description`, `tier`, `design`, `layout`, `sampleContent`, `sortOrder`, `isActive`, `version`, timestamps
-  - [ ] Generate Drizzle migration in `drizzle/`
-  - [ ] Write worker database integration tests in `tests/worker/template-db.test.ts`
-- [ ] Task: Implement Idempotent Seed Runner (10 Templates)
-  - [ ] Create seed definitions for all 10 templates (plain, classic, compact, minimal, modern, technical, executive, elegant, bold, creative) in `app/db/seed/templates.ts`
-  - [ ] Implement upsert logic (`ON CONFLICT (key) DO UPDATE`)
-  - [ ] Add npm script or hook for running seed on local D1 and CI
-  - [ ] Write seed validation tests verifying all 10 rows conform to Zod schemas
-- [ ] Task: Phase 1 Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Define Zod Schemas for Design Tokens & Layout Config
+  - [x] Write schema tests in `tests/unit/template-schema.test.ts` for `TemplateDesignTokensSchema` and `TemplateLayoutConfigSchema`
+  - [x] Implement schemas and type definitions in `app/lib/schemas/template.ts`
+  - [x] Update `app/lib/schemas/resume.ts` to support resolved template tokens and layout variants
+- [x] Task: Create `template_master` Table & Drizzle Migration
+  - [x] Add `templateMaster` table in `app/db/schema.ts` with columns: `id`, `key`, `name`, `description`, `tier`, `design`, `layout`, `sampleContent`, `sortOrder`, `isActive`, `version`, timestamps
+  - [x] Generate Drizzle migration in `drizzle/`
+  - [x] Write worker database integration tests in `tests/worker/template-db.test.ts`
+- [x] Task: Implement Idempotent Seed Runner (10 Templates)
+  - [x] Create seed definitions for all 10 templates (plain, classic, compact, minimal, modern, technical, executive, elegant, bold, creative) in `app/db/seed/templates.ts`
+  - [x] Implement upsert logic (`ON CONFLICT (key) DO UPDATE`)
+  - [x] Add npm script or hook for running seed on local D1 and CI
+  - [x] Write seed validation tests verifying all 10 rows conform to Zod schemas
+- [x] Task: Phase 1 Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 2: Fonts & Generic Configurable Resume Renderer
 - [ ] Task: Setup Local Font Assets & Typography Registry

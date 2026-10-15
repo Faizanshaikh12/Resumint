@@ -2,6 +2,7 @@ import { execSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import { createDefaultContent, createDefaultDesign } from "../app/lib/resume/defaults";
+import { generateTemplateSeedSql } from "../app/db/seed/templates";
 
 async function runSeed() {
   const isRemote = process.argv.includes("--remote");
@@ -44,6 +45,9 @@ async function runSeed() {
     // 4. Designer Resume
     `INSERT OR REPLACE INTO "resumes" ("id", "user_id", "title", "template_id", "content", "design", "version", "created_at", "updated_at")
      VALUES ('sample-designer', '${demoUserId}', 'Lead Product & UI Designer', 'minimal', '${escapeSql(JSON.stringify(designerContent))}', '${escapeSql(JSON.stringify(designerDesign))}', 1, ${now}, ${now});`,
+
+    // 5. Template Master (10 Templates)
+    generateTemplateSeedSql(),
   ];
 
   const tempSqlFile = path.resolve(process.cwd(), "temp-seed.sql");
